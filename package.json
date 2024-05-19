@@ -4,11 +4,18 @@
   "description": "discord bot testing",
   "main": "index.js",
   "scripts": {
+    "start": "pm2 start index.js --name aigis-discord-bot",
+    "stop": "pm2 stop aigis-discord-bot",
+    "dev": "pm2 start index.js --watch --name aigis-discord-bot",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Matthew Welker",
   "license": "ISC",
   "devDependencies": {
     "eslint": "^9.3.0"
+  },
+  "dependencies": {
+    "discord.js": "^14.15.2",
+    "dotenv": "^16.4.5"
   }
 }
