@@ -1,0 +1,1 @@
+exports.EMBED_COLOR = 0xFFC54A;

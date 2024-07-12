@@ -1,0 +1,173 @@
+const MyBuffer = require('../utils/MyBuffer');
+const AigisError = require('../utils/AigisError');
+const { EmbedBuilder, bold } = require('discord.js');
+const db = require('../database/db');
+const axios = require('axios');
+const { CronJob } = require('cron');
+const config = require('../config');
+
+exports.MIN_LENGTH = 50;
+exports.DB_NAME = 'sotd';
+
+const MAX_TRIES = 5; //number of tries before giving up on finding a new song
+const MAX_CHARS = Number.MAX_SAFE_INTEGER; //max number of characters for embed values (experimenting)
+
+let playlists; //buffer for playlists
+let songs; //songs array for recently used songs
+let job; //cronjob object
+
+/** Initialize the data structures */
+exports.initSOTD = async () => {
+  try {
+    let obj = await db.find(exports.DB_NAME, 'ds', { 'structure': 'playlists' });
+    playlists = new MyBuffer(obj[0].data);
+    playlists.print();
+    obj = await db.find(exports.DB_NAME, 'ds', { 'structure': 'songs' });
+    songs = obj[0].data.split(',');
+  } catch (err) {
+    console.log('Error initializing SOTD data structures, expected on first time');
+    playlists = new MyBuffer();
+    songs = [];
+    writeData();
+    console.error(err);
+  }
+}
+
+//check if Spotify JWT token is expired and create a new one if necessary. Return token value
+exports.checkToken = async () => {
+  let expiry = process.env.SPOTIFY_EXPIRE_TIME;
+  let current = Math.floor(Date.now() / 1000) + 1000; // 1000 seconds before token expiry
+  if (current > expiry) {
+    let authOptions = {
+      method: 'post',
+      url: 'https://accounts.spotify.com/api/token',
+      headers: {
+        'Authorization': 'Basic ' + (new Buffer.from(process.env.SPOTIFY_CLIENT_ID + ':' + process.env.SPOTIFY_CLIENT_SECRET).toString('base64')),
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      data: new URLSearchParams({ 'grant_type': 'client_credentials' })
+    };
+    try {
+      let response = await axios(authOptions);
+      process.env.SPOTIFY_TOKEN = response.data.access_token;
+      return process.env.SPOTIFY_TOKEN;
+    } catch (err) {
+      throw new AigisError("I could not verify your authentication token. I cant access Spotify!");
+    }
+  } else {
+    return process.env.SPOTIFY_TOKEN;
+  }
+}
+
+exports.startCronJob = () => {
+  job = new CronJob(
+    '0 0 0 * * *',
+    exports.selectSong,
+    null,
+    true,
+    'America/New_York'
+  );
+}
+
+exports.stopCronJob = () => {
+  job.stop();
+}
+
+exports.insertPlaylist = async (playlist) => {
+  data = await db.findOne(exports.DB_NAME, 'playlists', { 'spotify_id': playlist.spotify_id });
+  if (data) {
+    return false;
+  }
+  await db.insert(exports.DB_NAME, 'playlists', playlist);
+  playlists.insert(playlist.spotify_id);
+  writeData();
+  return true;
+}
+
+exports.removePlaylist = async (playlist_id) => {
+  let res = await db.deleteOne(exports.DB_NAME, 'playlists', { 'spotify_id': playlist_id });
+  if (res === 0) {
+    return false;
+  }
+  //pass a function to remove that returns false for elements to be removed, and the id to remove. See docs for MyBuffer.remove
+  playlists.remove((item, arr) => item != arr[0], playlist_id);
+  writeData();
+  return true;
+}
+
+exports.selectSong = async () => {
+  if (playlists.length === 0) {
+    playlists.print();
+    throw new AigisError('there are no playlists to select a song from.');
+  }
+  let token = await exports.checkToken();
+  let searching = true; // still searching for new song
+  let tries = 0; // number of tries before giving up and returning current song
+  let id = playlists.get(); // get playlist from buffer
+  let playlist = await db.findOne(exports.DB_NAME, 'playlists', { 'spotify_id': id }); //get playlist object from database
+  let length = playlist.length; //get length from database
+  let offset = Math.floor(Math.random() * length); //generate offset based on length in database
+  lbl: while (searching) {
+    //get playlist tracks
+    try {
+      const res = await axios.get(`https://api.spotify.com/v1/playlists/${id}/tracks?offset=${offset}&limit=1`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const song = res.data.items[0];
+      //only check for repeat if within max number of tries
+      if (tries < MAX_TRIES) {
+        for (let s of songs) {
+          if (s === song.track.id) {
+            tries += 1;
+            continue lbl;
+          }
+        }
+      }
+      searching = false;
+      //update length of playlist in database - does not need to be concurrent
+      db.updateOne(exports.DB_NAME, 'playlists', { 'spotify_id': id }, { $set: { 'length': res.data.total } }, true).then(result => {
+        if (res.data.total < exports.MIN_LENGTH) {
+          console.error('Playlist ' + id + ' is too short to be used for Song of the Day. It is being removed.');
+          exports.removePlaylist(id);
+        }
+      });
+      songs.push(song.track.id);
+      writeData();
+      //adjust lengths for better display
+      let songStr = song.track.name.length > MAX_CHARS ? song.track.name.substring(0, MAX_CHARS) + '...' : song.track.name;
+      let albumStr = song.track.album.name.length > MAX_CHARS ? song.track.album.name.substring(0, MAX_CHARS) + '...' : song.track.album.name;
+      let playlistOwnerStr = playlist.owner.length > MAX_CHARS ? playlist.owner.substring(0, MAX_CHARS) + '...' : playlist.owner;
+      //get artist string for possible multiple artists
+      let artistStr = '';
+      if (song.track.artists.length == 1) {
+        artistStr = song.track.artists[0].name;
+      } else {
+        artistStr = `${song.track.artists[0].name} and ${song.track.artists.length - 1} other`;
+        artistStr += song.track.artists.length - 1 > 1 ? 's' : '';
+      }
+      //build embed to display song
+      const embed = new EmbedBuilder()
+        .setColor(config.EMBED_COLOR)
+        .setTitle('Song of the Day')
+        .addFields(
+          { name: `${bold('Song')}`, value: `[${songStr}](${song.track.external_urls.spotify})` },
+          { name: `Artist`, value: artistStr },
+          { name: `Album`, value: albumStr },
+          { name: `Playlist Owner`, value: playlistOwnerStr }
+        )
+        .setImage(song.track.album.images[0].url)
+        .setTimestamp()
+      console.log(song.track.preview_url);
+      return embed;
+    } catch (err) {
+      throw err;
+    }
+  }
+}
+
+function writeData() {
+  db.updateOne(exports.DB_NAME, 'ds', { 'structure': 'playlists' }, { $set: { 'data': playlists.toString() } }, true);
+  db.updateOne(exports.DB_NAME, 'ds', { 'structure': 'songs' }, { $set: { 'data': songs.length == 0 ? '' : songs.join(',') } }, true);
+}  

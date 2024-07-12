@@ -1,7 +1,11 @@
 require('dotenv').config();
 const fs = require('node:fs');
 const path = require('node:path');
-const { Client, Events, GatewayIntentBits, Collection } = require('discord.js');
+const { Client, Events, GatewayIntentBits, Collection, ActivityType } = require('discord.js');
+const { initSOTD, startCronJob } = require('./command_helpers/sotd');
+
+//list of commands that require deferred replies (longer than 3 seconds)
+long_commands = ['ping', 'sotd']
 
 // BOT token
 const token = process.env.TOKEN;
@@ -34,6 +38,7 @@ client.once(Events.ClientReady, readyClient => {
 
 client.on(Events.InteractionCreate, async interaction => {
   if (!interaction.isChatInputCommand()) return;
+
   //interaction is a command
   const command = interaction.client.commands.get(interaction.commandName);
   if (!command) {
@@ -41,6 +46,8 @@ client.on(Events.InteractionCreate, async interaction => {
     return;
   }
   try {
+    if (long_commands.includes(interaction.commandName))
+      await interaction.deferReply(); //defer reply for long commands (longer than 3 seconds)
     await command.execute(interaction); //execute the command
   } catch (error) {
     console.error(error);
@@ -52,6 +59,20 @@ client.on(Events.InteractionCreate, async interaction => {
   }
 });
 
-
 //login with client token
-client.login(token);
+client.login(token).then(token => {
+  client.user.setPresence({
+    activities: [{
+      name: ' Trashpanda-san incorrectly code me',
+      type: ActivityType.Watching
+    }],
+    status: 'online'
+  });
+});
+
+initSOTD().then(() => {
+  console.log('Song of the Day initialized and ready.')
+});
+
+//startCronJob();
+console.log('Cron job for Song of the Day started.');

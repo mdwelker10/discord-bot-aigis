@@ -12,7 +12,7 @@ module.exports = {
     const date = interaction.member.joinedAt.getDate();
     const day = interaction.member.joinedAt.getDay();
     const year = interaction.member.joinedAt.getFullYear();
-    await interaction.reply(`Allow me to dox you. Your username is ${interaction.user.tag} and you joined the server on ${numToMonth(month)} ${date}, ${year}. It was a ${numToDate(day)}.`);
+    await interaction.reply(`Allow me to dox you. Your username is ${interaction.user.tag}-san, but you prefer ${interaction.user.displayName}-san. and you joined the server on ${numToMonth(month)} ${date}, ${year}. It was a ${numToDate(day)}.`);
   },
 };
 
