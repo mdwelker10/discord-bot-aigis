@@ -58,10 +58,15 @@ exports.checkToken = async () => {
   }
 }
 
-exports.startCronJob = () => {
+exports.startCronJob = (client) => {
   job = new CronJob(
     '0 0 0 * * *',
-    exports.selectSong,
+    async () => {
+      let channel = client.channels.cache.get(config.SOTD_CHANNEL_ID);
+      let embed = await exports.selectSong();
+      console.log('DEBUGGG For debugging first time: channel is ' + channel + ' and is embed null: ' + embed ? 'no' : 'yes');
+      channel.send({ embeds: [embed] });
+    },
     null,
     true,
     'America/New_York'
