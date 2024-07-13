@@ -64,10 +64,10 @@ client.on(Events.InteractionCreate, async interaction => {
 client.login(token).then(token => {
   client.user.setPresence({
     activities: [{
-      name: ' Trashpanda-san incorrectly code me',
+      name: 'Trashpanda-san incorrectly code me',
       type: ActivityType.Watching
     }],
-    status: 'online'
+    status: 'online' 
   });
 });
 

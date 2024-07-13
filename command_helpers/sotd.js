@@ -21,7 +21,6 @@ exports.initSOTD = async () => {
   try {
     let obj = await db.find(exports.DB_NAME, 'ds', { 'structure': 'playlists' });
     playlists = new MyBuffer(obj[0].data);
-    playlists.print();
     obj = await db.find(exports.DB_NAME, 'ds', { 'structure': 'songs' });
     songs = obj[0].data.split(',');
   } catch (err) {
@@ -97,7 +96,6 @@ exports.removePlaylist = async (playlist_id) => {
 
 exports.selectSong = async () => {
   if (playlists.length === 0) {
-    playlists.print();
     throw new AigisError('there are no playlists to select a song from.');
   }
   let token = await exports.checkToken();
