@@ -67,7 +67,7 @@ client.login(token).then(token => {
       name: 'Trashpanda-san incorrectly code me',
       type: ActivityType.Watching
     }],
-    status: 'online' 
+    status: 'online'
   });
 });
 
@@ -75,7 +75,7 @@ initSOTD().then(() => {
   console.log('Song of the Day initialized and ready.')
 });
 
-startCronJob();
+startCronJob(client);
 console.log('Cron job for Song of the Day started.');
 
 // job = new CronJob(
