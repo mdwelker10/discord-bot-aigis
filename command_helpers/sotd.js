@@ -170,4 +170,4 @@ exports.selectSong = async () => {
 function writeData() {
   db.updateOne(exports.DB_NAME, 'ds', { 'structure': 'playlists' }, { $set: { 'data': playlists.toString() } }, true);
   db.updateOne(exports.DB_NAME, 'ds', { 'structure': 'songs' }, { $set: { 'data': songs.length == 0 ? '' : songs.join(',') } }, true);
-}  
+}   

@@ -3,6 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { Client, Events, GatewayIntentBits, Collection, ActivityType } = require('discord.js');
 const { initSOTD, startCronJob } = require('./command_helpers/sotd');
+const { CronJob } = require('cron');
 
 //list of commands that require deferred replies (longer than 3 seconds)
 long_commands = ['ping', 'sotd']
@@ -74,5 +75,16 @@ initSOTD().then(() => {
   console.log('Song of the Day initialized and ready.')
 });
 
-//startCronJob();
+startCronJob();
 console.log('Cron job for Song of the Day started.');
+
+// job = new CronJob(
+//   '0 * * * * *',
+//   () => {
+//     const general = client.channels.cache.get('803893455934849077');
+//     general.send('Trashpanda-san, when will I be fixed?');
+//   },
+//   null,
+//   true,
+//   'America/New_York'
+// );
