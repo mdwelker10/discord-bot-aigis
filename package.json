@@ -7,7 +7,7 @@
     "start": "pm2 start ecosystem.config.js",
     "stop": "pm2 stop aigis",
     "dev": "pm2 start ecosystem.dev.config.js",
-    "restart": "pm2 restart aigis",
+    "restart": "pm2 restart aigis --update-env",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Matthew Welker",
