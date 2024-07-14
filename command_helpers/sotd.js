@@ -65,7 +65,7 @@ exports.startCronJob = (client) => {
     '0 0 0 * * *',
     async () => {
       let channel = client.channels.cache.get(config.SOTD_CHANNEL_ID);
-      const arr = await selectSong();
+      const arr = await exports.selectSong();
       await channel.send({ embeds: [arr[0]] });
       if (arr[1] != null) {
         await channel.send({ files: [arr[1]] });
