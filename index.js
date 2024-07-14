@@ -90,4 +90,12 @@ if (process.env.DEV != 1) {
 //   true,
 //   'America/New_York'
 // );
-//testing hook
+
+/*
+TODO:
+- add command to set status, pass client into command.execute to allow for setting status 
+    - update index.js for this command as an exception as execute currently only takes interaction - see if this will work.
+    - If it doesnt work then try making status stuff ENV variables
+
+- add pre commit hook to check branch being committed to 
+*/
