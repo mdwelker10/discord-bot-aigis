@@ -76,33 +76,39 @@ module.exports = {
         await interaction.editReply({ embeds: [embed] });
       }
       else if (interaction.options.getSubcommand() === 'select') { //select a song
-        await interaction.editReply(`${interaction.user.displayName}-san, the testing phase for the Song of the Day is over.`);
-        // try {
-        //   const embed = await selectSong();
-        //   await interaction.editReply({ embeds: [embed] });
-        // } catch (err) {
-        //   if (err instanceof AigisError || !err.response || !err.response.status) {
-        //     throw err;
-        //   }
-        //   if (err.response.status === 400) {
-        //     throw new AigisError(`something went wrong getting the Song of the Day. I am not sure what happened. Please tell Trashpanda-san to look at the logs.`);
-        //   } else if (err.response.status === 404) {
-        //     throw new AigisError(`the playlist selected does not exist on Spotify. Was it deleted?`);
-        //   } else if (err.response.status >= 500) {
-        //     throw new AigisError(`something to do with Spotify. It is their fault ${interaction.user.displayName}-san, I am sure of it!`);
-        //   } else if (err.response.status === 401 || err.response.status === 403) {
-        //     throw new AigisError(`the Spotify access token is bad! ${interaction.user.displayName}-san, I cannot get any data without a valid token.`);
-        //   } else if (err.response.status === 429) {
-        //     throw new AigisError(`Spotify is not allowing me to get their data right now. How rude! ${interaction.user.displayName}-san, I need you to please wait and try again later.`);
-        //   } else {
-        //     throw new AigisError(`uh... um... ${interaction.user.displayName}-san? I don't know what happened. The Spotify status code was ${err.response.status}, but my programming does not have protocol for that`);
-        //   }
-        // }
+        if (process.env.DEV != 1) {
+          await interaction.editReply(`${interaction.user.displayName}-san, the testing phase for the Song of the Day is over.`);
+        } else {
+          try {
+            const arr = await selectSong();
+            await interaction.editReply({ embeds: [arr[0]] });
+            if (arr[1] != null) {
+              interaction.channel.send({ files: [arr[1]] });
+            }
+          } catch (err) {
+            if (err instanceof AigisError || !err.response || !err.response.status) {
+              throw err;
+            }
+            if (err.response.status === 400) {
+              throw new AigisError(`something went wrong getting the Song of the Day. I am not sure what happened. Please tell Trashpanda-san to look at the logs.`);
+            } else if (err.response.status === 404) {
+              throw new AigisError(`the playlist selected does not exist on Spotify. Was it deleted?`);
+            } else if (err.response.status >= 500) {
+              throw new AigisError(`something to do with Spotify. It is their fault ${interaction.user.displayName}-san, I am sure of it!`);
+            } else if (err.response.status === 401 || err.response.status === 403) {
+              throw new AigisError(`the Spotify access token is bad! ${interaction.user.displayName}-san, I cannot get any data without a valid token.`);
+            } else if (err.response.status === 429) {
+              throw new AigisError(`Spotify is not allowing me to get their data right now. How rude! ${interaction.user.displayName}-san, I need you to please wait and try again later.`);
+            } else {
+              throw new AigisError(`uh... um... ${interaction.user.displayName}-san? I don't know what happened. The Spotify status code was ${err.response.status}, but my programming does not have protocol for that`);
+            }
+          }
+        }
       }
       else if (interaction.options.getSubcommand() === 'add-playlist') { //add playlist
         let pid = interaction.options.getString('playlist-id');
-        await addPlaylist(pid, interaction.user.displayName);
-        await interaction.editReply(`I have added the playlist to the list of Song of the Day playlists ${interaction.user.displayName}-san.`);
+        let name = await addPlaylist(pid, interaction.user.displayName);
+        await interaction.editReply(`I have added the playlist "${name}" to the list of Song of the Day playlists ${interaction.user.displayName}-san.`);
       }
       else if (interaction.options.getSubcommand() === 'remove-playlist') { //remove playlist
         let pid = interaction.options.getString('playlist-id');
@@ -151,6 +157,7 @@ async function addPlaylist(id, name) {
     if (!success) {
       throw new AigisError('that playlist is already in the list of Song of the Day playlists.');
     }
+    return data.name;
   } catch (err) {
     if (err instanceof AigisError) {
       throw err;
@@ -191,19 +198,4 @@ async function listPlaylists() {
     .setTimestamp();
   //.setFooter({text: 'Only the first X playlists shown', iconURL: 'https://i.imgur.com/2rZa85n.jpg'});
   return embed;
-}
-
-//update length of playlist each time it is queried for SOTD
-let playlists = {
-  '_id': 1,
-  'name': 'playlist name',
-  'spotify_id': 'spotify playlist id',
-  'length': 61,
-  'owner': 'display name',
-  'image': 'image url'
-}
-
-let ds = {
-  'structure': 'playlists / songs',
-  'data': 'actual data structure string'
 }

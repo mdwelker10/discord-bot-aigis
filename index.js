@@ -1,7 +1,7 @@
 require('dotenv').config();
 const fs = require('node:fs');
 const path = require('node:path');
-const { Client, Events, GatewayIntentBits, Collection, ActivityType } = require('discord.js');
+const { Client, Events, GatewayIntentBits, Collection, ActivityType, PresenceUpdateStatus } = require('discord.js');
 const { initSOTD, startCronJob } = require('./command_helpers/sotd');
 const { CronJob } = require('cron');
 
@@ -64,10 +64,10 @@ client.on(Events.InteractionCreate, async interaction => {
 client.login(token).then(token => {
   client.user.setPresence({
     activities: [{
-      name: 'Trashpanda-san incorrectly code me',
-      type: ActivityType.Watching
+      name: 'pm2',
+      type: ActivityType.Playing
     }],
-    status: 'online'
+    status: PresenceUpdateStatus.Online
   });
 });
 
@@ -75,8 +75,10 @@ initSOTD().then(() => {
   console.log('Song of the Day initialized and ready.')
 });
 
-startCronJob(client);
-console.log('Cron job for Song of the Day started.');
+if (process.env.DEV != 1) {
+  startCronJob(client);
+  console.log('Cron job for Song of the Day started.');
+}
 
 // job = new CronJob(
 //   '0 * * * * *',

@@ -5,6 +5,8 @@ const db = require('../database/db');
 const axios = require('axios');
 const { CronJob } = require('cron');
 const config = require('../config');
+const fs = require('fs'); const { resolve } = require('dns');
+const path = require('path');
 
 exports.MIN_LENGTH = 50;
 exports.DB_NAME = 'sotd';
@@ -63,9 +65,11 @@ exports.startCronJob = (client) => {
     '0 0 0 * * *',
     async () => {
       let channel = client.channels.cache.get(config.SOTD_CHANNEL_ID);
-      let embed = await exports.selectSong();
-      console.log('DEBUGGG For debugging first time: channel is ' + channel + ' and is embed null: ' + embed ? 'no' : 'yes');
-      channel.send({ embeds: [embed] });
+      const arr = await selectSong();
+      await channel.send({ embeds: [arr[0]] });
+      if (arr[1] != null) {
+        await channel.send({ files: [arr[1]] });
+      }
     },
     null,
     true,
@@ -162,8 +166,28 @@ exports.selectSong = async () => {
         )
         .setImage(song.track.album.images[0].url)
         .setTimestamp()
-      console.log(song.track.preview_url);
-      return embed;
+      const preview_url = song.track.preview_url;
+      if (preview_url != null) {
+        const res = await axios.get(preview_url, { responseType: 'stream' });
+        for (const file of fs.readdirSync(path.join(__dirname, 'temp'))) {
+          fs.unlinkSync(path.join(__dirname, 'temp', file));
+        }
+        const filePath = path.join(__dirname, 'temp', `${song.track.name} [Preview].mp3`);
+        const writer = fs.createWriteStream(filePath, { autoClose: true });
+        res.data.pipe(writer);
+        return new Promise((resolve, reject) => {
+          writer.on('finish', () => {
+            resolve([embed, path.resolve(filePath)]);
+          });
+          writer.on('error', (err) => {
+            console.error(err);
+            resolve([embed, null]);
+          });
+        });
+      } else {
+        console.log(`Song ${song.track.name} does not have a preview URL.`);
+      }
+      return [embed, song.track.preview_url];
     } catch (err) {
       throw err;
     }

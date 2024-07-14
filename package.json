@@ -4,9 +4,9 @@
   "description": "discord bot testing",
   "main": "index.js",
   "scripts": {
-    "start": "pm2 start index.js --name aigis-discord-bot",
-    "stop": "pm2 stop aigis-discord-bot",
-    "dev": "pm2 start index.js --watch --name aigis-discord-bot",
+    "start": "pm2 start ecosystem.config.js",
+    "stop": "pm2 stop aigis",
+    "dev": "pm2 start ecosystem.dev.config.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Matthew Welker",
