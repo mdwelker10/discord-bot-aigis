@@ -5,6 +5,7 @@ module.exports = {
       script: './index.js',
       watch: false,
       env: {
+        DEV: 0,
         NODE_ENV: "production",
       },
     }
