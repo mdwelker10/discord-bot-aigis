@@ -64,8 +64,8 @@ client.on(Events.InteractionCreate, async interaction => {
 client.login(token).then(token => {
   client.user.setPresence({
     activities: [{
-      name: 'pm2',
-      type: ActivityType.Playing
+      name: 'The 1s and 0s of AWS',
+      type: ActivityType.Watching
     }],
     status: PresenceUpdateStatus.Online
   });
