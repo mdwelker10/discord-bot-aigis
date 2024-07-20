@@ -162,6 +162,7 @@ exports.selectSong = async () => {
           { name: `${bold('Song')}`, value: `[${songStr}](${song.track.external_urls.spotify})` },
           { name: `Artist`, value: artistStr },
           { name: `Album`, value: albumStr },
+          { name: `Playlist`, value: `[${playlist.name}](<https://open.spotify.com/playlist/${id}>)` },
           { name: `Playlist Owner`, value: playlistOwnerStr }
         )
         .setImage(song.track.album.images[0].url)

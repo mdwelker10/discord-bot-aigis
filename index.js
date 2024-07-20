@@ -6,7 +6,7 @@ const { initSOTD, startCronJob } = require('./command_helpers/sotd');
 const { CronJob } = require('cron');
 
 //list of commands that require deferred replies (longer than 3 seconds)
-long_commands = ['ping', 'sotd']
+long_commands = ['ping', 'sotd', 'rank']
 
 // BOT token
 const token = process.env.TOKEN;
@@ -62,11 +62,20 @@ client.on(Events.InteractionCreate, async interaction => {
 
 //login with client token
 client.login(token).then(token => {
-  client.user.setPresence({
-    activities: [{
+  let activities = [];
+  if (process.env.DEV == 1) { //dev status
+    activities = [{
+      name: 'Trashpanda-san incorrectly program me',
+      type: ActivityType.Watching
+    }]
+  } else { //prod status
+    activities = [{
       name: 'The 1s and 0s of AWS',
       type: ActivityType.Watching
-    }],
+    }]
+  }
+  client.user.setPresence({
+    activities: activities,
     status: PresenceUpdateStatus.Online
   });
 });
@@ -96,6 +105,4 @@ TODO:
 - add command to set status, pass client into command.execute to allow for setting status 
     - update index.js for this command as an exception as execute currently only takes interaction - see if this will work.
     - If it doesnt work then try making status stuff ENV variables
-
-- add pre commit hook to check branch being committed to 
 */

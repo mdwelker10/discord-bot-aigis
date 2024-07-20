@@ -10,4 +10,4 @@ module.exports = {
     const sent = await interaction.editReply({ content: 'Pinging...', fetchReply: true });
     interaction.editReply(`OK ${interaction.user.displayName}-san, the ping is ${sent.createdTimestamp - interaction.createdTimestamp}ms.`);
   },
-};
+}; 
