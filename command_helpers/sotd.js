@@ -51,6 +51,7 @@ exports.checkToken = async () => {
     try {
       let response = await axios(authOptions);
       process.env.SPOTIFY_TOKEN = response.data.access_token;
+      process.env.SPOTIFY_EXPIRE_TIME = Math.floor(Date.now() / 1000) + response.data.expires_in; //expires in an hour
       return process.env.SPOTIFY_TOKEN;
     } catch (err) {
       throw new AigisError("I could not verify your authentication token. I cant access Spotify!");

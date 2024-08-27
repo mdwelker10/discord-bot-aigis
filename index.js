@@ -6,12 +6,12 @@ const { initSOTD, startCronJob } = require('./command_helpers/sotd');
 const { CronJob } = require('cron');
 
 //list of commands that require deferred replies (longer than 3 seconds)
-long_commands = ['ping', 'sotd', 'rank']
+long_commands = ['ping', 'sotd', 'manga']
 
 // BOT token
 const token = process.env.TOKEN;
 //create client
-const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent] });
 
 //attach .commands property to client to allow access to commands in other files
 client.commands = new Collection();
@@ -37,6 +37,15 @@ client.once(Events.ClientReady, readyClient => {
   console.log(`Ready! Logged in as ${readyClient.user.tag}`);
 });
 
+client.on(Events.MessageCreate, message => {
+  if (message.author.bot) return;
+  if (message.content.toLowerCase().includes('aigis')) {
+    message.reply(`Did you need me ${message.author.displayName}-san?`);
+  } else if (message.content === 'ping') {
+    message.reply('pong');
+  }
+});
+
 client.on(Events.InteractionCreate, async interaction => {
   if (!interaction.isChatInputCommand()) return;
 
@@ -47,9 +56,11 @@ client.on(Events.InteractionCreate, async interaction => {
     return;
   }
   try {
-    if (long_commands.includes(interaction.commandName))
+    if (long_commands.includes(interaction.commandName)) {
       await interaction.deferReply(); //defer reply for long commands (longer than 3 seconds)
+    }
     await command.execute(interaction); //execute the command
+
   } catch (error) {
     console.error(error);
     if (interaction.replied || interaction.deferred) {
@@ -62,22 +73,15 @@ client.on(Events.InteractionCreate, async interaction => {
 
 //login with client token
 client.login(token).then(token => {
-  let activities = [];
   if (process.env.DEV == 1) { //dev status
-    activities = [{
-      name: 'Trashpanda-san incorrectly program me',
-      type: ActivityType.Watching
-    }]
-  } else { //prod status
-    activities = [{
-      name: 'The 1s and 0s of AWS',
-      type: ActivityType.Watching
-    }]
+    client.user.setPresence({
+      activities: [{
+        name: 'Trashpanda-san incorrectly program me',
+        type: ActivityType.Watching
+      }],
+      status: PresenceUpdateStatus.Online
+    });
   }
-  client.user.setPresence({
-    activities: activities,
-    status: PresenceUpdateStatus.Online
-  });
 });
 
 initSOTD().then(() => {
@@ -90,10 +94,10 @@ if (process.env.DEV != 1) {
 }
 
 // job = new CronJob(
-//   '0 * * * * *',
+//   '* * * * * *',
 //   () => {
-//     const general = client.channels.cache.get('803893455934849077');
-//     general.send('Trashpanda-san, when will I be fixed?');
+//     const botdev = client.channels.cache.get('1261541686723739758');
+//     botdev.send(`<@754934858081632376>-san please get ready for the watchparty!`);
 //   },
 //   null,
 //   true,
