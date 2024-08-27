@@ -133,6 +133,9 @@ exports.selectSong = async () => {
           }
         }
       }
+      if (tries >= MAX_TRIES) {
+        console.log(`Could not find a new song in less than ${MAX_TRIES} tries. New song might be repeat. Selected song ${song.track.name}.`);
+      }
       searching = false;
       //update length of playlist in database - does not need to be concurrent
       db.updateOne(exports.DB_NAME, 'playlists', { 'spotify_id': id }, { $set: { 'length': res.data.total } }, true).then(result => {

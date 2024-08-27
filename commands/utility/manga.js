@@ -83,25 +83,36 @@ module.exports = {
           url += '?contentRating[]=safe&contentRating[]=suggestive&contentRating[]=erotica&contentRating[]=pornographic';
         }
         const data = await axios.get(url);
-        const art = await getCoverArt(data.data.data.id, data.data.data.relationships.filter(rel => rel.type === 'cover_art')[0].id);
+        const cover = await getCoverArt(data.data.data.id, data.data.data.relationships.filter(rel => rel.type === 'cover_art')[0].id);
+        let art = Array.isArray(cover) ? cover[0] : cover;
         const author = await getMangaAuthor(data.data.data.relationships.filter(rel => rel.type === 'author')[0].id);
-        let desc = data.data.data.attributes.description.en;
-        if (!desc || desc == '') {
-          desc = `There is no English description for this manga.\n${Object.values(data.data.data.attributes.description)[0]}`;
+        let desc = data.data.data.attributes.description;
+        if (desc.en) {
+          desc = desc.en;
+        } else if (Object.values(desc).length > 0) {
+          desc = Object.values(desc)[0];
+        } else {
+          desc = `There is no description for this manga.`;
         }
+
         const embed = new EmbedBuilder()
           .setTitle(data.data.data.attributes.title['en'] ?? data.data.data.attributes.altTitles['en'] ?? Object.values(data.data.data.attributes.title)[0])
           .setURL(`https://mangadex.org/title/${data.data.data.id}`)
           .setDescription(desc)
           .addFields(
-            { name: 'Author', value: author, inline: true },
-            { name: 'Status', value: data.data.data.attributes.status, inline: true },
-            { name: 'Content Rating', value: data.data.data.attributes.contentRating, inline: true })
+            { name: 'Author', value: author },
+            { name: 'Status', value: data.data.data.attributes.status },
+            { name: 'Content Rating', value: data.data.data.attributes.contentRating })
           .setImage(art)
           .setColor(config.EMBED_COLOR)
           .setFooter({ text: 'via Mangadex' })
           .setTimestamp();
-        await interaction.editReply({ embeds: [embed] });
+        //attach image if needed
+        if (Array.isArray(cover)) {
+          await interaction.editReply({ embeds: [embed], files: [cover[1]] });
+        } else {
+          await interaction.editReply({ embeds: [embed] });
+        }
       } else {
         await interaction.editReply(`I'm sorry ${username}-san, I do not recognize the command you gave me.`);
       }

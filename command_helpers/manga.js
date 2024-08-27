@@ -1,5 +1,8 @@
 const axios = require('axios');
 const AigisError = require('../utils/AigisError');
+const fs = require('fs');
+const path = require('path');
+const { AttachmentBuilder } = require('discord.js');
 
 //check if token is valid and refresh if not. Return token value
 exports.checkToken = async () => {
@@ -50,14 +53,26 @@ exports.checkToken = async () => {
   }
 }
 
-/** get cover art URL given a manga ID and cover art ID */
+/** get cover art file path / link given a manga ID and cover art ID */
 exports.getCoverArt = async (mangaID, coverID) => {
   //const token = await checkToken();
   const data = await axios.get(`https://api.mangadex.org/cover/${coverID}`);
   const filename = data.data.data.attributes.fileName;
-  const ret = `https://uploads.mangadex.org/covers/${mangaID}/${filename}`;
-  console.log(ret);
-  return ret;
+  const url = `https://uploads.mangadex.org/covers/${mangaID}/${filename}`;
+  const filePath = path.join(__dirname, 'temp', `${filename}`);
+  //download image and place in temp folder
+  const res = await axios.get(url, { responseType: 'stream' });
+  const writer = fs.createWriteStream(filePath, { autoClose: true });
+  res.data.pipe(writer);
+  return new Promise((resolve, reject) => {
+    writer.on('finish', () => {
+      resolve([`attachment://${filename}`, new AttachmentBuilder(path.resolve(filePath))]); //need to have attachment for local files
+    });
+    writer.on('error', (err) => {
+      console.error(err);
+      resolve('https://imgur.com/usdIJxN');
+    });
+  });
 }
 
 exports.getMangaAuthor = async (authorID) => {
