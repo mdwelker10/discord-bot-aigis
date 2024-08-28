@@ -3,6 +3,14 @@ const AigisError = require('../utils/AigisError');
 const fs = require('fs');
 const path = require('path');
 const { AttachmentBuilder } = require('discord.js');
+const db = require('../database/db');
+const config = require('../config');
+const ISO6391 = require('iso-639-1');
+const { CronJob } = require('cron');
+
+exports.COLLECTION_NAME = 'manga';
+
+let job; //cronjob object
 
 //check if token is valid and refresh if not. Return token value
 exports.checkToken = async () => {
@@ -54,29 +62,146 @@ exports.checkToken = async () => {
 }
 
 /** get cover art file path / link given a manga ID and cover art ID */
-exports.getCoverArt = async (mangaID, coverID) => {
+exports.getCoverArt = async (mangaID, coverID, keep = false) => {
   //const token = await checkToken();
   const data = await axios.get(`https://api.mangadex.org/cover/${coverID}`);
   const filename = data.data.data.attributes.fileName;
   const url = `https://uploads.mangadex.org/covers/${mangaID}/${filename}`;
-  const filePath = path.join(__dirname, 'temp', `${filename}`);
-  //download image and place in temp folder
+  const filePath = keep ? path.join(__dirname, '..', 'images', `${filename}`) : path.join(__dirname, 'temp', `${filename}`);
+  //download image and place in folder
   const res = await axios.get(url, { responseType: 'stream' });
-  const writer = fs.createWriteStream(filePath, { autoClose: true });
+  const writer = fs.createWriteStream(filePath, { autoClose: true, flags: 'w' });
   res.data.pipe(writer);
   return new Promise((resolve, reject) => {
     writer.on('finish', () => {
-      resolve([`attachment://${filename}`, new AttachmentBuilder(path.resolve(filePath))]); //need to have attachment for local files
+      if (keep) {
+        resolve(filename); //for manga being followed
+      } else {
+        resolve([`attachment://${filename}`, new AttachmentBuilder(path.resolve(filePath))]); //need to have attachment for local files
+      }
     });
     writer.on('error', (err) => {
       console.error(err);
-      resolve('https://imgur.com/usdIJxN');
+      resolve('https://imgur.com/usdIJxN'); //default image of Aigis reading
     });
   });
 }
 
-exports.getMangaAuthor = async (authorID) => {
-  //const token = await checkToken();
-  const data = await axios.get(`https://api.mangadex.org/author/${authorID}`);
-  return data.data.data.attributes.name;
+exports.getTitle = (attributes, lang = 'en') => {
+  return attributes.title[lang] ?? attributes.altTitles[lang] ?? Object.values(attributes.title)[0]
 }
+
+exports.getLanguage = (lang) => {
+  if (config.MANGADEX_ISO6391[lang]) {
+    return config.MANGADEX_ISO6391[lang];
+  } else {
+    return ISO6391.getName(lang);
+  }
+}
+
+exports.followManga = async (manga_id, lang, manga_data, user_id) => {
+  const title = exports.getTitle(manga_data.attributes, lang);
+  //get chapter data
+  let ret = {};
+  try {
+    ret = await axios.get(`https://api.mangadex.org/manga/${manga_id}/feed?translatedLanguage[]=${lang}&order[chapter]=desc&limit=1`);
+  } catch (err) {
+    if (err.response.status === 400) {
+      console.error(`Mangadex request error, details below:\n${JSON.stringify(err.response.data.errors[0])}`);
+      throw new AigisError(`Mangadex has told me that my request was invalid. They say "${err.response.data.errors[0].detail}.`);
+    } else {
+      throw err;
+    }
+  }
+  //if there are no chapters in the specified language
+  const existing_data = await db.findOne(config.DB_NAME, exports.COLLECTION_NAME, { manga_id: manga_id, lang: lang });
+  //if an entry exists in the database for this manga and this language just edit ping list
+  if (existing_data && existing_data.manga_id === manga_id && existing_data.lang === lang) {
+    //push user id to the ping list
+    await db.updateOne(config.DB_NAME, exports.COLLECTION_NAME, { manga_id: manga_id, lang: lang }, { $push: { ping_list: user_id } });
+  } else {
+    let data = {};
+    let cover_file_name = await exports.getCoverArt(manga_id, manga_data.relationships.filter(rel => rel.type === 'cover_art')[0].id, true);
+    //if no chapters in this language for this manga use some default values
+    if (ret.data.data.length === 0) {
+      data = {
+        title: title,
+        manga_id: manga_id,
+        lang: lang,
+        latest_chapter: 0,
+        latest_chapter_num: -1,
+        cover_art: cover_file_name,
+        ping_list: [user_id]
+      }
+    } else {
+      const chapter = ret.data.data[0];
+      data = {
+        title: title,
+        manga_id: manga_id,
+        lang: lang,
+        latest_chapter: chapter.id,
+        latest_chapter_num: chapter.attributes.chapter,
+        cover_art: cover_file_name,
+        ping_list: [user_id]
+      }
+    }
+    await db.insert(config.DB_NAME, exports.COLLECTION_NAME, data);
+  }
+  return title;
+}
+
+exports.startMangaCronJob = async (client) => {
+  job = new CronJob(
+    '0 0 3,9,15,21 * * *',
+    async () => {
+      let data = await db.find(config.DB_NAME, exports.COLLECTION_NAME, {});
+      for (let manga of data) {
+        let ret = {};
+        try {
+          ret = await axios.get(`https://api.mangadex.org/manga/${manga.manga_id}/feed?translatedLanguage[]=${manga.lang}&order[chapter]=desc&limit=1`);
+          if (ret.data.data.length === 0) {
+            return;
+          } else if (ret.data.data[0].attributes.chapter > manga.latest_chapter_num) {
+            const chapter = ret.data.data[0];
+            console.log(`New chapter for ${manga.title} in ${getLanguage(manga.lang)} has been released.`);
+            //update database with new chapter
+            db.updateOne(config.DB_NAME, COLLECTION_NAME, { manga_id: manga.manga_id, lang: manga.lang }, { $set: { latest_chapter: chapter.id, latest_chapter_num: chapter.attributes.chapter } });
+            //put together ping and embed
+            let channel = client.channels.cache.get(config.BOT_CHANNEL_ID);
+            let link = `https://mangadex.org/chapter/${chapter.id}`;
+            let ping = '';
+            for (let id of manga.ping_list) {
+              ping += `<@${id}>-san `;
+            }
+            ping += `A new chapter of ${manga.title} in ${getLanguage(manga.lang)} has been released! You can read it ${hyperlink('here', `<${link}>`)}.`;
+            const cover = path.join(__dirname, '..', '..', 'images', manga.cover_art);
+            const file = new AttachmentBuilder(path.resolve(cover));
+            const embed = new EmbedBuilder()
+              .setColor(config.EMBED_COLOR)
+              .setTitle(`${manga.title} - Chapter ${chapter.attributes.chapter}`)
+              .addFields({ name: 'Language', value: getLanguage(manga.lang) })
+              .setFooter({ text: 'via Mangadex' })
+              .setImage(`attachment://${manga.cover_art}`)
+              .setTimestamp();
+            await channel.send({ content: ping, embeds: [embed], files: [file] });
+          }
+        } catch (err) {
+          if (err.response && err.response.status === 400) {
+            console.error(`Mangadex error with ${manga.title} in ${getLanguage(manga.lang)}. Details below:\n${JSON.stringify(err.response.data.errors[0])}`);
+            throw new AigisError(`<@${process.env.OWNER_ID}-san, in trying to check for manga updates Mangadex has told me my request is invalid. They say "${err.response.data.errors[0].detail}.`);
+          } else {
+            throw err;
+          }
+        }
+      };
+    },
+    null,
+    true,
+    'America/New_York'
+  );
+}
+
+exports.stopMangaCronJob = () => {
+  job.stop();
+}
+

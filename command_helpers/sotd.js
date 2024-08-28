@@ -5,7 +5,7 @@ const db = require('../database/db');
 const axios = require('axios');
 const { CronJob } = require('cron');
 const config = require('../config');
-const fs = require('fs'); const { resolve } = require('dns');
+const fs = require('fs');
 const path = require('path');
 
 exports.MIN_LENGTH = 50;
@@ -61,7 +61,7 @@ exports.checkToken = async () => {
   }
 }
 
-exports.startCronJob = (client) => {
+exports.startSotdCronJob = (client) => {
   job = new CronJob(
     '0 0 0 * * *',
     async () => {
@@ -78,7 +78,7 @@ exports.startCronJob = (client) => {
   );
 }
 
-exports.stopCronJob = () => {
+exports.stopSotdCronJob = () => {
   job.stop();
 }
 

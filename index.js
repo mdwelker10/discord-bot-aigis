@@ -2,7 +2,8 @@ require('dotenv').config();
 const fs = require('node:fs');
 const path = require('node:path');
 const { Client, Events, GatewayIntentBits, Collection, ActivityType, PresenceUpdateStatus } = require('discord.js');
-const { initSOTD, startCronJob } = require('./command_helpers/sotd');
+const { initSOTD, startSotdCronJob: startSotdCronJob } = require('./command_helpers/sotd');
+const { startMangaCronJob } = require('./command_helpers/manga');
 const { CronJob } = require('cron');
 
 //list of commands that require deferred replies (longer than 3 seconds)
@@ -89,8 +90,11 @@ initSOTD().then(() => {
 });
 
 if (process.env.DEV != 1) {
-  startCronJob(client);
+  startSotdCronJob(client);
   console.log('Cron job for Song of the Day started.');
+  startMangaCronJob(client);
+  console.log('Cron job for Manga updates started.');
+
 }
 
 // job = new CronJob(
