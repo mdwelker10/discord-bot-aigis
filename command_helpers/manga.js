@@ -9,6 +9,7 @@ const ISO6391 = require('iso-639-1');
 const { CronJob } = require('cron');
 
 exports.COLLECTION_NAME = 'manga';
+exports.DEFAULT_IMAGE = 'https://i.imgur.com/usdIJxN.png';
 
 let job; //cronjob object
 
@@ -61,7 +62,7 @@ exports.checkToken = async () => {
   }
 }
 
-/** get cover art file path / link given a manga ID and cover art ID */
+/** get cover art file path / link given a manga ID and cover art ID. */
 exports.getCoverArt = async (mangaID, coverID, keep = false) => {
   //const token = await checkToken();
   const data = await axios.get(`https://api.mangadex.org/cover/${coverID}`);
@@ -75,14 +76,14 @@ exports.getCoverArt = async (mangaID, coverID, keep = false) => {
   return new Promise((resolve, reject) => {
     writer.on('finish', () => {
       if (keep) {
-        resolve(filename); //for manga being followed
+        resolve(filename); //for manga being followed (attachment is manually built later)
       } else {
-        resolve([`attachment://${filename}`, new AttachmentBuilder(path.resolve(filePath))]); //need to have attachment for local files
+        resolve([`attachment://${filename}`, new AttachmentBuilder(path.resolve(filePath))]); //need to have attachment for local files (i.e. random manga)
       }
     });
     writer.on('error', (err) => {
       console.error(err);
-      resolve('https://imgur.com/usdIJxN'); //default image of Aigis reading
+      resolve(exports.DEFAULT_IMAGE); //default image of Aigis reading
     });
   });
 }
@@ -121,7 +122,10 @@ exports.followManga = async (manga_id, lang, manga_data, user_id) => {
     await db.updateOne(config.DB_NAME, exports.COLLECTION_NAME, { manga_id: manga_id, lang: lang }, { $push: { ping_list: user_id } });
   } else {
     let data = {};
-    let cover_file_name = await exports.getCoverArt(manga_id, manga_data.relationships.filter(rel => rel.type === 'cover_art')[0].id, true);
+    let cover_file_name = 'https://i.imgur.com/usdIJxN.png';
+    if (manga_data.contentRating !== 'pornographic') {
+      cover_file_name = await exports.getCoverArt(manga_id, manga_data.relationships.filter(rel => rel.type === 'cover_art')[0].id, true);
+    }
     //if no chapters in this language for this manga use some default values
     if (ret.data.data.length === 0) {
       data = {
@@ -207,15 +211,21 @@ exports.startMangaCronJob = async (client) => {
             }
             ping += `A new chapter of ${manga.title} in ${getLanguage(manga.lang)} has been released! You can read it ${hyperlink('here', `<${link}>`)}.`;
             const cover = path.join(__dirname, '..', '..', 'images', manga.cover_art);
-            const file = new AttachmentBuilder(path.resolve(cover));
+            const image = manga.cover_art === exports.DEFAULT_IMAGE ? exports.DEFAULT_IMAGE : `attachment://${manga.cover_art}`;
             const embed = new EmbedBuilder()
               .setColor(config.EMBED_COLOR)
               .setTitle(`${manga.title} - Chapter ${chapter.attributes.chapter}`)
               .addFields({ name: 'Language', value: getLanguage(manga.lang) })
               .setFooter({ text: 'via Mangadex' })
-              .setImage(`attachment://${manga.cover_art}`)
+              .setImage(image)
               .setTimestamp();
-            await channel.send({ content: ping, embeds: [embed], files: [file] });
+
+            if (manga.cover_art === exports.DEFAULT_IMAGE) {
+              channel.send({ content: ping, embeds: [embed] });
+            } else {
+              const file = new AttachmentBuilder(path.resolve(cover));
+              await channel.send({ content: ping, embeds: [embed], files: [file] });
+            }
           }
         } catch (err) {
           if (err.response && err.response.status === 400) {

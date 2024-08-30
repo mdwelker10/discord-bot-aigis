@@ -3,7 +3,7 @@ const axios = require('axios');
 const AigisError = require('../../utils/AigisError');
 const config = require('../../config');
 const ISO6391 = require('iso-639-1');
-const { checkToken, getCoverArt, followManga, getTitle, getLanguage, listManga, unfollowManga } = require('../../command_helpers/manga');
+const { checkToken, getCoverArt, followManga, getTitle, getLanguage, listManga, unfollowManga, DEFAULT_IMAGE } = require('../../command_helpers/manga');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -52,6 +52,7 @@ module.exports = {
         )
     ),
   async execute(interaction) {
+    let temp = '';
     try {
       const subcommand = interaction.options.getSubcommand();
       const username = interaction.user.displayName;
@@ -135,8 +136,13 @@ module.exports = {
           url += '?contentRating[]=safe&contentRating[]=suggestive&contentRating[]=erotica&contentRating[]=pornographic';
         }
         const data = await axios.get(url);
-        const cover = await getCoverArt(data.data.data.id, data.data.data.relationships.filter(rel => rel.type === 'cover_art')[0].id);
-        let art = Array.isArray(cover) ? cover[0] : cover;
+        temp = data.data.data;
+        let art = null;
+        let cover = null;
+        if (data.data.data.attributes.contentRating !== 'pornographic') {
+          cover = await getCoverArt(data.data.data.id, data.data.data.relationships.filter(rel => rel.type === 'cover_art')[0].id);
+          art = Array.isArray(cover) ? cover[0] : cover; //if its an array AttachmentBuilder will be at cover[1]
+        }
         const author = await getMangaAuthor(data.data.data.relationships.filter(rel => rel.type === 'author')[0].id);
         let desc = data.data.data.attributes.description;
         if (desc.en) {
@@ -154,12 +160,13 @@ module.exports = {
             { name: 'Author', value: author },
             { name: 'Status', value: data.data.data.attributes.status },
             { name: 'Content Rating', value: data.data.data.attributes.contentRating })
-          .setImage(art)
+          .setImage(art ?? DEFAULT_IMAGE) //if no image use default of aigis reading
           .setColor(config.EMBED_COLOR)
           .setFooter({ text: 'via Mangadex' })
           .setTimestamp();
         //attach image if needed
         if (Array.isArray(cover)) {
+          //send AttachmentBuilder with attachment
           await interaction.editReply({ embeds: [embed], files: [cover[1]] });
         } else {
           await interaction.editReply({ embeds: [embed] });
@@ -171,6 +178,7 @@ module.exports = {
       if (err instanceof AigisError) {
         await interaction.editReply(`${interaction.user.displayName}-san! I'm sorry but I have encountered an issue while executing your command. The problem is ${err.message}`);
       } else {
+        console.log(temp);
         console.error(err);
         await interaction.editReply(`${interaction.user.displayName}-san... I do not know what happened. My programming indicated there was an issue but it is unknown to me. The issue is ${err.message}`)
       }
