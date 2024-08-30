@@ -9,10 +9,11 @@ module.exports = {
         NODE_ENV: 'development',
       },
       ignore_watch: [
-        'node_modules',
+        './node_modules',
         '.gitignore',
         '**/temp',
-        '.git'
+        '.git',
+        './images',
       ]
     }
   ]

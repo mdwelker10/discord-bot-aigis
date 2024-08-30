@@ -3,7 +3,7 @@ const axios = require('axios');
 const AigisError = require('../../utils/AigisError');
 const config = require('../../config');
 const ISO6391 = require('iso-639-1');
-const { checkToken, getCoverArt, followManga, getTitle, getLanguage, COLLECTION_NAME } = require('../../command_helpers/manga');
+const { checkToken, getCoverArt, followManga, getTitle, getLanguage, listManga, unfollowManga } = require('../../command_helpers/manga');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -65,6 +65,7 @@ module.exports = {
         desc += `There are some exceptions listed on ${hyperlink('Mangadex\'s website', '<https://api/mangadex.org/docs/3-enumerations')}.`
         const embed = new EmbedBuilder()
           .setTitle('Manga Command Help')
+          .setColor(config.EMBED_COLOR)
           .setDescription(desc)
           .setThumbnail('https://i.imgur.com/1lZnFBP.jpeg')
           .addFields(
@@ -96,14 +97,14 @@ module.exports = {
           await interaction.editReply(`I have added you to the ping list for ${manga_title} in ${getLanguage(lang)} ${username}-san.`);
         } catch (err) {
           //error handle API responses
-          if (!err.response || err.response.status) {
+          if (!err.response || !err.response.status) {
             throw err;
           }
           if (err.response.status === 403) {
             console.error(err);
             throw new AigisError(`Mangadex has forbidden me from accessing this manga. I am not sure why. Ask Trashpanda-san to look at the logs.`)
-          } else if (err.response.status === 404) {
-            await interaction.editReply(`${username}-san, I could not find the manga with an ID of ${manga_id}, please make sure you are using the correct ID.`);
+          } else if (err.response.status === 404 || err.response.status === 400) {
+            await interaction.editReply(`${username}-san, I could not find the manga with an ID of ${interaction.options.getString('manga-id')}, please make sure you are using the correct ID.`);
             return;
           } else {
             console.error(err);
@@ -111,15 +112,22 @@ module.exports = {
           }
         }
       } else if (subcommand === 'list') { //list manga command
-        await interaction.editReply(`I'm sorry ${username}-san, I am not programmed for that command yet.`);
+        let embed = await listManga(interaction.user.id);
+        await interaction.editReply({ embeds: [embed] });
       } else if (subcommand === 'unfollow') { //unfollow command
         //const token = await checkToken();
-        const lang = validateLanguage(interaction.options.getString('language') ?? 'en');
-        if (!lang) {
+        const lang = interaction.options.getString('language') ?? 'en';
+        const validLang = validateLanguage(lang);
+        if (!validLang) {
           await interaction.editReply(`I'm sorry ${username}-san, the language code of ${interaction.options.getString('language')} is not valid.`);
           return;
         }
-        await interaction.editReply(`I'm sorry ${username}-san, I am not programmed for that command yet.`);
+        const result = await unfollowManga(interaction.options.getString('manga-id'), lang, interaction.user.id);
+        if (result) {
+          await interaction.editReply(`Alright ${username}-san, I have removed you from the ping list for ${result} in ${getLanguage(lang)}.`);
+        } else {
+          await interaction.editReply(`${username}-san, you do not appear to be following that manga in that language.`);
+        }
       } else if (subcommand === 'random') { //random manga command
         const porn = interaction.options.getBoolean('pornographic') ?? false;
         let url = 'https://api.mangadex.org/manga/random';

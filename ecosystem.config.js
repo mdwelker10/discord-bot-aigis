@@ -8,6 +8,10 @@ module.exports = {
         DEV: 0,
         NODE_ENV: "production",
       },
+      out_file: "./logs/out.log",
+      error_file: "./logs/error.log",
+      log_date_format: "MM-DD HH:mm:ss Z",
+      log_type: "raw"
     }
   ]
 }

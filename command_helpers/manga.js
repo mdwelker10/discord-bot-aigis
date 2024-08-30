@@ -2,7 +2,7 @@ const axios = require('axios');
 const AigisError = require('../utils/AigisError');
 const fs = require('fs');
 const path = require('path');
-const { AttachmentBuilder } = require('discord.js');
+const { AttachmentBuilder, EmbedBuilder, hyperlink } = require('discord.js');
 const db = require('../database/db');
 const config = require('../config');
 const ISO6391 = require('iso-639-1');
@@ -148,6 +148,38 @@ exports.followManga = async (manga_id, lang, manga_data, user_id) => {
     await db.insert(config.DB_NAME, exports.COLLECTION_NAME, data);
   }
   return title;
+}
+
+exports.listManga = async (user_id) => {
+  let data = await db.find(config.DB_NAME, exports.COLLECTION_NAME, { ping_list: user_id });
+  let str = '';
+  for (const m of data) {
+    str += `- ${hyperlink(`${m.title} in ${exports.getLanguage(m.lang)}`, `<https://mangadex.org/title/${m.manga_id}>`)}\n`;
+  }
+  if (str === '') {
+    str = 'You are not following any manga.';
+  }
+  let embed = new EmbedBuilder()
+    .setColor(config.EMBED_COLOR)
+    .setTitle('Manga You Are Following')
+    .setDescription(str)
+    .setTimestamp();
+  return embed;
+}
+
+exports.unfollowManga = async (manga_id, lang, user_id) => {
+  let data = await db.findOne(config.DB_NAME, exports.COLLECTION_NAME, { manga_id: manga_id, lang: lang });
+  if (!data) {
+    return false;
+  }
+  if (data.ping_list.length === 1) {
+    await db.deleteOne(config.DB_NAME, exports.COLLECTION_NAME, { manga_id: manga_id, lang: lang });
+    fs.unlinkSync(path.join(__dirname, '..', 'images', data.cover_art));
+  } else {
+    //$pull will remove the specified user id from the ping list
+    await db.updateOne(config.DB_NAME, exports.COLLECTION_NAME, { manga_id: manga_id, lang: lang }, { $pull: { ping_list: user_id } });
+  }
+  return data.title;
 }
 
 exports.startMangaCronJob = async (client) => {

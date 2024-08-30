@@ -94,7 +94,6 @@ if (process.env.DEV != 1) {
   console.log('Cron job for Song of the Day started.');
   startMangaCronJob(client);
   console.log('Cron job for Manga updates started.');
-
 }
 
 // job = new CronJob(
@@ -107,10 +106,3 @@ if (process.env.DEV != 1) {
 //   true,
 //   'America/New_York'
 // );
-
-/*
-TODO:
-- add command to set status, pass client into command.execute to allow for setting status 
-    - update index.js for this command as an exception as execute currently only takes interaction - see if this will work.
-    - If it doesnt work then try making status stuff ENV variables
-*/
