@@ -10,8 +10,8 @@ module.exports = {
       },
       out_file: "./logs/out.log",
       error_file: "./logs/error.log",
-      log_date_format: "MM-DD HH:mm:ss Z",
-      log_type: "raw"
+      log_date_format: "YYYY-MM-DD HH:mm:ss Z",
+      log_type: "json"
     }
   ]
 }

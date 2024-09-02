@@ -4,4 +4,4 @@
 .DS_*
 **/temp/
 **/logs
-**/images/
+**/images/*

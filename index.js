@@ -29,21 +29,19 @@ for (const folder of commandFolders) {
     if ('data' in command && 'execute' in command)
       client.commands.set(command.data.name, command);
     else
-      console.log(`Invalid following command file is missing the "data" or "execute" property: ${filePath}`);
+      console.warn(`Invalid following command file is missing the "data" or "execute" property: ${filePath}`);
   }
 }
 
 //run following code only once when client is ready
 client.once(Events.ClientReady, readyClient => {
-  console.log(`Ready! Logged in as ${readyClient.user.tag}`);
+  console.info(`Ready! Logged in as ${readyClient.user.tag}`);
 });
 
 client.on(Events.MessageCreate, message => {
   if (message.author.bot) return;
   if (message.content.toLowerCase().includes('aigis')) {
     message.reply(`Did you need me ${message.author.displayName}-san?`);
-  } else if (message.content === 'ping') {
-    message.reply('pong');
   }
 });
 
@@ -57,6 +55,12 @@ client.on(Events.InteractionCreate, async interaction => {
     return;
   }
   try {
+    //log command execution
+    let subcommand = interaction.options.getSubcommand(false);
+    let str = `User ${interaction.user.id} executed command: ${interaction.commandName}`
+    str += subcommand ? ` -- with subcommand: ${subcommand}` : '';
+    console.log(str);
+    //execute commands
     if (long_commands.includes(interaction.commandName)) {
       await interaction.deferReply(); //defer reply for long commands (longer than 3 seconds)
     }
@@ -86,14 +90,14 @@ client.login(token).then(token => {
 });
 
 initSOTD().then(() => {
-  console.log('Song of the Day initialized and ready.')
+  console.info('Song of the Day initialized and ready.')
 });
 
 if (process.env.DEV != 1) {
   startSotdCronJob(client);
-  console.log('Cron job for Song of the Day started.');
+  console.info('Cron job for Song of the Day started.');
   startMangaCronJob(client);
-  console.log('Cron job for Manga updates started.');
+  console.info('Cron job for Manga updates started.');
 }
 
 // job = new CronJob(

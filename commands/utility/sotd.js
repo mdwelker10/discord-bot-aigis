@@ -108,12 +108,14 @@ module.exports = {
       else if (interaction.options.getSubcommand() === 'add-playlist') { //add playlist
         let pid = interaction.options.getString('playlist-id');
         let name = await addPlaylist(pid, interaction.user.displayName);
+        console.log(`${interaction.user.id} added SOTD playlist ${name}`);
         await interaction.editReply(`I have added the playlist "${name}" to the list of Song of the Day playlists ${interaction.user.displayName}-san.`);
       }
       else if (interaction.options.getSubcommand() === 'remove-playlist') { //remove playlist
         let pid = interaction.options.getString('playlist-id');
         let result = await removePlaylist(pid);
         if (result) {
+          console.log(`${interaction.user.id} removed playlist with ID ${pid}`);
           await interaction.editReply(`Alright ${interaction.user.displayName}-san, I have removed the playlist.`);
         } else {
           await interaction.editReply(`I'm sorry ${interaction.user.displayName}-san, but that playlist does not seem to be in the Song of the Day playlists.`);

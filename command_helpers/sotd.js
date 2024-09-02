@@ -26,7 +26,7 @@ exports.initSOTD = async () => {
     obj = await db.find(exports.DB_NAME, 'ds', { 'structure': 'songs' });
     songs = obj[0].data.split(',');
   } catch (err) {
-    console.log('Error initializing SOTD data structures, expected on first time');
+    console.warn('Error initializing SOTD data structures, expected on first time.');
     playlists = new MyBuffer();
     songs = [];
     writeData();
@@ -134,7 +134,7 @@ exports.selectSong = async () => {
         }
       }
       if (tries >= MAX_TRIES) {
-        console.log(`Could not find a new song in less than ${MAX_TRIES} tries. New song might be repeat. Selected song ${song.track.name}.`);
+        console.info(`SOTD -- Could not find a new song in less than ${MAX_TRIES} tries. New song might be repeat. Selected song ${song.track.name}.`);
       }
       searching = false;
       //update length of playlist in database - does not need to be concurrent
@@ -190,7 +190,7 @@ exports.selectSong = async () => {
           });
         });
       } else {
-        console.log(`Song ${song.track.name} does not have a preview URL.`);
+        console.info(`SOTD -- song ${song.track.name} does not have a preview URL.`);
       }
       return [embed, song.track.preview_url];
     } catch (err) {

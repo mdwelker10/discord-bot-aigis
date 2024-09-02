@@ -114,10 +114,12 @@ exports.followManga = async (manga_id, lang, manga_data, user_id) => {
       throw err;
     }
   }
-  //if there are no chapters in the specified language
   const existing_data = await db.findOne(config.DB_NAME, exports.COLLECTION_NAME, { manga_id: manga_id, lang: lang });
   //if an entry exists in the database for this manga and this language just edit ping list
   if (existing_data && existing_data.manga_id === manga_id && existing_data.lang === lang) {
+    if (existing_data.ping_list.includes(user_id)) {
+      throw new AigisError('you are already following that manga in that language.');
+    }
     //push user id to the ping list
     await db.updateOne(config.DB_NAME, exports.COLLECTION_NAME, { manga_id: manga_id, lang: lang }, { $push: { ping_list: user_id } });
   } else {
@@ -199,7 +201,7 @@ exports.startMangaCronJob = async (client) => {
             return;
           } else if (ret.data.data[0].attributes.chapter > manga.latest_chapter_num) {
             const chapter = ret.data.data[0];
-            console.log(`New chapter for ${manga.title} in ${getLanguage(manga.lang)} has been released.`);
+            console.info(`New chapter for ${manga.title} in ${getLanguage(manga.lang)} has been released. Sending ping.`);
             //update database with new chapter
             db.updateOne(config.DB_NAME, COLLECTION_NAME, { manga_id: manga.manga_id, lang: manga.lang }, { $set: { latest_chapter: chapter.id, latest_chapter_num: chapter.attributes.chapter } });
             //put together ping and embed

@@ -52,7 +52,7 @@ module.exports = {
         )
     ),
   async execute(interaction) {
-    let temp = '';
+    //let temp = '';
     try {
       const subcommand = interaction.options.getSubcommand();
       const username = interaction.user.displayName;
@@ -108,7 +108,6 @@ module.exports = {
             await interaction.editReply(`${username}-san, I could not find the manga with an ID of ${interaction.options.getString('manga-id')}, please make sure you are using the correct ID.`);
             return;
           } else {
-            console.error(err);
             throw err;
           }
         }
@@ -178,7 +177,6 @@ module.exports = {
       if (err instanceof AigisError) {
         await interaction.editReply(`${interaction.user.displayName}-san! I'm sorry but I have encountered an issue while executing your command. The problem is ${err.message}`);
       } else {
-        console.log(temp);
         console.error(err);
         await interaction.editReply(`${interaction.user.displayName}-san... I do not know what happened. My programming indicated there was an issue but it is unknown to me. The issue is ${err.message}`)
       }
