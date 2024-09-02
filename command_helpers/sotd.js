@@ -7,6 +7,7 @@ const { CronJob } = require('cron');
 const config = require('../config');
 const fs = require('fs');
 const path = require('path');
+const { cleanTemp } = require('../utils/Methods');
 
 exports.MIN_LENGTH = 50;
 exports.DB_NAME = 'sotd';
@@ -174,10 +175,8 @@ exports.selectSong = async () => {
       const preview_url = song.track.preview_url;
       if (preview_url != null) {
         const res = await axios.get(preview_url, { responseType: 'stream' });
-        for (const file of fs.readdirSync(path.join(__dirname, 'temp'))) {
-          fs.unlinkSync(path.join(__dirname, 'temp', file));
-        }
-        const filePath = path.join(__dirname, 'temp', `${song.track.name} [Preview].mp3`);
+        cleanTemp();
+        const filePath = path.join(__dirname, '..', 'temp', `${song.track.name} [Preview].mp3`);
         const writer = fs.createWriteStream(filePath, { autoClose: true });
         res.data.pipe(writer);
         return new Promise((resolve, reject) => {

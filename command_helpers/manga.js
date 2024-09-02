@@ -7,6 +7,7 @@ const db = require('../database/db');
 const config = require('../config');
 const ISO6391 = require('iso-639-1');
 const { CronJob } = require('cron');
+const { cleanTemp } = require('../utils/Methods')
 
 exports.COLLECTION_NAME = 'manga';
 exports.DEFAULT_IMAGE = 'https://i.imgur.com/usdIJxN.png';
@@ -62,13 +63,18 @@ exports.checkToken = async () => {
   }
 }
 
-/** get cover art file path / link given a manga ID and cover art ID. */
+/** 
+ * get cover art file path / link given a manga ID and cover art ID.
+ *  If keep is true file is saved to images/
+ * if keep is false file is saved to temp/ 
+ */
 exports.getCoverArt = async (mangaID, coverID, keep = false) => {
   //const token = await checkToken();
   const data = await axios.get(`https://api.mangadex.org/cover/${coverID}`);
   const filename = data.data.data.attributes.fileName;
   const url = `https://uploads.mangadex.org/covers/${mangaID}/${filename}`;
-  const filePath = keep ? path.join(__dirname, '..', 'images', `${filename}`) : path.join(__dirname, 'temp', `${filename}`);
+  const filePath = keep ? path.join(__dirname, '..', 'images', `${filename}`) : path.join(__dirname, '..', 'temp', `${filename}`);
+  cleanTemp();
   //download image and place in folder
   const res = await axios.get(url, { responseType: 'stream' });
   const writer = fs.createWriteStream(filePath, { autoClose: true, flags: 'w' });

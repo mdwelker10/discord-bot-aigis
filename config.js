@@ -14,3 +14,4 @@ exports.MANGADEX_ISO6391 = {
   'ko-ro': 'Romanized Korean',
   'zh-ro': 'Romanized Chinese'
 }
+exports.TEMP_MAX_LENTH = 50;
