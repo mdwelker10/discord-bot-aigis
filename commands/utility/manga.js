@@ -142,7 +142,11 @@ module.exports = {
           cover = await getCoverArt(data.data.data.id, data.data.data.relationships.filter(rel => rel.type === 'cover_art')[0].id);
           art = Array.isArray(cover) ? cover[0] : cover; //if its an array AttachmentBuilder will be at cover[1]
         }
-        const author = await getMangaAuthor(data.data.data.relationships.filter(rel => rel.type === 'author')[0].id);
+        const author_arr = data.data.data.relationships.filter(rel => rel.type === 'author');
+        let author = 'No listed author';
+        if (author_arr.length > 0) {
+          author = await getMangaAuthor([0].id);
+        }
         let desc = data.data.data.attributes.description;
         if (desc.en && desc.en.length > 0) {
           desc = desc.en;
