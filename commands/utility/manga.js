@@ -144,13 +144,14 @@ module.exports = {
         }
         const author = await getMangaAuthor(data.data.data.relationships.filter(rel => rel.type === 'author')[0].id);
         let desc = data.data.data.attributes.description;
-        if (desc.en) {
+        if (desc.en && desc.en.length > 0) {
           desc = desc.en;
-        } else if (Object.values(desc).length > 0) {
+        } else if (Object.values(desc).length > 0 && Object.values(desc)[0].length > 0) {
           desc = Object.values(desc)[0];
         } else {
           desc = `There is no description for this manga.`;
         }
+        console.info(`Random manga selected: ${data.data.data.id}`);
         const embed = new EmbedBuilder()
           .setTitle(getTitle(data.data.data.attributes))
           .setURL(`https://mangadex.org/title/${data.data.data.id}`)
