@@ -137,7 +137,6 @@ module.exports = {
         let art = null;
         let cover = null;
         if (data.data.data.attributes.contentRating !== 'pornographic') {
-
           cover = await getCoverArt(data.data.data.id, data.data.data.relationships.filter(rel => rel.type === 'cover_art')[0].id);
           art = Array.isArray(cover) ? cover[0] : cover; //if its an array AttachmentBuilder will be at cover[1]
         }

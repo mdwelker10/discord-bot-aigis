@@ -7,7 +7,7 @@ exports.cleanTemp = () => {
   const len = fs.readdirSync(path.join(__dirname, '..', 'temp')).length;
   if (len >= config.TEMP_MAX_LENTH) {
     for (const file of fs.readdirSync(path.join(__dirname, '..', 'temp'))) {
-      fs.unlinkSync(path.join(__dirname, 'temp', file));
+      fs.unlinkSync(path.join(__dirname, '..', 'temp', file));
     }
   }
 }
