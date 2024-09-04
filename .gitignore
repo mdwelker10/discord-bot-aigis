@@ -5,3 +5,5 @@
 **/temp/
 **/logs
 **/images/*
+ai/__pycache__/
+ai/venv/
