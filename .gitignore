@@ -7,3 +7,4 @@
 **/images/*
 ai/__pycache__/
 ai/venv/
+ai/venv_win/

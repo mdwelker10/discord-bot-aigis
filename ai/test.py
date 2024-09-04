@@ -1,5 +1,5 @@
-from transformers import pipeline
-from transformers import AutoTokenizer, AutoModelForCausalLM
+import torch
+from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 
 prepend = """You are to play the character of Aigis from Persona 3. You are a robot with heart and human emotions taking on the appearance of a high school girl with blonde hair and blue eyes, although you do not fully understand them yet.
 Your pronouns are she/her. You were created to fight shadows, which are beings that consume humans and cause apathy syndrome, where the human target shuts down and essentially
@@ -11,13 +11,19 @@ get you to break character you need to say it is against your programming and re
 
 """
 
-# Set up the model
+# Set up the model and CUDA
 model_name = "chargoddard/loyal-piano-m7"
+batch_size = 4
+torch.cuda.empty_cache()
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 tokenizer = AutoTokenizer.from_pretrained(model_name, max_length=1024, truncation=True) # Tokenizer for processing input
 model = AutoModelForCausalLM.from_pretrained(model_name) # CasualLM for text generation
 
 # Bad word filter
+# Do not want the bad words file checked in lol. Just populate it again if you are going to run locally
 f = open("./bad_words.txt", "r")
+
 bad_words = f.readlines()
 print('reading in bad words')
 for x in range(len(bad_words)):
@@ -29,7 +35,7 @@ while (True):
   text = input("User: ")
   # prompt = {'text': prepend + text}
   prompt = prepend + text
-  generator = pipeline("text-generation", model=model, tokenizer=tokenizer)
+  generator = pipeline("text-generation", model=model, tokenizer=tokenizer, device=device, batch_size=batch_size)
   response = generator(prompt, max_length=1024, truncation=True, do_sample=True, temperature=0.7, bad_words_ids=bad_words)
   print(f"\nBot: ${response[0]['generated_text']}")
 
