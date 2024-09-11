@@ -50,10 +50,6 @@ module.exports = {
           option.setName('pornographic')
             .setDescription('Set to true to include pornographic manga. Default is false.')
         )
-    )
-    .addSubcommand(sub =>
-      sub.setName('check')
-        .setDescription('Check for manga updates manually.')
     ),
   async execute(interaction) {
     try {
@@ -177,20 +173,6 @@ module.exports = {
         } else {
           await interaction.editReply({ embeds: [embed] });
         }
-      } else if (subcommand === 'check') {
-        const roles = process.env.ROLE_IDS.split(", ");
-        let persmission = false;
-        for (const role of roles) {
-          if (interaction.member.roles.cache.has(role)) {
-            persmission = true;
-            break;
-          }
-        }
-        if (!persmission) {
-          return await interaction.editReply(`I'm sorry ${interaction.user.displayName}-san, you do not have permission to use this command.`);
-        }
-        await mangaCheck();
-        await interaction.editReply(`I have checked for updates to all manga.`);
       } else {
         await interaction.editReply(`I'm sorry ${username}-san, I do not recognize the command you gave me.`);
       }

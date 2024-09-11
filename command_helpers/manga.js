@@ -198,7 +198,7 @@ exports.startMangaCronJob = async (client) => {
   job = new CronJob(
     '0 0 3,9,15,21 * * *',
     async () => {
-      await exports.mangaCheck();
+      await exports.mangaCheck(client);
     },
     null,
     true,
@@ -210,7 +210,7 @@ exports.stopMangaCronJob = () => {
   job.stop();
 }
 
-exports.mangaCheck = async () => {
+exports.mangaCheck = async (client) => {
   let data = await db.find(config.DB_NAME, exports.COLLECTION_NAME, {});
   for (let manga of data) {
     let ret = {};
