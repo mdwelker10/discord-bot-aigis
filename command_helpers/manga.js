@@ -205,7 +205,7 @@ exports.startMangaCronJob = async (client) => {
           ret = await axios.get(`https://api.mangadex.org/manga/${manga.manga_id}/feed?translatedLanguage[]=${manga.lang}&order[chapter]=desc&limit=1`);
           if (ret.data.data.length === 0) {
             return;
-          } else if (ret.data.data[0].attributes.chapter > manga.latest_chapter_num) {
+          } else if (parseFloat(ret.data.data[0].attributes.chapter) > parseFloat(manga.latest_chapter_num)) {
             const chapter = ret.data.data[0];
             console.info(`New chapter for ${manga.title} in ${exports.getLanguage(manga.lang)} has been released. Sending ping.`);
             //update database with new chapter
@@ -218,7 +218,7 @@ exports.startMangaCronJob = async (client) => {
               ping += `<@${id}>-san `;
             }
             ping += `A new chapter of ${manga.title} in ${exports.getLanguage(manga.lang)} has been released! You can read it ${hyperlink('here', `<${link}>`)}.`;
-            const cover = path.join(__dirname, '..', '..', 'images', manga.cover_art);
+            const cover = path.join(__dirname, '..', 'images', manga.cover_art);
             const image = manga.cover_art === exports.DEFAULT_IMAGE ? exports.DEFAULT_IMAGE : `attachment://${manga.cover_art}`;
             const embed = new EmbedBuilder()
               .setColor(config.EMBED_COLOR)
@@ -229,7 +229,7 @@ exports.startMangaCronJob = async (client) => {
               .setTimestamp();
 
             if (manga.cover_art === exports.DEFAULT_IMAGE) {
-              channel.send({ content: ping, embeds: [embed] });
+              await channel.send({ content: ping, embeds: [embed] });
             } else {
               const file = new AttachmentBuilder(path.resolve(cover));
               await channel.send({ content: ping, embeds: [embed], files: [file] });
