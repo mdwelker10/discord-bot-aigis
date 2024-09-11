@@ -209,7 +209,7 @@ exports.startMangaCronJob = async (client) => {
             const chapter = ret.data.data[0];
             console.info(`New chapter for ${manga.title} in ${exports.getLanguage(manga.lang)} has been released. Sending ping.`);
             //update database with new chapter
-            db.updateOne(config.DB_NAME, COLLECTION_NAME, { manga_id: manga.manga_id, lang: manga.lang }, { $set: { latest_chapter: chapter.id, latest_chapter_num: chapter.attributes.chapter } });
+            db.updateOne(config.DB_NAME, exports.COLLECTION_NAME, { manga_id: manga.manga_id, lang: manga.lang }, { $set: { latest_chapter: chapter.id, latest_chapter_num: chapter.attributes.chapter } });
             //put together ping and embed
             let channel = client.channels.cache.get(config.BOT_CHANNEL_ID);
             let link = `https://mangadex.org/chapter/${chapter.id}`;
