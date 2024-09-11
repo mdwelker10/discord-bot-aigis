@@ -198,52 +198,7 @@ exports.startMangaCronJob = async (client) => {
   job = new CronJob(
     '0 0 3,9,15,21 * * *',
     async () => {
-      let data = await db.find(config.DB_NAME, exports.COLLECTION_NAME, {});
-      for (let manga of data) {
-        let ret = {};
-        try {
-          ret = await axios.get(`https://api.mangadex.org/manga/${manga.manga_id}/feed?translatedLanguage[]=${manga.lang}&order[chapter]=desc&limit=1`);
-          if (ret.data.data.length === 0) {
-            return;
-          } else if (parseFloat(ret.data.data[0].attributes.chapter) > parseFloat(manga.latest_chapter_num)) {
-            const chapter = ret.data.data[0];
-            console.info(`New chapter for ${manga.title} in ${exports.getLanguage(manga.lang)} has been released. Sending ping.`);
-            //update database with new chapter
-            db.updateOne(config.DB_NAME, exports.COLLECTION_NAME, { manga_id: manga.manga_id, lang: manga.lang }, { $set: { latest_chapter: chapter.id, latest_chapter_num: chapter.attributes.chapter } });
-            //put together ping and embed
-            let channel = client.channels.cache.get(config.BOT_CHANNEL_ID);
-            let link = `https://mangadex.org/chapter/${chapter.id}`;
-            let ping = '';
-            for (let id of manga.ping_list) {
-              ping += `<@${id}>-san `;
-            }
-            ping += `A new chapter of ${manga.title} in ${exports.getLanguage(manga.lang)} has been released! You can read it ${hyperlink('here', `<${link}>`)}.`;
-            const cover = path.join(__dirname, '..', 'images', manga.cover_art);
-            const image = manga.cover_art === exports.DEFAULT_IMAGE ? exports.DEFAULT_IMAGE : `attachment://${manga.cover_art}`;
-            const embed = new EmbedBuilder()
-              .setColor(config.EMBED_COLOR)
-              .setTitle(`${manga.title} - Chapter ${chapter.attributes.chapter}`)
-              .addFields({ name: 'Language', value: exports.getLanguage(manga.lang) })
-              .setFooter({ text: 'via Mangadex' })
-              .setImage(image)
-              .setTimestamp();
-
-            if (manga.cover_art === exports.DEFAULT_IMAGE) {
-              await channel.send({ content: ping, embeds: [embed] });
-            } else {
-              const file = new AttachmentBuilder(path.resolve(cover));
-              await channel.send({ content: ping, embeds: [embed], files: [file] });
-            }
-          }
-        } catch (err) {
-          if (err.response && err.response.status === 400) {
-            console.error(`Mangadex error with ${manga.title} in ${exports.getLanguage(manga.lang)}. Details below:\n${JSON.stringify(err.response.data.errors[0])}`);
-            throw new AigisError(`<@${process.env.OWNER_ID}-san, in trying to check for manga updates Mangadex has told me my request is invalid. They say "${err.response.data.errors[0].detail}.`);
-          } else {
-            throw err;
-          }
-        }
-      };
+      await exports.mangaCheck();
     },
     null,
     true,
@@ -255,3 +210,50 @@ exports.stopMangaCronJob = () => {
   job.stop();
 }
 
+exports.mangaCheck = async () => {
+  let data = await db.find(config.DB_NAME, exports.COLLECTION_NAME, {});
+  for (let manga of data) {
+    let ret = {};
+    try {
+      ret = await axios.get(`https://api.mangadex.org/manga/${manga.manga_id}/feed?translatedLanguage[]=${manga.lang}&order[chapter]=desc&limit=1`);
+      if (ret.data.data.length === 0) {
+        return;
+      } else if (parseFloat(ret.data.data[0].attributes.chapter) > parseFloat(manga.latest_chapter_num)) {
+        const chapter = ret.data.data[0];
+        console.info(`New chapter for ${manga.title} in ${exports.getLanguage(manga.lang)} has been released. Sending ping.`);
+        //update database with new chapter
+        await db.updateOne(config.DB_NAME, exports.COLLECTION_NAME, { manga_id: manga.manga_id, lang: manga.lang }, { $set: { latest_chapter: chapter.id, latest_chapter_num: chapter.attributes.chapter } });
+        //put together ping and embed
+        let channel = client.channels.cache.get(config.BOT_CHANNEL_ID);
+        let link = `https://mangadex.org/chapter/${chapter.id}`;
+        let ping = '';
+        for (let id of manga.ping_list) {
+          ping += `<@${id}>-san `;
+        }
+        ping += `A new chapter of ${manga.title} in ${exports.getLanguage(manga.lang)} has been released! You can read it ${hyperlink('here', `<${link}>`)}.`;
+        const cover = path.join(__dirname, '..', 'images', manga.cover_art);
+        const image = manga.cover_art === exports.DEFAULT_IMAGE ? exports.DEFAULT_IMAGE : `attachment://${manga.cover_art}`;
+        const embed = new EmbedBuilder()
+          .setColor(config.EMBED_COLOR)
+          .setTitle(`${manga.title} - Chapter ${chapter.attributes.chapter}`)
+          .addFields({ name: 'Language', value: exports.getLanguage(manga.lang) })
+          .setFooter({ text: 'via Mangadex' })
+          .setImage(image)
+          .setTimestamp();
+        if (manga.cover_art === exports.DEFAULT_IMAGE) {
+          await channel.send({ content: ping, embeds: [embed] });
+        } else {
+          const file = new AttachmentBuilder(path.resolve(cover));
+          await channel.send({ content: ping, embeds: [embed], files: [file] });
+        }
+      }
+    } catch (err) {
+      if (err.response && err.response.status === 400) {
+        console.error(`Mangadex error with ${manga.title} in ${exports.getLanguage(manga.lang)}. Details below:\n${JSON.stringify(err.response.data.errors[0])}`);
+        throw new AigisError(`<@${process.env.OWNER_ID}-san, in trying to check for manga updates Mangadex has told me my request is invalid. They say "${err.response.data.errors[0].detail}.`);
+      } else {
+        throw err;
+      }
+    }
+  };
+}

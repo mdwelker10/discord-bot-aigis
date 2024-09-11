@@ -3,7 +3,7 @@ const axios = require('axios');
 const AigisError = require('../../utils/AigisError');
 const config = require('../../config');
 const ISO6391 = require('iso-639-1');
-const { checkToken, getCoverArt, followManga, getTitle, getLanguage, listManga, unfollowManga, DEFAULT_IMAGE } = require('../../command_helpers/manga');
+const { checkToken, getCoverArt, followManga, getTitle, getLanguage, listManga, unfollowManga, DEFAULT_IMAGE, mangaCheck } = require('../../command_helpers/manga');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -50,6 +50,10 @@ module.exports = {
           option.setName('pornographic')
             .setDescription('Set to true to include pornographic manga. Default is false.')
         )
+    )
+    .addSubcommand(sub =>
+      sub.setName('check')
+        .setDescription('Check for manga updates manually.')
     ),
   async execute(interaction) {
     try {
@@ -173,6 +177,20 @@ module.exports = {
         } else {
           await interaction.editReply({ embeds: [embed] });
         }
+      } else if (subcommand === 'check') {
+        const roles = process.env.ROLE_IDS.split(", ");
+        let persmission = false;
+        for (const role of roles) {
+          if (interaction.member.roles.cache.has(role)) {
+            persmission = true;
+            break;
+          }
+        }
+        if (!persmission) {
+          return await interaction.editReply(`I'm sorry ${interaction.user.displayName}-san, you do not have permission to use this command.`);
+        }
+        await mangaCheck();
+        await interaction.editReply(`I have checked for updates to all manga.`);
       } else {
         await interaction.editReply(`I'm sorry ${username}-san, I do not recognize the command you gave me.`);
       }
