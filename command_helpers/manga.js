@@ -196,7 +196,7 @@ exports.unfollowManga = async (manga_id, lang, user_id) => {
 
 exports.startMangaCronJob = async (client) => {
   job = new CronJob(
-    '0 0 3,9,15,21 * * *',
+    '0 0 */6 * * *',
     async () => {
       await exports.mangaCheck(client);
     },
@@ -212,13 +212,11 @@ exports.stopMangaCronJob = () => {
 
 exports.mangaCheck = async (client) => {
   let data = await db.find(config.DB_NAME, exports.COLLECTION_NAME, {});
-  for (let manga of data) {
+  start: for (let manga of data) {
     let ret = {};
     try {
       ret = await axios.get(`https://api.mangadex.org/manga/${manga.manga_id}/feed?translatedLanguage[]=${manga.lang}&order[chapter]=desc&limit=1`);
-      if (ret.data.data.length === 0) {
-        return;
-      } else if (parseFloat(ret.data.data[0].attributes.chapter) > parseFloat(manga.latest_chapter_num)) {
+      if (parseFloat(ret.data.data[0].attributes.chapter) > parseFloat(manga.latest_chapter_num)) {
         const chapter = ret.data.data[0];
         console.info(`New chapter for ${manga.title} in ${exports.getLanguage(manga.lang)} has been released. Sending ping.`);
         //update database with new chapter
@@ -233,6 +231,7 @@ exports.mangaCheck = async (client) => {
         ping += `A new chapter of ${manga.title} in ${exports.getLanguage(manga.lang)} has been released! You can read it ${hyperlink('here', `<${link}>`)}.`;
         const cover = path.join(__dirname, '..', 'images', manga.cover_art);
         const image = manga.cover_art === exports.DEFAULT_IMAGE ? exports.DEFAULT_IMAGE : `attachment://${manga.cover_art}`;
+        console.log('THE IMAGE IS ', image);
         const embed = new EmbedBuilder()
           .setColor(config.EMBED_COLOR)
           .setTitle(`${manga.title} - Chapter ${chapter.attributes.chapter}`)
@@ -250,7 +249,8 @@ exports.mangaCheck = async (client) => {
     } catch (err) {
       if (err.response && err.response.status === 400) {
         console.error(`Mangadex error with ${manga.title} in ${exports.getLanguage(manga.lang)}. Details below:\n${JSON.stringify(err.response.data.errors[0])}`);
-        throw new AigisError(`<@${process.env.OWNER_ID}-san, in trying to check for manga updates Mangadex has told me my request is invalid. They say "${err.response.data.errors[0].detail}.`);
+        continue start;
+        //  throw new AigisError(`<@${process.env.OWNER_ID}-san, in trying to check for manga updates Mangadex has told me my request is invalid. They say "${err.response.data.errors[0].detail}.`);
       } else {
         throw err;
       }

@@ -2,8 +2,8 @@ require('dotenv').config();
 const fs = require('node:fs');
 const path = require('node:path');
 const { Client, Events, GatewayIntentBits, Collection, ActivityType, PresenceUpdateStatus } = require('discord.js');
-const { initSOTD, startSotdCronJob: startSotdCronJob } = require('./command_helpers/sotd');
-const { startMangaCronJob } = require('./command_helpers/manga');
+const { initSOTD, startSotdCronJob } = require('./command_helpers/sotd');
+const { startMangaCronJob, mangaCheck } = require('./command_helpers/manga');
 const { CronJob } = require('cron');
 
 //list of commands that require deferred replies (longer than 3 seconds)
@@ -38,10 +38,13 @@ client.once(Events.ClientReady, readyClient => {
   console.info(`Ready! Logged in as ${readyClient.user.tag}`);
 });
 
-client.on(Events.MessageCreate, message => {
+client.on(Events.MessageCreate, async (message) => {
   if (message.author.bot) return;
   if (message.content.toLowerCase().includes('aigis')) {
     message.reply(`Did you need me ${message.author.displayName}-san?`);
+  } else if (message.content.toLowerCase().includes('debug manga')) {
+    await mangaCheck(client);
+    message.reply('I have checked for manga updates');
   }
 });
 
