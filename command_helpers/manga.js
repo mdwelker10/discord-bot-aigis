@@ -212,11 +212,13 @@ exports.stopMangaCronJob = () => {
 
 exports.mangaCheck = async (client) => {
   let data = await db.find(config.DB_NAME, exports.COLLECTION_NAME, {});
-  start: for (let manga of data) {
+  for (let manga of data) {
     let ret = {};
     try {
       ret = await axios.get(`https://api.mangadex.org/manga/${manga.manga_id}/feed?translatedLanguage[]=${manga.lang}&order[chapter]=desc&limit=1`);
-      if (parseFloat(ret.data.data[0].attributes.chapter) > parseFloat(manga.latest_chapter_num)) {
+      if (ret.data.data.length === 0) {
+        continue;
+      } else if (parseFloat(ret.data.data[0].attributes.chapter) > parseFloat(manga.latest_chapter_num)) {
         const chapter = ret.data.data[0];
         console.info(`New chapter for ${manga.title} in ${exports.getLanguage(manga.lang)} has been released. Sending ping.`);
         //update database with new chapter
@@ -249,7 +251,7 @@ exports.mangaCheck = async (client) => {
     } catch (err) {
       if (err.response && err.response.status === 400) {
         console.error(`Mangadex error with ${manga.title} in ${exports.getLanguage(manga.lang)}. Details below:\n${JSON.stringify(err.response.data.errors[0])}`);
-        continue start;
+        continue;
         //  throw new AigisError(`<@${process.env.OWNER_ID}-san, in trying to check for manga updates Mangadex has told me my request is invalid. They say "${err.response.data.errors[0].detail}.`);
       } else {
         throw err;
