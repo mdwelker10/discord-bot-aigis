@@ -43,10 +43,10 @@ client.on(Events.MessageCreate, async (message) => {
   if (message.content.toLowerCase().includes('aigis')) {
     message.reply(`Did you need me ${message.author.displayName}-san?`);
   }
-  // else if (message.content.toLowerCase().includes('debug manga')) {
-  //   await mangaCheck(client);
-  //   message.reply('I have checked for manga updates');
-  // }
+  else if (message.content.toLowerCase().includes('debug manga')) {
+    await mangaCheck(client);
+    message.reply('I have checked for manga updates');
+  }
 });
 
 client.on(Events.InteractionCreate, async interaction => {
