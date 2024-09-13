@@ -219,6 +219,7 @@ exports.mangaCheck = async (client) => {
       if (ret.data.data.length === 0) {
         continue;
       } else if (parseFloat(ret.data.data[0].attributes.chapter) > parseFloat(manga.latest_chapter_num)) {
+        console.log(ret.data.data[0]);
         const chapter = ret.data.data[0];
         console.info(`New chapter for ${manga.title} in ${exports.getLanguage(manga.lang)} has been released. Sending ping.`);
         //update database with new chapter
@@ -233,7 +234,6 @@ exports.mangaCheck = async (client) => {
         ping += `A new chapter of ${manga.title} in ${exports.getLanguage(manga.lang)} has been released! You can read it ${hyperlink('here', `<${link}>`)}.`;
         const cover = path.join(__dirname, '..', 'images', manga.cover_art);
         const image = manga.cover_art === exports.DEFAULT_IMAGE ? exports.DEFAULT_IMAGE : `attachment://${manga.cover_art}`;
-        console.log('THE IMAGE IS ', image);
         const embed = new EmbedBuilder()
           .setColor(config.EMBED_COLOR)
           .setTitle(`${manga.title} - Chapter ${chapter.attributes.chapter}`)
