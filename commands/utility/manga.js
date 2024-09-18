@@ -181,9 +181,10 @@ module.exports = {
         if (interaction.user.id !== process.env.OWNER_ID) {
           await interaction.editReply(`I'm sorry ${username}-san, but only developers can stop the manga checks.`);
           return;
+        } else {
+          stopMangaCronJob();
+          await interaction.editReply(`I have stopped the manga checks.`, { ephemeral: true });
         }
-        stopMangaCronJob();
-        await interaction.editReply(`I have stopped the manga checks.`, { ephemeral: true });
       } else {
         await interaction.editReply(`I'm sorry ${username}-san, I do not recognize the command you gave me.`);
       }

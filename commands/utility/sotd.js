@@ -126,12 +126,13 @@ module.exports = {
         }
       }
       else if (interaction.options.getSubcommand() === 'stop') {
-        if (interaction.user.id !== process.env.OWNER_ID) {
+        if (interaction.user.id != process.env.OWNER_ID) {
           await interaction.editReply(`I'm sorry ${username}-san, but only developers can stop the Song of the Day.`);
           return;
+        } else {
+          stopSotdCronJob();
+          await interaction.editReply(`I have stopped the Song of the Day.`, { ephemeral: true });
         }
-        stopSotdCronJob();
-        await interaction.editReply(`I have stopped the Song of the Day.`, { ephemeral: true });
       }
       else {
         await interaction.editReply(`I'm sorry ${interaction.user.displayName}-san, I do not recognize the command you gave me.`)
