@@ -1,3 +1,4 @@
+require('dotenv').config();
 const { SlashCommandBuilder, EmbedBuilder, bold, hyperlink, } = require("discord.js");
 const axios = require('axios');
 const db = require("../../database/db");

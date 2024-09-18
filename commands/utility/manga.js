@@ -3,7 +3,8 @@ const axios = require('axios');
 const AigisError = require('../../utils/AigisError');
 const config = require('../../config');
 const ISO6391 = require('iso-639-1');
-const { checkToken, getCoverArt, followManga, getTitle, getLanguage, listManga, unfollowManga, DEFAULT_IMAGE, mangaCheck, stopMangaCronJob } = require('../../command_helpers/manga');
+require('dotenv').config();
+const { checkToken, getCoverArt, followManga, getTitle, getLanguage, listManga, unfollowManga, DEFAULT_IMAGE, stopMangaCronJob } = require('../../command_helpers/manga');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -186,7 +187,7 @@ module.exports = {
           return;
         } else {
           stopMangaCronJob();
-          await interaction.editReply(`I have stopped the manga checks.`, { ephemeral: true });
+          await interaction.editReply(`I have stopped the manga checks.`);
         }
       } else {
         await interaction.editReply(`I'm sorry ${username}-san, I do not recognize the command you gave me.`);
