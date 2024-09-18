@@ -2,7 +2,7 @@ const { SlashCommandBuilder, EmbedBuilder, bold, hyperlink, } = require("discord
 const axios = require('axios');
 const db = require("../../database/db");
 const AigisError = require('../../utils/AigisError');
-const { insertPlaylist, removePlaylist, checkToken, selectSong } = require('../../command_helpers/sotd');
+const { insertPlaylist, removePlaylist, checkToken, selectSong, stopSotdCronJob } = require('../../command_helpers/sotd');
 const { DB_NAME, MIN_LENGTH } = require('../../command_helpers/sotd');
 const config = require('../../config');
 
@@ -38,6 +38,10 @@ module.exports = {
     .addSubcommand(subcmd =>
       subcmd.setName('help')
         .setDescription('Get help on how to use the Song of The Day command')
+    )
+    .addSubcommand(subcmd =>
+      subcmd.setName('stop')
+        .setDescription('Stop the Song of the Day from running. Developer only.')
     ),
   async execute(interaction) {
     const roles = process.env.ROLE_IDS.split(", ");
@@ -120,6 +124,14 @@ module.exports = {
         } else {
           await interaction.editReply(`I'm sorry ${interaction.user.displayName}-san, but that playlist does not seem to be in the Song of the Day playlists.`);
         }
+      }
+      else if (interaction.options.getSubcommand() === 'stop') {
+        if (interaction.user.id !== config.OWNER_ID) {
+          await interaction.editReply(`I'm sorry ${username}-san, but only developers can stop the Song of the Day.`);
+          return;
+        }
+        stopSotdCronJob();
+        await interaction.editReply(`I have stopped the Song of the Day.`, { ephemeral: true });
       }
       else {
         await interaction.editReply(`I'm sorry ${interaction.user.displayName}-san, I do not recognize the command you gave me.`)

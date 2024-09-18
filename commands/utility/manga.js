@@ -3,7 +3,7 @@ const axios = require('axios');
 const AigisError = require('../../utils/AigisError');
 const config = require('../../config');
 const ISO6391 = require('iso-639-1');
-const { checkToken, getCoverArt, followManga, getTitle, getLanguage, listManga, unfollowManga, DEFAULT_IMAGE, mangaCheck } = require('../../command_helpers/manga');
+const { checkToken, getCoverArt, followManga, getTitle, getLanguage, listManga, unfollowManga, DEFAULT_IMAGE, mangaCheck, stopMangaCronJob } = require('../../command_helpers/manga');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -50,6 +50,10 @@ module.exports = {
           option.setName('pornographic')
             .setDescription('Set to true to include pornographic manga. Default is false.')
         )
+    )
+    .addSubcommand(sub =>
+      sub.setName('stop')
+        .setDescription('Stop the manga checks from occuring. Dev only.')
     ),
   async execute(interaction) {
     try {
@@ -173,6 +177,13 @@ module.exports = {
         } else {
           await interaction.editReply({ embeds: [embed] });
         }
+      } else if (subcommand === 'stop') {
+        if (interaction.user.id !== config.OWNER_ID) {
+          await interaction.editReply(`I'm sorry ${username}-san, but only developers can stop the manga checks.`);
+          return;
+        }
+        stopMangaCronJob();
+        await interaction.editReply(`I have stopped the manga checks.`, { ephemeral: true });
       } else {
         await interaction.editReply(`I'm sorry ${username}-san, I do not recognize the command you gave me.`);
       }
