@@ -126,7 +126,7 @@ module.exports = {
         }
       }
       else if (interaction.options.getSubcommand() === 'stop') {
-        if (interaction.user.id !== config.OWNER_ID) {
+        if (interaction.user.id !== process.env.OWNER_ID) {
           await interaction.editReply(`I'm sorry ${username}-san, but only developers can stop the Song of the Day.`);
           return;
         }
