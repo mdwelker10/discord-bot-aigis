@@ -3,7 +3,6 @@ const axios = require('axios');
 const AigisError = require('../../utils/AigisError');
 const config = require('../../config');
 const ISO6391 = require('iso-639-1');
-require('dotenv').config();
 const { checkToken, getCoverArt, followManga, getTitle, getLanguage, listManga, unfollowManga, DEFAULT_IMAGE, stopMangaCronJob } = require('../../command_helpers/manga');
 
 module.exports = {
@@ -179,9 +178,6 @@ module.exports = {
           await interaction.editReply({ embeds: [embed] });
         }
       } else if (subcommand === 'stop') {
-        console.log(`ID ${interaction.user.id}`);
-        console.log(`Owner ID ${process.env.OWNER_ID}`);
-        console.log(`comparison using ==: ${interaction.user.id == process.env.OWNER_ID}`);
         if (interaction.user.id != process.env.OWNER_ID) {
           await interaction.editReply(`I'm sorry ${username}-san, but only developers can stop the manga checks.`);
           return;
