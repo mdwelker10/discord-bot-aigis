@@ -91,6 +91,14 @@ client.login(token).then(token => {
       }],
       status: PresenceUpdateStatus.Online
     });
+  } else { //prod status
+    client.user.setPresence({
+      activities: [{
+        name: 'Makoto-san',
+        type: ActivityType.Watching
+      }],
+      status: PresenceUpdateStatus.Online
+    });
   }
 });
 

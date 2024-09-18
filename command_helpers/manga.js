@@ -212,16 +212,18 @@ exports.stopMangaCronJob = () => {
 
 exports.mangaCheck = async (client) => {
   let data = await db.find(config.DB_NAME, exports.COLLECTION_NAME, {});
+  console.log(`Data from database: ${JSON.stringify(data)}`);
   for (let manga of data) {
     let ret = {};
     try {
       ret = await axios.get(`https://api.mangadex.org/manga/${manga.manga_id}/feed?translatedLanguage[]=${manga.lang}&order[chapter]=desc&limit=1`);
+      if (ret.data.data.length === 0) {
+        continue;
+      }
       console.log(`Chapter from API: ${ret.data.data[0].attributes.chapter} (parsed: ${parseFloat(ret.data.data[0].attributes.chapter)})`);
       console.log(`Latest chapter from DB: ${manga.latest_chapter_num} (parsed: ${parseFloat(manga.latest_chapter_num)})`);
       console.log(`Comparison result: ${parseFloat(ret.data.data[0].attributes.chapter) > parseFloat(manga.latest_chapter_num)}`);
-      if (ret.data.data.length === 0) {
-        continue;
-      } else if (parseFloat(ret.data.data[0].attributes.chapter) > parseFloat(manga.latest_chapter_num)) {
+      if (parseFloat(ret.data.data[0].attributes.chapter) > parseFloat(manga.latest_chapter_num)) {
         const chapter = ret.data.data[0];
         console.info(`New chapter for ${manga.title} in ${exports.getLanguage(manga.lang)} has been released. Sending ping.`);
         //update database with new chapter
