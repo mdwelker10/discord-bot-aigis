@@ -178,6 +178,9 @@ module.exports = {
           await interaction.editReply({ embeds: [embed] });
         }
       } else if (subcommand === 'stop') {
+        console.log(`ID ${interaction.user.id}`);
+        console.log(`Owner ID ${process.env.OWNER_ID}`);
+        console.log(`comparison using ==: ${interaction.user.id == process.env.OWNER_ID}`);
         if (interaction.user.id != process.env.OWNER_ID) {
           await interaction.editReply(`I'm sorry ${username}-san, but only developers can stop the manga checks.`);
           return;
