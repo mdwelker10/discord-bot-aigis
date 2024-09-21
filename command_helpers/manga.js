@@ -222,12 +222,14 @@ exports.mangaCheck = async (client) => {
       }
       console.log(`Chapter from API: ${ret.data.data[0].attributes.chapter} (parsed: ${parseFloat(ret.data.data[0].attributes.chapter)})`);
       console.log(`Latest chapter from DB: ${manga.latest_chapter_num} (parsed: ${parseFloat(manga.latest_chapter_num)})`);
-      console.log(`Comparison result: ${parseFloat(ret.data.data[0].attributes.chapter) > parseFloat(manga.latest_chapter_num)}`);
       if (parseFloat(ret.data.data[0].attributes.chapter) > parseFloat(manga.latest_chapter_num)) {
         const chapter = ret.data.data[0];
         console.info(`New chapter for ${manga.title} in ${exports.getLanguage(manga.lang)} has been released. Sending ping.`);
         //update database with new chapter
-        await db.updateOne(config.DB_NAME, exports.COLLECTION_NAME, { manga_id: manga.manga_id, lang: manga.lang }, { $set: { latest_chapter: chapter.id, latest_chapter_num: chapter.attributes.chapter } });
+        let res = await db.updateOne(config.DB_NAME, exports.COLLECTION_NAME, { manga_id: manga.manga_id, lang: manga.lang }, { $set: { latest_chapter: chapter.id, latest_chapter_num: chapter.attributes.chapter } });
+        if (res === 0) {
+          console.error(`Could not update database with new chapter for ${manga.title} in ${exports.getLanguage(manga.lang)}.`);
+        }
         //put together ping and embed
         let channel = client.channels.cache.get(config.BOT_CHANNEL_ID);
         let link = `https://mangadex.org/chapter/${chapter.id}`;
