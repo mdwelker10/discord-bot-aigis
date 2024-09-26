@@ -51,6 +51,8 @@ exports.addIndex = async function addIndex(dbName, collectionName, index) {
   } catch (err) {
     console.error(err);
     throw new AigisError('something went wrong with the database, tell Trashpanda-san to check the logs');
+  } finally {
+    await closeConnection();
   }
 }
 
@@ -70,6 +72,8 @@ exports.insert = async function insert(databaseName, collectionName, data) {
   } catch (err) {
     console.error(err);
     throw new AigisError('something went wrong with the database, tell Trashpanda-san to check the logs');
+  } finally {
+    await closeConnection();
   }
 }
 
@@ -84,6 +88,8 @@ exports.findOne = async function findOne(databaseName, collectionName, query) {
   } catch (err) {
     console.error(err);
     throw new AigisError('something went wrong with the database, tell Trashpanda-san to check the logs');
+  } finally {
+    await closeConnection();
   }
 }
 
@@ -113,6 +119,8 @@ exports.updateOne = async function updateOne(databaseName, collectionName, query
   } catch (err) {
     console.error(err);
     throw new AigisError('something went wrong with the database, tell Trashpanda-san to check the logs');
+  } finally {
+    await closeConnection();
   }
 }
 
@@ -127,6 +135,8 @@ exports.updateMany = async function updateMany(databaseName, collectionName, que
   } catch (err) {
     console.error(err);
     throw new AigisError('something went wrong with the database, tell Trashpanda-san to check the logs');
+  } finally {
+    await closeConnection();
   }
 }
 
@@ -141,6 +151,8 @@ exports.deleteOne = async function deleteOne(databaseName, collectionName, query
   } catch (err) {
     console.error(err);
     throw new AigisError('something went wrong with the database, tell Trashpanda-san to check the logs');
+  } finally {
+    await closeConnection();
   }
 }
 
@@ -155,6 +167,8 @@ exports.deleteMany = async function deleteMany(databaseName, collectionName, que
   } catch (err) {
     console.error(err);
     throw new AigisError('something went wrong with the database, tell Trashpanda-san to check the logs');
+  } finally {
+    await closeConnection();
   }
 }
 

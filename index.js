@@ -43,11 +43,11 @@ client.on(Events.MessageCreate, async (message) => {
   if (message.content.toLowerCase().includes('aigis')) {
     message.reply(`Did you need me ${message.author.displayName}-san?`);
   }
-  else if (message.content.toLowerCase().includes('debug manga') && message.author.id == process.env.OWNER_ID) {
-    //this stays in until manga command fully debugged. Manual testing shows its fine but cronjob bugs
-    await mangaCheck(client);
-    message.reply('I have checked for manga updates');
-  }
+  // else if (message.content.toLowerCase().includes('debug manga') && message.author.id == process.env.OWNER_ID) {
+  //   //this stays in until manga command fully debugged. Manual testing shows its fine but cronjob bugs
+  //   await mangaCheck(client);
+  //   message.reply('I have checked for manga updates');
+  // }
 });
 
 client.on(Events.InteractionCreate, async interaction => {

@@ -139,14 +139,14 @@ exports.selectSong = async () => {
       }
       searching = false;
       //update length of playlist in database - does not need to be concurrent
-      db.updateOne(exports.DB_NAME, 'playlists', { 'spotify_id': id }, { $set: { 'length': res.data.total } }, true).then(result => {
+      await db.updateOne(exports.DB_NAME, 'playlists', { 'spotify_id': id }, { $set: { 'length': res.data.total } }, true).then(result => {
         if (res.data.total < exports.MIN_LENGTH) {
           console.error('Playlist ' + id + ' is too short to be used for Song of the Day. It is being removed.');
           exports.removePlaylist(id);
         }
       });
       songs.push(song.track.id);
-      writeData();
+      await writeData();
       //adjust lengths for better display
       let songStr = song.track.name.length > MAX_CHARS ? song.track.name.substring(0, MAX_CHARS) + '...' : song.track.name;
       let albumStr = song.track.album.name.length > MAX_CHARS ? song.track.album.name.substring(0, MAX_CHARS) + '...' : song.track.album.name;
@@ -198,7 +198,7 @@ exports.selectSong = async () => {
   }
 }
 
-function writeData() {
-  db.updateOne(exports.DB_NAME, 'ds', { 'structure': 'playlists' }, { $set: { 'data': playlists.toString() } }, true);
-  db.updateOne(exports.DB_NAME, 'ds', { 'structure': 'songs' }, { $set: { 'data': songs.length == 0 ? '' : songs.join(',') } }, true);
+async function writeData() {
+  await db.updateOne(exports.DB_NAME, 'ds', { 'structure': 'playlists' }, { $set: { 'data': playlists.toString() } }, true);
+  await db.updateOne(exports.DB_NAME, 'ds', { 'structure': 'songs' }, { $set: { 'data': songs.length == 0 ? '' : songs.join(',') } }, true);
 }   

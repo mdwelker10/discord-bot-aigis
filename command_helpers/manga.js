@@ -220,8 +220,6 @@ exports.mangaCheck = async (client) => {
       if (ret.data.data.length === 0) {
         continue;
       }
-      console.log(`Chapter from API: ${ret.data.data[0].attributes.chapter} (parsed: ${parseFloat(ret.data.data[0].attributes.chapter)})`);
-      console.log(`Latest chapter from DB: ${manga.latest_chapter_num} (parsed: ${parseFloat(manga.latest_chapter_num)})`);
       if (parseFloat(ret.data.data[0].attributes.chapter) > parseFloat(manga.latest_chapter_num)) {
         const chapter = ret.data.data[0];
         console.info(`New chapter for ${manga.title} in ${exports.getLanguage(manga.lang)} has been released. Sending ping.`);
