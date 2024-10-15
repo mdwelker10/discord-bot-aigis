@@ -4,6 +4,7 @@ const path = require('node:path');
 const { Client, Events, GatewayIntentBits, Collection, ActivityType, PresenceUpdateStatus } = require('discord.js');
 const { initSOTD, startSotdCronJob } = require('./command_helpers/sotd');
 const { startMangaCronJob, mangaCheck } = require('./command_helpers/manga');
+const { initQueue } = require('./command_helpers/reminder');
 const { CronJob } = require('cron');
 
 //list of commands that require deferred replies (longer than 3 seconds)
@@ -94,7 +95,7 @@ client.login(token).then(token => {
   } else { //prod status
     client.user.setPresence({
       activities: [{
-        name: 'Makoto-san',
+        name: 'The 1s and 0s of AWS',
         type: ActivityType.Watching
       }],
       status: PresenceUpdateStatus.Online
@@ -104,6 +105,10 @@ client.login(token).then(token => {
 
 initSOTD().then(() => {
   console.info('Song of the Day initialized and ready.')
+});
+
+initQueue(client).then(() => {
+  console.info('Reminder queue initialized and ready.');
 });
 
 if (process.env.DEV != 1) {
