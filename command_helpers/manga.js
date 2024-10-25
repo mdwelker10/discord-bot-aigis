@@ -77,7 +77,7 @@ exports.getCoverArt = async (mangaID, coverID, keep = false) => {
   cleanTemp();
   //download image and place in folder
   const res = await axios.get(url, { responseType: 'stream' });
-  const writer = fs.createWriteStream(filePath, { autoClose: true, flags: 'w' });
+  const writer = fs.createWriteStream(filePath, { autoClose: true, flags: 'w+' });
   res.data.pipe(writer);
   return new Promise((resolve, reject) => {
     writer.on('finish', () => {
@@ -196,7 +196,7 @@ exports.unfollowManga = async (manga_id, lang, user_id) => {
 
 exports.startMangaCronJob = async (client) => {
   job = new CronJob(
-    '0 0 */6 * * *',
+    '0 0 */3 * * *',
     async () => {
       await exports.mangaCheck(client);
     },
@@ -212,7 +212,7 @@ exports.stopMangaCronJob = () => {
 
 exports.mangaCheck = async (client) => {
   let data = await db.find(config.DB_NAME, exports.COLLECTION_NAME, {});
-  console.log(`Data from database: ${JSON.stringify(data)}`);
+  //console.log(`Data from database: ${JSON.stringify(data)}`);
   for (let manga of data) {
     let ret = {};
     try {
@@ -221,6 +221,16 @@ exports.mangaCheck = async (client) => {
         continue;
       }
       if (parseFloat(ret.data.data[0].attributes.chapter) > parseFloat(manga.latest_chapter_num)) {
+        //get data again to check for cover art update
+        const updated_data = await axios.get(`https://api.mangadex.org/manga/${manga.manga_id}`);
+        const new_cover = await exports.getCoverArt(manga.manga_id, updated_data.data.data.relationships.filter(rel => rel.type === 'cover_art')[0].id, true);
+        if (new_cover !== manga.cover_art) {
+          //update cover art in database
+          const old_cover = manga.cover_art;
+          await db.updateMany(config.DB_NAME, exports.COLLECTION_NAME, { manga_id: manga.manga_id }, { $set: { cover_art: new_cover } });
+          fs.unlink(path.join(__dirname, '..', 'images', old_cover), () => console.info(`Updated cover art for ${manga.title}`));
+          manga.cover_art = new_cover; //update manga object to reflect new cover art for sending ping
+        }
         const chapter = ret.data.data[0];
         console.info(`New chapter for ${manga.title} in ${exports.getLanguage(manga.lang)} has been released. Sending ping.`);
         //update database with new chapter
