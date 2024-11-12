@@ -52,32 +52,54 @@ client.on(Events.MessageCreate, async (message) => {
 });
 
 client.on(Events.InteractionCreate, async interaction => {
-  if (!interaction.isChatInputCommand()) return;
-
-  //interaction is a command
-  const command = interaction.client.commands.get(interaction.commandName);
-  if (!command) {
-    console.error(`No command named ${interaction.commandName} found`);
-    return;
-  }
-  try {
-    //log command execution
-    let subcommand = interaction.options.getSubcommand(false);
-    let str = `User ${interaction.user.id} executed command: ${interaction.commandName}`
-    str += subcommand ? ` -- with subcommand: ${subcommand}` : '';
-    console.log(str);
-    //execute commands
-    if (long_commands.includes(interaction.commandName)) {
-      await interaction.deferReply(); //defer reply for long commands (longer than 3 seconds)
+  if (interaction.isChatInputCommand()) { //interaction is a command
+    const command = interaction.client.commands.get(interaction.commandName);
+    if (!command) {
+      console.error(`No command named ${interaction.commandName} found`);
+      return;
     }
-    await command.execute(interaction); //execute the command
+    try {
+      //log command execution
+      let subcommand = interaction.options.getSubcommand(false);
+      let str = `User ${interaction.user.id} executed command: ${interaction.commandName}`
+      str += subcommand ? ` -- with subcommand: ${subcommand}` : '';
+      console.log(str);
+      //execute commands
+      if (long_commands.includes(interaction.commandName)) {
+        await interaction.deferReply(); //defer reply for long commands (longer than 3 seconds)
+      }
+      await command.execute(interaction); //execute the command
 
-  } catch (error) {
-    console.error(error);
-    if (interaction.replied || interaction.deferred) {
-      await interaction.followUp({ content: 'There was an error executing this command. Blame the dumb developer that created me.', ephemeral: true });
-    } else {
-      await interaction.reply({ content: 'There was an error executing this command. Blame the dumb developer that created me.', ephemeral: true });
+    } catch (error) {
+      console.error(error);
+      if (interaction.replied || interaction.deferred) {
+        await interaction.followUp({ content: 'There was an error executing this command. Blame Trashpanda-san.', ephemeral: true });
+      } else {
+        await interaction.reply({ content: 'There was an error executing this command. Blame Trashpanda-san.', ephemeral: true });
+      }
+    }
+  } else if (interaction.isAutocomplete()) { //interaction is an autocomplete query
+    const command = interaction.client.commands.get(interaction.commandName);
+    if (!command) {
+      console.error(`No command named ${interaction.commandName} found`);
+      return;
+    }
+    if (!command.autocomplete) {
+      console.error(`No autocomplete function found for command ${interaction.commandName}`);
+      return;
+    }
+    try {
+      //log command execution
+      // let str = `User ${interaction.user.id} executed autocomplete query: ${interaction.commandName}`;
+      // console.log(str);
+      await command.autocomplete(interaction); //execute the command
+    } catch (error) {
+      console.error(error);
+      if (interaction.replied || interaction.deferred) {
+        await interaction.followUp({ content: 'There was an error executing this command. Blame Trashpanda-san.', ephemeral: true });
+      } else {
+        await interaction.reply({ content: 'There was an error executing this command. Blame Trashpanda-san.', ephemeral: true });
+      }
     }
   }
 });

@@ -50,11 +50,36 @@ module.exports = {
           option.setName('pornographic')
             .setDescription('Set to true to include pornographic manga. Default is false.')
         )
+        .addStringOption(option =>
+          option.setName('tag-1')
+            .setDescription('Optional tag to filter the random manga by.')
+            .setAutocomplete(true)
+        )
+        .addStringOption(option =>
+          option.setName('tag-2')
+            .setDescription('Optional tag to filter the random manga by.')
+            .setAutocomplete(true)
+        )
+        .addStringOption(option =>
+          option.setName('tag-3')
+            .setDescription('Optional tag to filter the random manga by.')
+            .setAutocomplete(true)
+        )
     )
     .addSubcommand(sub =>
       sub.setName('stop')
         .setDescription('Stop the manga checks from occuring. Dev only.')
     ),
+  //autocomplete for tags
+  async autocomplete(interaction) {
+    const focusedValue = interaction.options.getFocused();
+    const choices = Object.keys(config.MANGADEX_TAGS);
+    const filteredChoices = choices.filter(choice => choice.toLowerCase().startsWith(focusedValue.toLowerCase()));
+    if (filteredChoices.length > 25) {
+      filteredChoices.length = 25; //25 is the most amount of choices allowed
+    }
+    await interaction.respond(filteredChoices.map(choice => ({ name: choice, value: config.MANGADEX_TAGS[choice] })));
+  },
   async execute(interaction) {
     try {
       const subcommand = interaction.options.getSubcommand();
@@ -66,7 +91,10 @@ module.exports = {
         desc += `The URL will be something like \`mangadex.org/title/6bf844c8-2ce4-401a-a761-3151042efe30\`, and the ID is the part after \`title/\`. You might find some more text after another slash, but disregard that.\n\n`;
         desc += `Also ${username}-san, the language option can be used to specify what language you want to follow the manga in. The default is English so this is optional. `
         desc += `You need to use the ${hyperlink('ISO 639-1 standard', '<https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes>')} for the language code. `;
-        desc += `There are some exceptions listed on ${hyperlink('Mangadex\'s website', '<https://api/mangadex.org/docs/3-enumerations')}.`
+        desc += `There are some exceptions listed on ${hyperlink("Mangadex's website", '<https://api/mangadex.org/docs/3-enumerations')}.`
+        //string for random command description is very long
+        let rand = `Get a random manga from Mangadex with the option to filter by 3 tags using OR logic. To see valid tags visit ${hyperlink("Mangadex's website", '<https://mangadex.org/tag>')}. `
+        rand += 'Set the optional pornographic flag to true to include pronographic manga. By default it is false.'
         const embed = new EmbedBuilder()
           .setTitle('Manga Command Help')
           .setColor(config.EMBED_COLOR)
@@ -77,7 +105,7 @@ module.exports = {
             { name: '/manga follow <manga-id> <language>', value: 'Follow a manga to get pinged for new chapter releases.' },
             { name: '/manga list', value: 'List all manga you are following.' },
             { name: '/manga unfollow <manga-id> <language>', value: 'Unfollow a manga to stop getting pinged for new chapter releases.' },
-            { name: '/manga random <pornographic>', value: 'Get a random manga from Mangadex. Set the optional pornographic flag to true to include pronographic manga. By default it is false.' }
+            { name: '/manga random <tag-1> <tag-2> <tag-3> <pornographic>', value: rand }
           )
           .setTimestamp();
         await interaction.editReply({ embeds: [embed] });
@@ -133,11 +161,36 @@ module.exports = {
         }
       } else if (subcommand === 'random') { //random manga command
         const porn = interaction.options.getBoolean('pornographic') ?? false;
-        let url = 'https://api.mangadex.org/manga/random';
-        if (porn) {
-          url += '?contentRating[]=safe&contentRating[]=suggestive&contentRating[]=erotica&contentRating[]=pornographic';
+        let url = 'https://api.mangadex.org/manga/random?includedTagsMode=OR';
+        //handle tags
+        const tag1 = interaction.options.getString('tag-1') ?? false;
+        const tag2 = interaction.options.getString('tag-2') ?? false;
+        const tag3 = interaction.options.getString('tag-3') ?? false;
+        for (const tag of [tag1, tag2, tag3]) {
+          if (tag) {
+            console.log(`Tag: ${tag}`);
+            url += `&includedTags[]=${tag}`;
+          }
         }
-        const data = await axios.get(url);
+        //handle content rating
+        if (porn) {
+          url += '&contentRating[]=safe&contentRating[]=suggestive&contentRating[]=erotica&contentRating[]=pornographic';
+        }
+        let data;
+        try {
+          data = await axios.get(url);
+        } catch (err) {
+          console.error(err);
+          if (err.response.status) {
+            throw new AigisError(`I'm sorry ${username}-san, I asked Mangadex for a manga and they gave me an error. The code was ${err.response.status}. Please tell Trashpanda-san to check the logs.`);
+          }
+          throw new AigisError(`I'm sorry ${username}-san, I could not get a random manga. There was a problem connecting to Mangadex. You can try again at a later time.`);
+        }
+        // In case there is no ID somehow. It apprently happened once
+        if (!data.data.data.id) {
+          console.log(`Manga with no ID found: ${JSON.stringify(data.data.data)}`);
+          throw new AigisError(`I'm sorry ${username}-san, the manga I received has no ID and I cannot do anything with it. Please try again and maybe "the RNG gods will smile upon us", as they say.`);
+        }
         let art = null;
         let cover = null;
         if (data.data.data.attributes.contentRating !== 'pornographic') {
