@@ -166,8 +166,10 @@ module.exports = {
         const tag1 = interaction.options.getString('tag-1') ?? false;
         const tag2 = interaction.options.getString('tag-2') ?? false;
         const tag3 = interaction.options.getString('tag-3') ?? false;
+        let tagsUsed = []; //for later logging
         for (const tag of [tag1, tag2, tag3]) {
-          if (tag) {
+          if (tag && !tagsUsed.includes(tag) && Object.values(config.MANGADEX_TAGS).includes(tag)) {
+            tagsUsed.push(tag);
             console.log(`Tag: ${tag}`);
             url += `&includedTags[]=${tag}`;
           }
@@ -210,7 +212,7 @@ module.exports = {
         } else {
           desc = `There is no description for this manga.`;
         }
-        console.info(`Random manga selected: ${data.data.data.id}`);
+        console.info(`Random manga selected: ${data.data.data.id}. Tags used: ${tagsUsed.join(', ')}`);
         const embed = new EmbedBuilder()
           .setTitle(getTitle(data.data.data.attributes))
           .setURL(`https://mangadex.org/title/${data.data.data.id}`)
