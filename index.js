@@ -41,9 +41,9 @@ client.once(Events.ClientReady, readyClient => {
 
 client.on(Events.MessageCreate, async (message) => {
   if (message.author.bot) return;
-  if (message.content.toLowerCase().includes('aigis')) {
-    message.reply(`Did you need me ${message.author.displayName}-san?`);
-  }
+  // if (message.content.toLowerCase().includes('aigis')) {
+  //   message.reply(`Did you need me ${message.author.displayName}-san?`);
+  // }
   // else if (message.content.toLowerCase().includes('debug manga') && message.author.id == process.env.OWNER_ID) {
   //   //this stays in until manga command fully debugged. Manual testing shows its fine but cronjob bugs
   //   await mangaCheck(client);

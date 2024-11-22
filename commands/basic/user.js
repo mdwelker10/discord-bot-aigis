@@ -8,6 +8,7 @@ module.exports = {
     // interaction.user is the object representing the User who ran the command
     // interaction.member is the GuildMember object representing the User in the specific guild
     // guild is the term used for a discord server in the docs and API
+    console.log(interaction.guildId, interaction.channelId)
     const month = interaction.member.joinedAt.getMonth();
     const date = interaction.member.joinedAt.getDate();
     const day = interaction.member.joinedAt.getDay();

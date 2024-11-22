@@ -13,7 +13,7 @@ async function createConnection(dbName) {
     } catch (err) {
       console.error(err);
       await client.close();
-      throw new AigisError('something went wrong with opening the database connection. Trashpanda-san will not like this.');
+      throw new AigisError('Something went wrong with opening the database connection. Trashpanda-san will not like this.');
     }
   }
   return database;
@@ -35,7 +35,7 @@ exports.init = async function init(dbName, collectionNames) {
     }
   } catch (err) {
     console.error(err);
-    throw new AigisError('something went wrong with the database, tell Trashpanda-san to check the logs');
+    throw new AigisError('Something went wrong with the database, please report this.');
   } finally {
     await client.close();
   }
@@ -50,7 +50,7 @@ exports.addIndex = async function addIndex(dbName, collectionName, index) {
     const result = await collection.createIndex(index);
   } catch (err) {
     console.error(err);
-    throw new AigisError('something went wrong with the database, tell Trashpanda-san to check the logs');
+    throw new AigisError('Something went wrong with the database, please report this.');
   } finally {
     await closeConnection();
   }
@@ -71,7 +71,7 @@ exports.insert = async function insert(databaseName, collectionName, data) {
     }
   } catch (err) {
     console.error(err);
-    throw new AigisError('something went wrong with the database, tell Trashpanda-san to check the logs');
+    throw new AigisError('Something went wrong with the database, please report this.');
   } finally {
     await closeConnection();
   }
@@ -87,7 +87,7 @@ exports.findOne = async function findOne(databaseName, collectionName, query) {
     return result;
   } catch (err) {
     console.error(err);
-    throw new AigisError('something went wrong with the database, tell Trashpanda-san to check the logs');
+    throw new AigisError('Something went wrong with the database, please report this.');
   } finally {
     await closeConnection();
   }
@@ -102,7 +102,7 @@ exports.find = async function find(databaseName, collectionName, query) {
     return results;
   } catch (err) {
     console.error(err);
-    throw new AigisError('something went wrong with the database, tell Trashpanda-san to check the logs');
+    throw new AigisError('Something went wrong with the database, please report this.');
   } finally {
     await closeConnection();
   }
@@ -118,7 +118,7 @@ exports.updateOne = async function updateOne(databaseName, collectionName, query
     return result.modifiedCount;
   } catch (err) {
     console.error(err);
-    throw new AigisError('something went wrong with the database, tell Trashpanda-san to check the logs');
+    throw new AigisError('Something went wrong with the database, please report this.');
   } finally {
     await closeConnection();
   }
@@ -134,7 +134,7 @@ exports.updateMany = async function updateMany(databaseName, collectionName, que
     return result.modifiedCount;
   } catch (err) {
     console.error(err);
-    throw new AigisError('something went wrong with the database, tell Trashpanda-san to check the logs');
+    throw new AigisError('Something went wrong with the database, please report this.');
   } finally {
     await closeConnection();
   }
@@ -150,7 +150,7 @@ exports.deleteOne = async function deleteOne(databaseName, collectionName, query
     return result.deletedCount;
   } catch (err) {
     console.error(err);
-    throw new AigisError('something went wrong with the database, tell Trashpanda-san to check the logs');
+    throw new AigisError('Something went wrong with the database, please report this.');
   } finally {
     await closeConnection();
   }
@@ -166,7 +166,7 @@ exports.deleteMany = async function deleteMany(databaseName, collectionName, que
     return result.deletedCount;
   } catch (err) {
     console.error(err);
-    throw new AigisError('something went wrong with the database, tell Trashpanda-san to check the logs');
+    throw new AigisError('Something went wrong with the database, please report this.');
   } finally {
     await closeConnection();
   }
