@@ -135,7 +135,7 @@ The following menu can be brought up by Aigis, along with the explanation of man
 - `/manga follow <manga-id> <language>` - Follow a manga to get pinged for new chapter releases.
 - `/manga list` - List all manga you are following.
 - `/manga unfollow <manga-id> <language>` - Unfollow a manga to stop getting pinged for new chapter releases.
-- `/manga random <tag-1> <tag-2> <tag-3> <pornographic>` - Get a random manga from Mangadex withe at least one of the given tags. Pornographic manga excluded by default.
+- `/manga random <tag-1> <tag-2> <tag-3> <pornographic>` - Get a random manga from Mangadex with at least one of the given tags. Pornographic manga excluded by default.
 - `/manga stop` - Stop manga chapter release checks for all servers. Bot developer only. 
 
 
