@@ -151,7 +151,7 @@ One solution to all of these I tried is [Backyard AI](https://backyard.ai/), whi
 
 The problem with Backyard AI is their service is the ability to chat with characters thorugh their interface, not an API, meaning it would be extremely difficult or impossible to integreate it into Aigis.
 
-Below are some screenshots of my brief chat with Aigis on Backyard AI after only some slight tuning and editing of a Makoto Nijima model that was prompted [exactly as you might expect](https://github.com/mdwelker10/discord-bot-aigis/blob/main/attachments/makoto.png)
+Below are some screenshots of my brief chat with Aigis on Backyard AI after only some slight tuning and editing of a Makoto Nijima model I found that was prompted [exactly as you might expect](https://github.com/mdwelker10/discord-bot-aigis/blob/main/attachments/makoto.png).
 
 While not perfect, with enough tuning it could be very good and very fun to interact with, that is if I can find a way to use the methods Backyard AI implements without actually using Backyard AI.
 
