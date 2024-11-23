@@ -89,7 +89,7 @@ In the above link, the playlist ID is `1F0UF9B5AWMy6YzpQx34dV`. The ID will alwa
 ### Command Reference
 The following menu can be brought up by Aigis, along with the explanation of playlist IDs, via the `/sotd help` command.
 
-- `/sotd add-playlist <playlist-id>` - Add a playlist to the list of playlists to select from for Song of the Day. Playlist must have at least 50 songs.
+- `/sotd add-playlist <playlist-id>` - Add a playlist to the list of playlists to select from for Song of the Day. Playlist must have at least 35 songs.
 - `/sotd remove-playlist <playlist-id>` - Remove a playlist from the list of playlists to select from for Song of the Day.
 - `/sotd list-playlists` - List all the playlists that are currently in the list of playlists to select from for Song of the Day.
 - `/sotd select` - Manually select a song for Song of the Day. Used only for testing purposes and currently disabled on non-dev environments.
