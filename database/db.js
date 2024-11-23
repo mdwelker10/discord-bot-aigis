@@ -41,8 +41,10 @@ exports.init = async function init(dbName, collectionNames) {
   }
 }
 
-//create index on specified collection. index will be something like { field_name: 1} for ascending or { field_name: -1 } for descending
-//can have comma separated fields for compoud indexes EX: { field1: 1, field2: -1 }
+/**
+ * create index on specified collection. index will be something like { field_name: 1} for ascending or { field_name: -1 } for descending
+ * can have comma separated fields for compoud indexes EX: { field1: 1, field2: -1 } 
+ */
 exports.addIndex = async function addIndex(dbName, collectionName, index) {
   try {
     const db = await createConnection(dbName);
@@ -55,9 +57,10 @@ exports.addIndex = async function addIndex(dbName, collectionName, index) {
     await closeConnection();
   }
 }
-
-//generic insert function. If "data" is an array, will assume it is inserting multiple documents. Otherwise insert 1 document
-//returns inserted id or ids
+/** 
+ * generic insert function. If "data" is an array, will assume it is inserting multiple documents. Otherwise insert 1 document
+ * returns inserted id or ids 
+ */
 exports.insert = async function insert(databaseName, collectionName, data) {
   try {
     const db = await createConnection(databaseName);
@@ -77,8 +80,10 @@ exports.insert = async function insert(databaseName, collectionName, data) {
   }
 }
 
-//generic findOne function
-//Query would be something like { 'name': 'John' }
+/**
+ * generic findOne function
+ * Query would be something like { 'name': 'John' }
+ */
 exports.findOne = async function findOne(databaseName, collectionName, query) {
   try {
     const db = await createConnection(databaseName);
@@ -93,7 +98,10 @@ exports.findOne = async function findOne(databaseName, collectionName, query) {
   }
 }
 
-//generic find function (find multiple)
+/** 
+ * generic find function (find multiple)
+ * Query would be something like { 'name': 'John' }
+ */
 exports.find = async function find(databaseName, collectionName, query) {
   try {
     const db = await createConnection(databaseName);
@@ -108,13 +116,15 @@ exports.find = async function find(databaseName, collectionName, query) {
   }
 }
 
-//generic update function. Query used to determine what to update, "update" used as the actual update function EX: { $set: { 'count': 50 } }
-//returns newly updated data
-exports.updateOne = async function updateOne(databaseName, collectionName, query, update, upsert = false) {
+/**
+ * generic update function. Filter used to determine what to update, "update" used as the actual update function EX: { $set: { 'count': 50 } }
+ * returns newly updated data. Upsert will insert if no documents match the filter
+ */
+exports.updateOne = async function updateOne(databaseName, collectionName, filter, update, upsert = false) {
   try {
     const db = await createConnection(databaseName);
     const collection = db.collection(collectionName);
-    const result = await collection.updateOne(query, update, { upsert: upsert });
+    const result = await collection.updateOne(filter, update, { upsert: upsert });
     return result.modifiedCount;
   } catch (err) {
     console.error(err);
@@ -124,13 +134,15 @@ exports.updateOne = async function updateOne(databaseName, collectionName, query
   }
 }
 
-//generic update many function. Query used to determine what to update, "update" used as the actual update function EX: { $set: { 'count': 50 } }
-//returns newly updated data
-exports.updateMany = async function updateMany(databaseName, collectionName, query, update, upsert = false) {
+/**
+ * generic update many function. Filter used to determine what to update, "update" used as the actual update function EX: { $set: { 'count': 50 } }
+ * returns newly updated data. Upsert will insert if no documents match the filter
+ */
+exports.updateMany = async function updateMany(databaseName, collectionName, filter, update, upsert = false) {
   try {
     const db = await createConnection(databaseName);
     const collection = db.collection(collectionName);
-    const result = await collection.updateMany(query, update, { upsert: upsert });
+    const result = await collection.updateMany(filter, update, { upsert: upsert });
     return result.modifiedCount;
   } catch (err) {
     console.error(err);
@@ -140,8 +152,28 @@ exports.updateMany = async function updateMany(databaseName, collectionName, que
   }
 }
 
-//generic delete function, deletes one document based on query
-//returns number of documents deleted
+/**
+ * generic replace function. Filter used to determine what to replace, "replacement" is the new document
+ * returns the number of documents that matched the query. Upsert will insert if no documents match the filter
+ */
+exports.replace = async function replaceOne(databaseName, collectionName, filter, replacement, upsert = false) {
+  try {
+    const db = await createConnection(databaseName);
+    const collection = db.collection(collectionName);
+    const result = await collection.replaceOne(filter, replacement, { upsert: upsert });
+    return result.matchedCount;
+  } catch (err) {
+    console.error(err);
+    throw new AigisError('Something went wrong with the database, please report this.');
+  } finally {
+    await closeConnection();
+  }
+}
+
+/**
+ * generic delete function, deletes one document based on query
+ * returns number of documents deleted
+ */
 exports.deleteOne = async function deleteOne(databaseName, collectionName, query) {
   try {
     const db = await createConnection(databaseName);
@@ -156,8 +188,10 @@ exports.deleteOne = async function deleteOne(databaseName, collectionName, query
   }
 }
 
-//generic delete many function, deletes documents based on query
-//returns number of documents deleted
+/**
+ * generic delete many function, deletes documents based on query
+ * returns number of documents deleted
+ */
 exports.deleteMany = async function deleteMany(databaseName, collectionName, query) {
   try {
     const db = await createConnection(databaseName);

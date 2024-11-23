@@ -1,13 +1,20 @@
 const { SlashCommandBuilder, PermissionsBitField, ActionRowBuilder,
   ModalBuilder, TextInputBuilder, TextInputStyle, DiscordAPIError } = require('discord.js');
+const config = require('../../config');
 
 const db = require('../../database/db');
 const SPECIAL_COMMANDS = ['sotd', 'manga'];
+const { getGuildConfig } = require('../../utils/methods');
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('setup')
-    .setDescription('Set up Aigis for your server.'),
+    .setDescription('Set up Aigis for your server.')
+    .addBooleanOption(option =>
+      option.setName('force')
+        .setDescription('Force configuration override')
+        .setRequired(false)
+    ),
   async execute(interaction) {
     const username = interaction.user.displayName;
     //check for permission to set up the bot (anyone with manage server permission)
@@ -53,7 +60,6 @@ module.exports = {
       time: 90000, //timeout after 90 seconds. Required in case user closes modal without submitting
       filter: i => i.user.id === interaction.user.id //only accept modals from user that sent original interaction
     }).catch(error => {
-      console.error('No modal submit interaction was collected');
       return null; //in case theres a time out or user closes modal
     });
 
@@ -83,10 +89,11 @@ module.exports = {
       //special channels can be empty so errors will be shown to user but transaction will still go through
       const specialChannels = submitted.fields.getTextInputValue('specialChannels');
       //parse input
-      const channelMap = new Map();
-      SPECIAL_COMMANDS.forEach(c => channelMap.set(c, defaultChannel));
+      const map = new Map();
+      SPECIAL_COMMANDS.forEach(c => map.set(`channel_${c}`, defaultChannel));
       let errMsg = ''; //will remain empty if no errors
       specialChannels.split('\n').forEach(r => {
+        if (!r || r === '') return;
         const [command, channel] = r.split(':');
         if (command && channel) {
 
@@ -96,7 +103,7 @@ module.exports = {
           } else if (ch == null) {
             errMsg += `Invalid channel ID: ${channel}\n`;
           } else {
-            channelMap.set(command, channel);
+            map.set(`channel_${command}`, channel);
           }
         } else {
           errMsg += `Invalid line format: ${r}\n`;
@@ -114,9 +121,21 @@ module.exports = {
           await submitted.reply({ content: `${username}-san, you really messed up big time. There was an error sending the error message. Please try again.`, ephemeral: true });
         }
       }
-      console.log(`Role ID: ${roleId}\nDefault Channel: ${defaultChannel}\nSpecial Channels: ${JSON.stringify(Object.fromEntries(channelMap))}`);
-      //TODO save to db and configure commands to work with new settings
-      //make database name the guild ID and save in config document
+      map.set('bot_config_roleid', roleId);
+      map.set('channel_default', defaultChannel);
+      map.set('guild_id', guild.id);
+      const force = interaction.options.getBoolean('force') ?? false;
+      //get the config document for the server if it exists.
+      const guildConfig = await getGuildConfig(guild.id);
+      if (!guildConfig || force) {
+        //if no config document exists or force enabled then replace/upsert config document
+        await db.replace(config.DB_NAME, 'config', { guild_id: guild.id }, map, true);
+      } else {
+        //if config document exists and force not enabled then return error
+        return await submitted.reply({ content: `${username}-san, the configuration for this server already exists. Please use the force option to override.`, ephemeral: true });
+      }
+      //send success message
+      await submitted.reply({ content: `The configuration has been set up successfully.`, ephemeral: true });
     }
   }
 };

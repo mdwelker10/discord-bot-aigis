@@ -95,7 +95,7 @@ module.exports = {
               throw err;
             }
             if (err.response.status === 400) {
-              throw new AigisError(`something went wrong getting the Song of the Day. I am not sure what happened. Please tell Trashpanda-san to look at the logs.`);
+              throw new AigisError(`something went wrong getting the Song of the Day. I am not sure what happened. Please tell a developer to look at my logs.`);
             } else if (err.response.status === 404) {
               throw new AigisError(`the playlist selected does not exist on Spotify. Was it deleted?`);
             } else if (err.response.status >= 500) {

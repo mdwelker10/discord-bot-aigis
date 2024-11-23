@@ -1,13 +1,16 @@
 const { REST, Routes } = require('discord.js');
 require('dotenv').config();
 const clientId = process.env.CLIENT_ID;
-const guildId = process.env.GUILD_ID;
 const token = process.env.TOKEN;
 
 const rest = new REST().setToken(token);
 
-rest.put(Routes.applicationGuildCommands(clientId, guildId, { body: [] })).then(() => console.log('deleted')).catch(console.error);
-//rest.put(Routes.applicationGuildCommands(clientId, guildId, "Command ID")).then(() => console.log('deleted')).catch(console.error);
-
-//rest.put(Routes.applicationCommands(clientId, { body: [] })).then(() => console.log('deleted')).catch(console.error);
-//rest.put(Routes.applicationCommands(clientId, "Command ID")).then(() => console.log('deleted')).catch(console.error);
+if (process.env.DEV == '1') {
+  rest.put(Routes.applicationGuildCommands(clientId, process.env.TEST_GUILD, { body: [] })).then(() => console.log('deleted from guild1')).catch(console.error);
+  rest.put(Routes.applicationGuildCommands(clientId, process.env.TEST_GUILD2, { body: [] })).then(() => console.log('deleted from guild2')).catch(console.error);
+  //rest.put(Routes.applicationGuildCommands(clientId, process.env.TEST_GUILD, "CommandID")).then(() => console.log('deleted')).catch(console.error);
+  //rest.put(Routes.applicationGuildCommands(clientId, process.env.TEST_GUILD2, "CommandID")).then(() => console.log('deleted')).catch(console.error);
+} else {
+  rest.put(Routes.applicationCommands(clientId, { body: [] })).then(() => console.log('deleted')).catch(console.error);
+  //rest.put(Routes.applicationCommands(clientId, "CommandID")).then(() => console.log('deleted')).catch(console.error);
+}

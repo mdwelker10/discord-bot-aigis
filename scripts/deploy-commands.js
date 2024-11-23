@@ -5,7 +5,6 @@ Only need to rerun when a command definition (name/description) changes, NOT whe
 require('dotenv').config();
 const { REST, Routes } = require('discord.js');
 const clientId = process.env.CLIENT_ID;
-const guildId = process.env.GUILD_ID;
 const token = process.env.TOKEN;
 const fs = require('node:fs');
 const path = require('node:path');
@@ -38,14 +37,25 @@ const rest = new REST().setToken(token);
 (async () => {
   try {
     console.log(`Started refreshing ${commands.length} application (/) commands.`);
-
-    const data = await rest.put(
-      Routes.applicationGuildCommands(clientId, guildId),
-      //Routes.applicationCommands(clientId),
-      { body: commands },
-    );
-
-    console.log(`Successfully reloaded ${data.length} application (/) commands.`);
+    if (process.env.DEV == '1') { //server config for development
+      console.log('DEVELOPMENT MODE: Deploying to server scope.');
+      const ret = await rest.put(
+        Routes.applicationGuildCommands(clientId, process.env.TEST_GUILD),
+        { body: commands },
+      );
+      console.log(`Successfully reloaded ${ret.length} application (/) commands to server 1.`);
+      const ret2 = await rest.put(
+        Routes.applicationGuildCommands(clientId, process.env.TEST_GUILD_2),
+        { body: commands },
+      );
+      console.log(`Successfully reloaded ${ret2.length} application (/) commands to server 2.`);
+    } else { //global config
+      const data = await rest.put(
+        Routes.applicationCommands(clientId),
+        { body: commands },
+      );
+      console.log(`Successfully reloaded ${data.length} application (/) commands.`);
+    }
   } catch (error) {
     console.error(error);
   }

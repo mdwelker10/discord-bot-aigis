@@ -1,10 +1,6 @@
 exports.EMBED_COLOR = 0xFFC54A;
-exports.BOT_CHANNEL_ID = '810725051036073994';
-exports.SOTD_CHANNEL_ID = '1261501877514928190';
-exports.MANGA_CHANNEL_ID = '810725051036073994';
-exports.GENERAL_CHANNEL_ID = '803893455934849077'
+exports.TEMP_MAX_LENGTH = 50;
 exports.DB_NAME = 'aigis';
-exports.TEMP_MAX_LENTH = 50;
 exports.MANGADEX_ISO6391 = {
   'en': 'English',
   'ja': 'Japanese',

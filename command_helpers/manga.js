@@ -7,7 +7,7 @@ const db = require('../database/db');
 const config = require('../config');
 const ISO6391 = require('iso-639-1');
 const { CronJob } = require('cron');
-const { cleanTemp } = require('../utils/Methods')
+const { cleanTemp, getGuildConfig } = require('../utils/methods')
 
 exports.COLLECTION_NAME = 'manga';
 exports.DEFAULT_IMAGE = 'https://i.imgur.com/usdIJxN.png';
@@ -106,7 +106,7 @@ exports.getLanguage = (lang) => {
   }
 }
 
-exports.followManga = async (manga_id, lang, manga_data, user_id) => {
+exports.followManga = async (guild_id, manga_id, lang, manga_data, user_id) => {
   const title = exports.getTitle(manga_data.attributes, lang);
   //get chapter data
   let ret = {};
@@ -120,14 +120,15 @@ exports.followManga = async (manga_id, lang, manga_data, user_id) => {
       throw err;
     }
   }
+  //ping_list is a map (JSON object) of guild id to a list of user ids
   const existing_data = await db.findOne(config.DB_NAME, exports.COLLECTION_NAME, { manga_id: manga_id, lang: lang });
   //if an entry exists in the database for this manga and this language just edit ping list
   if (existing_data && existing_data.manga_id === manga_id && existing_data.lang === lang) {
-    if (existing_data.ping_list.includes(user_id)) {
+    if (existing_data.ping_list[guild_id] && existing_data.ping_list[guild_id].includes(user_id)) {
       throw new AigisError('you are already following that manga in that language.');
     }
-    //push user id to the ping list
-    await db.updateOne(config.DB_NAME, exports.COLLECTION_NAME, { manga_id: manga_id, lang: lang }, { $push: { ping_list: user_id } });
+    //push user id to the ping list - Use a computed property for name of key
+    await db.updateOne(config.DB_NAME, exports.COLLECTION_NAME, { manga_id: manga_id, lang: lang }, { $push: { [`ping_list.${guild_id}`]: user_id } });
   } else {
     let data = {};
     let cover_file_name = 'https://i.imgur.com/usdIJxN.png';
@@ -143,7 +144,7 @@ exports.followManga = async (manga_id, lang, manga_data, user_id) => {
         latest_chapter: 0,
         latest_chapter_num: -1,
         cover_art: cover_file_name,
-        ping_list: [user_id]
+        ping_list: { [`${guild_id}`]: [user_id] }
       }
     } else {
       const chapter = ret.data.data[0];
@@ -154,7 +155,7 @@ exports.followManga = async (manga_id, lang, manga_data, user_id) => {
         latest_chapter: chapter.id,
         latest_chapter_num: chapter.attributes.chapter,
         cover_art: cover_file_name,
-        ping_list: [user_id]
+        ping_list: { [`${guild_id}`]: [user_id] }
       }
     }
     await db.insert(config.DB_NAME, exports.COLLECTION_NAME, data);
@@ -162,8 +163,8 @@ exports.followManga = async (manga_id, lang, manga_data, user_id) => {
   return title;
 }
 
-exports.listManga = async (user_id) => {
-  let data = await db.find(config.DB_NAME, exports.COLLECTION_NAME, { ping_list: user_id });
+exports.listManga = async (guild_id, user_id) => {
+  let data = await db.find(config.DB_NAME, exports.COLLECTION_NAME, { [`ping_list.${guild_id}`]: user_id });
   let str = '';
   for (const m of data) {
     str += `- ${hyperlink(`${m.title} in ${exports.getLanguage(m.lang)}`, `<https://mangadex.org/title/${m.manga_id}>`)}\n`;
@@ -179,17 +180,17 @@ exports.listManga = async (user_id) => {
   return embed;
 }
 
-exports.unfollowManga = async (manga_id, lang, user_id) => {
+exports.unfollowManga = async (guild_id, manga_id, lang, user_id) => {
   let data = await db.findOne(config.DB_NAME, exports.COLLECTION_NAME, { manga_id: manga_id, lang: lang });
   if (!data) {
     return false;
   }
-  if (data.ping_list.length === 1) {
+  if (Object.keys(data.ping_list).length === 1 && data.ping_list[guild_id].length === 1) {
     await db.deleteOne(config.DB_NAME, exports.COLLECTION_NAME, { manga_id: manga_id, lang: lang });
     fs.unlinkSync(path.join(__dirname, '..', 'images', data.cover_art));
   } else {
     //$pull will remove the specified user id from the ping list
-    await db.updateOne(config.DB_NAME, exports.COLLECTION_NAME, { manga_id: manga_id, lang: lang }, { $pull: { ping_list: user_id } });
+    await db.updateOne(guild_id, exports.COLLECTION_NAME, { manga_id: manga_id, lang: lang }, { $pull: { [`ping_list.${guild_id}`]: user_id } });
   }
   return data.title;
 }
@@ -239,27 +240,39 @@ exports.mangaCheck = async (client) => {
           console.error(`Could not update database with new chapter for ${manga.title} in ${exports.getLanguage(manga.lang)}.`);
         }
         //put together ping and embed
-        let channel = client.channels.cache.get(config.BOT_CHANNEL_ID);
-        let link = `https://mangadex.org/chapter/${chapter.id}`;
-        let ping = '';
-        for (let id of manga.ping_list) {
-          ping += `<@${id}>-san `;
-        }
-        ping += `A new chapter of ${manga.title} in ${exports.getLanguage(manga.lang)} has been released! You can read it ${hyperlink('here', `<${link}>`)}.`;
-        const cover = path.join(__dirname, '..', 'images', manga.cover_art);
-        const image = manga.cover_art === exports.DEFAULT_IMAGE ? exports.DEFAULT_IMAGE : `attachment://${manga.cover_art}`;
-        const embed = new EmbedBuilder()
-          .setColor(config.EMBED_COLOR)
-          .setTitle(`${manga.title} - Chapter ${chapter.attributes.chapter}`)
-          .addFields({ name: 'Language', value: exports.getLanguage(manga.lang) })
-          .setFooter({ text: 'via Mangadex' })
-          .setImage(image)
-          .setTimestamp();
-        if (manga.cover_art === exports.DEFAULT_IMAGE) {
-          await channel.send({ content: ping, embeds: [embed] });
-        } else {
-          const file = new AttachmentBuilder(path.resolve(cover));
-          await channel.send({ content: ping, embeds: [embed], files: [file] });
+        for (let guild_id in manga.ping_list) {
+          const guild_config = await getGuildConfig(guild_id);
+          //get guild config for the manga channel
+          if (!guild_config) {
+            console.error(`Could not find config for guild ${guild_id} when doing manga ping.`);
+            continue;
+          }
+          let channel = client.channels.cache.get(guild_config.channel_manga);
+          if (!channel) {
+            console.error(`Could not find channel for manga in guild ${guild_id}.`);
+            continue;
+          }
+          let link = `https://mangadex.org/chapter/${chapter.id}`;
+          let ping = '';
+          for (let id of manga.ping_list[guild_id]) {
+            ping += `<@${id}>-san `;
+          }
+          ping += `A new chapter of ${manga.title} in ${exports.getLanguage(manga.lang)} has been released! You can read it ${hyperlink('here', `<${link}>`)}.`;
+          const cover = path.join(__dirname, '..', 'images', manga.cover_art);
+          const image = manga.cover_art === exports.DEFAULT_IMAGE ? exports.DEFAULT_IMAGE : `attachment://${manga.cover_art}`;
+          const embed = new EmbedBuilder()
+            .setColor(config.EMBED_COLOR)
+            .setTitle(`${manga.title} - Chapter ${chapter.attributes.chapter}`)
+            .addFields({ name: 'Language', value: exports.getLanguage(manga.lang) })
+            .setFooter({ text: 'via Mangadex' })
+            .setImage(image)
+            .setTimestamp();
+          if (manga.cover_art === exports.DEFAULT_IMAGE) {
+            await channel.send({ content: ping, embeds: [embed] });
+          } else {
+            const file = new AttachmentBuilder(path.resolve(cover));
+            await channel.send({ content: ping, embeds: [embed], files: [file] });
+          }
         }
       }
     } catch (err) {

@@ -4,6 +4,7 @@ const AigisError = require('../../utils/AigisError');
 const config = require('../../config');
 const ISO6391 = require('iso-639-1');
 const { checkToken, getCoverArt, followManga, getTitle, getLanguage, listManga, unfollowManga, DEFAULT_IMAGE, stopMangaCronJob } = require('../../command_helpers/manga');
+const { getGuildConfig } = require('../../utils/methods');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -110,6 +111,11 @@ module.exports = {
           .setTimestamp();
         await interaction.editReply({ embeds: [embed] });
       } else if (subcommand === 'follow') { //follow manga command
+        const cfg = await getGuildConfig(interaction.guildId);
+        if (!cfg) {
+          await interaction.editReply(`I'm sorry ${username}-san, I was unable to retrieve the configuration for this server. Please have somone with the "manage server" permission execute the \`/setup\` command`);
+          return;
+        }
         //const token = await checkToken();
         const lang = interaction.options.getString('language') ?? 'en';
         if (!validateLanguage(lang)) {
@@ -125,7 +131,7 @@ module.exports = {
             await interaction.editReply(`${username}-san, the ID you provided is not for a manga but for ${article} ${manga.data.type}.`);
             return;
           }
-          const manga_title = await followManga(manga_id, lang, manga.data, interaction.user.id);
+          const manga_title = await followManga(interaction.guildId, manga_id, lang, manga.data, interaction.user.id);
           await interaction.editReply(`I have added you to the ping list for ${manga_title} in ${getLanguage(lang)} ${username}-san.`);
         } catch (err) {
           //error handle API responses
@@ -134,7 +140,7 @@ module.exports = {
           }
           if (err.response.status === 403) {
             console.error(err);
-            throw new AigisError(`Mangadex has forbidden me from accessing this manga. I am not sure why. Ask Trashpanda-san to look at the logs.`)
+            throw new AigisError(`Mangadex has forbidden me from accessing this manga. I am not sure why. Ask a developer to look at my logs.`)
           } else if (err.response.status === 404 || err.response.status === 400) {
             await interaction.editReply(`${username}-san, I could not find the manga with an ID of ${interaction.options.getString('manga-id')}, please make sure you are using the correct ID.`);
             return;
@@ -143,9 +149,19 @@ module.exports = {
           }
         }
       } else if (subcommand === 'list') { //list manga command
-        let embed = await listManga(interaction.user.id);
+        const cfg = await getGuildConfig(interaction.guildId);
+        if (!cfg) {
+          await interaction.editReply(`I'm sorry ${username}-san, I was unable to retrieve the configuration for this server. Please have somone with the "manage server" permission execute the \`/setup\` command`);
+          return;
+        }
+        let embed = await listManga(interaction.guildId, interaction.user.id);
         await interaction.editReply({ embeds: [embed] });
       } else if (subcommand === 'unfollow') { //unfollow command
+        const cfg = await getGuildConfig(interaction.guildId);
+        if (!cfg) {
+          await interaction.editReply(`I'm sorry ${username}-san, I was unable to retrieve the configuration for this server. Please have somone with the "manage server" permission execute the \`/setup\` command`);
+          return;
+        }
         //const token = await checkToken();
         const lang = interaction.options.getString('language') ?? 'en';
         const validLang = validateLanguage(lang);
@@ -153,7 +169,7 @@ module.exports = {
           await interaction.editReply(`I'm sorry ${username}-san, the language code of ${interaction.options.getString('language')} is not valid.`);
           return;
         }
-        const result = await unfollowManga(interaction.options.getString('manga-id'), lang, interaction.user.id);
+        const result = await unfollowManga(interaction.guildId, interaction.options.getString('manga-id'), lang, interaction.user.id);
         if (result) {
           await interaction.editReply(`Alright ${username}-san, I have removed you from the ping list for ${result} in ${getLanguage(lang)}.`);
         } else {
@@ -184,7 +200,7 @@ module.exports = {
         } catch (err) {
           console.error(err);
           if (err.response.status) {
-            throw new AigisError(`I'm sorry ${username}-san, I asked Mangadex for a manga and they gave me an error. The code was ${err.response.status}. Please tell Trashpanda-san to check the logs.`);
+            throw new AigisError(`I'm sorry ${username}-san, I asked Mangadex for a manga and they gave me an error. The code was ${err.response.status}. Please tell a developer to check my logs.`);
           }
           throw new AigisError(`I'm sorry ${username}-san, I could not get a random manga. There was a problem connecting to Mangadex. You can try again at a later time.`);
         }

@@ -15,19 +15,12 @@ module.exports = {
       option.setName('message')
         .setDescription('The message to send when the reminder is triggered')
         .setRequired(true)
-    )
-    .addBooleanOption(option =>
-      option.setName('general')
-        .setDescription('Whether to use general (true) or the channel the reminder was set in (false). Default false')
-        .setRequired(false)
     ),
   async execute(interaction) {
     const user = interaction.user.displayName;
     try {
       const time = interaction.options.getString('time');
       const message = interaction.options.getString('message');
-      const bool = interaction.options.getBoolean('channel') ?? false;
-      const channel = bool ? config.GENERAL_CHANNEL_ID : interaction.channel.id;
       const regex = new RegExp(/(?:(\d+)d)?(?:(\d+)h)?(?:(\d+)m)?/, 'g');
       if (!regex.test(time)) {
         return interaction.reply(`I'm sorry ${user}-san, your time parameter does not seem to be formatted properly. 
@@ -42,7 +35,7 @@ module.exports = {
       const delay = ((days * 24 * 60 * 60) + (hours * 60 * 60) + (minutes * 60)) * 1000;
       addItem(
         {
-          channel: channel,
+          channel: interaction.channelId,
           message: message,
           user: interaction.user.id
         },

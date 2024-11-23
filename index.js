@@ -5,10 +5,12 @@ const { Client, Events, GatewayIntentBits, Collection, ActivityType, PresenceUpd
 const { initSOTD, startSotdCronJob } = require('./command_helpers/sotd');
 const { startMangaCronJob, mangaCheck } = require('./command_helpers/manga');
 const { initQueue } = require('./command_helpers/reminder');
-const { CronJob } = require('cron');
+const { getGuildConfig } = require('./utils/methods');
 
 //list of commands that require deferred replies (longer than 3 seconds)
 long_commands = ['ping', 'sotd', 'manga']
+//list of commands that need the server configuration to work
+setup_required = []
 
 // BOT token
 const token = process.env.TOKEN;
@@ -44,11 +46,12 @@ client.on(Events.MessageCreate, async (message) => {
   // if (message.content.toLowerCase().includes('aigis')) {
   //   message.reply(`Did you need me ${message.author.displayName}-san?`);
   // }
-  // else if (message.content.toLowerCase().includes('debug manga') && message.author.id == process.env.OWNER_ID) {
-  //   //this stays in until manga command fully debugged. Manual testing shows its fine but cronjob bugs
-  //   await mangaCheck(client);
-  //   message.reply('I have checked for manga updates');
-  // }
+  if (process.env.DEV == '1' && message.content.toLowerCase().includes('debug manga') && message.author.id == process.env.OWNER_ID) {
+    console.log('Debugging manga...');
+    //For manually testing manga cronjob
+    await mangaCheck(client);
+    message.reply('I have checked for manga updates');
+  }
 });
 
 client.on(Events.InteractionCreate, async interaction => {
@@ -64,18 +67,25 @@ client.on(Events.InteractionCreate, async interaction => {
       let str = `User ${interaction.user.id} executed command: ${interaction.commandName}`
       str += subcommand ? ` -- with subcommand: ${subcommand}` : '';
       console.log(str);
-      //execute commands
-      if (long_commands.includes(interaction.commandName)) {
-        await interaction.deferReply(); //defer reply for long commands (longer than 3 seconds)
+      //defer reply if command could take longer than 3 seconds
+      if (long_commands.includes(interaction.commandName))
+        await interaction.deferReply();
+      //get server configuration if command requires it
+      if (setup_required.includes(interaction.commandName)) {
+        const server = await getGuildConfig(interaction.guildId);
+        if (!server)
+          return await interaction.reply(`I'm sorry ${interaction.user.username}-san, I was unable to retrieve the configuration for this server. Please have somone with the "manage server" permission execute the \`/setup\` command`);
+        return await command.execute(interaction, server); //execute the command passing in server config
       }
+      //execute commands
       await command.execute(interaction); //execute the command
 
     } catch (error) {
       console.error(error);
       if (interaction.replied || interaction.deferred) {
-        await interaction.followUp({ content: 'There was an error executing this command. Blame Trashpanda-san.', ephemeral: true });
+        await interaction.followUp({ content: "There was an error executing this command. This is no fault of my own, please blame a developer.", ephemeral: true });
       } else {
-        await interaction.reply({ content: 'There was an error executing this command. Blame Trashpanda-san.', ephemeral: true });
+        await interaction.reply({ content: 'There was an error executing this command. This is no fault of my own, please blame a developer.', ephemeral: true });
       }
     }
   } else if (interaction.isAutocomplete()) { //interaction is an autocomplete query
@@ -96,9 +106,9 @@ client.on(Events.InteractionCreate, async interaction => {
     } catch (error) {
       console.error(error);
       if (interaction.replied || interaction.deferred) {
-        await interaction.followUp({ content: 'There was an error executing this command. Blame Trashpanda-san.', ephemeral: true });
+        await interaction.followUp({ content: "There was an error executing this command. This is no fault of my own, please blame a developer.", ephemeral: true });
       } else {
-        await interaction.reply({ content: 'There was an error executing this command. Blame Trashpanda-san.', ephemeral: true });
+        await interaction.reply({ content: "There was an error executing this command. This is no fault of my own, please blame a developer.", ephemeral: true });
       }
     }
   }
@@ -139,14 +149,3 @@ if (process.env.DEV != 1) {
   startMangaCronJob(client);
   console.info('Cron job for Manga updates started.');
 }
-
-// job = new CronJob(
-//   '* * * * * *',
-//   () => {
-//     const botdev = client.channels.cache.get('1261541686723739758');
-//     botdev.send(`<@754934858081632376>-san please get ready for the watchparty!`);
-//   },
-//   null,
-//   true,
-//   'America/New_York'
-// );

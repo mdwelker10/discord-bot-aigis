@@ -7,7 +7,7 @@ const { CronJob } = require('cron');
 const config = require('../config');
 const fs = require('fs');
 const path = require('path');
-const { cleanTemp } = require('../utils/Methods');
+const { cleanTemp } = require('../utils/methods');
 
 exports.MIN_LENGTH = 50;
 exports.DB_NAME = 'sotd';
