@@ -91,8 +91,8 @@ module.exports = {
         desc += `You can get it by going to Mangadex and finding the manga you want to follow. `;
         desc += `The URL will be something like \`mangadex.org/title/6bf844c8-2ce4-401a-a761-3151042efe30\`, and the ID is the part after \`title/\`. You might find some more text after another slash, but disregard that.\n\n`;
         desc += `Also ${username}-san, the language option can be used to specify what language you want to follow the manga in. The default is English so this is optional. `
-        desc += `You need to use the ${hyperlink('ISO 639-1 standard', '<https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes>')} for the language code. `;
-        desc += `There are some exceptions listed on ${hyperlink("Mangadex's website", '<https://api/mangadex.org/docs/3-enumerations')}.`
+        desc += `You need to use the ${hyperlink('ISO 639-1 standard', '<https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes>')} for the language code. `;
+        desc += `There are some exceptions listed on ${hyperlink("Mangadex's website", '<https://api.mangadex.org/docs/3-enumerations/')}.`
         //string for random command description is very long
         let rand = `Get a random manga from Mangadex with the option to filter by 3 tags using OR logic. To see valid tags visit ${hyperlink("Mangadex's website", '<https://mangadex.org/tag>')}. `
         rand += 'Set the optional pornographic flag to true to include pronographic manga. By default it is false.'
