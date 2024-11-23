@@ -4,8 +4,9 @@ const axios = require('axios');
 const db = require("../../database/db");
 const AigisError = require('../../utils/AigisError');
 const { insertPlaylist, removePlaylist, checkToken, selectSong, stopSotdCronJob } = require('../../command_helpers/sotd');
-const { DB_NAME, MIN_LENGTH } = require('../../command_helpers/sotd');
+const { PLAYLISTS_COLL_NAME, MIN_LENGTH } = require('../../command_helpers/sotd');
 const config = require('../../config');
+const { getGuildConfig } = require('../../utils/methods');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -35,7 +36,7 @@ module.exports = {
     )
     .addSubcommand(subcmd =>
       subcmd.setName('select')
-        .setDescription('Manually select a song for Song of The Day, mostly to be used for testing'))
+        .setDescription('Manually select a song for Song of The Day.'))
     .addSubcommand(subcmd =>
       subcmd.setName('help')
         .setDescription('Get help on how to use the Song of The Day command')
@@ -45,17 +46,6 @@ module.exports = {
         .setDescription('Stop the Song of the Day from running. Developer only.')
     ),
   async execute(interaction) {
-    const roles = process.env.ROLE_IDS.split(", ");
-    let persmission = false;
-    for (const role of roles) {
-      if (interaction.member.roles.cache.has(role)) {
-        persmission = true;
-        break;
-      }
-    }
-    if (!persmission) {
-      return await interaction.editReply(`I'm sorry ${interaction.user.displayName}-san, you do not have permission to use this command.`);
-    }
     try {
       if (interaction.options.getSubcommand() === 'help') { //help
         let str = `Here is some guidance on how to use the Song of the Day feature ${interaction.user.displayName}-san. I promise it is very easy. Just so you know, the playlist-id is the Spotify ID of the playlist.`;
@@ -77,15 +67,25 @@ module.exports = {
         await interaction.editReply({ embeds: [embed] });
       }
       else if (interaction.options.getSubcommand() === 'list-playlists') { //list playlists
-        let embed = await listPlaylists();
+        const cfg = await getGuildConfig(interaction.guildId);
+        if (!cfg) {
+          await interaction.editReply(`I'm sorry ${username}-san, I was unable to retrieve the configuration for this server. Please have somone with the "manage server" permission execute the \`/setup\` command`);
+          return;
+        }
+        let embed = await listPlaylists(interaction.guildId);
         await interaction.editReply({ embeds: [embed] });
       }
       else if (interaction.options.getSubcommand() === 'select') { //select a song
+        const cfg = await getGuildConfig(interaction.guildId);
+        if (!cfg) {
+          await interaction.editReply(`I'm sorry ${username}-san, I was unable to retrieve the configuration for this server. Please have somone with the "manage server" permission execute the \`/setup\` command`);
+          return;
+        }
         if (process.env.DEV != 1) {
           await interaction.editReply(`${interaction.user.displayName}-san, the testing phase for the Song of the Day is over.`);
         } else {
           try {
-            const arr = await selectSong();
+            const arr = await selectSong(interaction.guildId);
             await interaction.editReply({ embeds: [arr[0]] });
             if (arr[1] != null) {
               interaction.channel.send({ files: [arr[1]] });
@@ -111,14 +111,32 @@ module.exports = {
         }
       }
       else if (interaction.options.getSubcommand() === 'add-playlist') { //add playlist
+        const cfg = await getGuildConfig(interaction.guildId);
+        if (!cfg) {
+          await interaction.editReply(`I'm sorry ${username}-san, I was unable to retrieve the configuration for this server. Please have somone with the "manage server" permission execute the \`/setup\` command`);
+          return;
+        }
+        //check for permission
+        if (!interaction.member.roles.cache.has(cfg['permission_role_id'])) {
+          return await interaction.editReply(`I'm sorry ${interaction.user.displayName}-san, but you do not have the permission for that.`);
+        }
         let pid = interaction.options.getString('playlist-id');
-        let name = await addPlaylist(pid, interaction.user.displayName);
+        let name = await addPlaylist(pid, interaction.user.displayName, interaction.guildId);
         console.log(`${interaction.user.id} added SOTD playlist ${name}`);
         await interaction.editReply(`I have added the playlist "${name}" to the list of Song of the Day playlists ${interaction.user.displayName}-san.`);
       }
       else if (interaction.options.getSubcommand() === 'remove-playlist') { //remove playlist
+        const cfg = await getGuildConfig(interaction.guildId);
+        if (!cfg) {
+          await interaction.editReply(`I'm sorry ${username}-san, I was unable to retrieve the configuration for this server. Please have somone with the "manage server" permission execute the \`/setup\` command`);
+          return;
+        }
+        //check for permission
+        if (!interaction.member.roles.cache.has(cfg['permission_role_id'])) {
+          return await interaction.editReply(`I'm sorry ${interaction.user.displayName}-san, but you do not have the permission for that.`);
+        }
         let pid = interaction.options.getString('playlist-id');
-        let result = await removePlaylist(pid);
+        let result = await removePlaylist(pid, interaction.guildId);
         if (result) {
           console.log(`${interaction.user.id} removed playlist with ID ${pid}`);
           await interaction.editReply(`Alright ${interaction.user.displayName}-san, I have removed the playlist.`);
@@ -126,7 +144,7 @@ module.exports = {
           await interaction.editReply(`I'm sorry ${interaction.user.displayName}-san, but that playlist does not seem to be in the Song of the Day playlists.`);
         }
       }
-      else if (interaction.options.getSubcommand() === 'stop') {
+      else if (interaction.options.getSubcommand() === 'stop') { //stop song of the day selection
         if (interaction.user.id != process.env.OWNER_ID) {
           await interaction.editReply(`I'm sorry ${username}-san, but only developers can stop the Song of the Day.`);
           return;
@@ -150,7 +168,7 @@ module.exports = {
   },
 };
 
-async function addPlaylist(id, name) {
+async function addPlaylist(id, name, guildId) {
   let token = await checkToken();
   try {
     let res = await axios.get(`https://api.spotify.com/v1/playlists/${id}`, {
@@ -169,7 +187,7 @@ async function addPlaylist(id, name) {
     if (data.tracks.total < MIN_LENGTH) {
       throw new AigisError('the playlist needs at least 50 songs, or it is too short to be used for the Song of the Day.');
     }
-    let success = await insertPlaylist(document);
+    let success = await insertPlaylist(document, guildId);
     if (!success) {
       throw new AigisError('that playlist is already in the list of Song of the Day playlists.');
     }
@@ -194,8 +212,9 @@ async function addPlaylist(id, name) {
   }
 }
 
-async function listPlaylists() {
-  let data = await db.find(DB_NAME, 'playlists', {});
+async function listPlaylists(guildId) {
+  let data = await db.find(config.DB_NAME, PLAYLISTS_COLL_NAME, {});
+  data = data.filter(p => p.guild_ids.includes(guildId));
   if (data.length == 0) {
     return new EmbedBuilder()
       .setColor(config.EMBED_COLOR)
@@ -206,6 +225,10 @@ async function listPlaylists() {
   let str = '';
   for (const playlist of data) {
     str += `- ${hyperlink(`${playlist.name} by ${playlist.owner}`, `<https://open.spotify.com/playlist/${playlist.spotify_id}>`)}\n`;
+    if (str.length > 3900) {
+      console.error(`Song of the Day playlists list is too long for guild ${guildId}`);
+      break;
+    }
   }
   const embed = new EmbedBuilder()
     .setColor(config.EMBED_COLOR)

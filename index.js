@@ -2,7 +2,7 @@ require('dotenv').config();
 const fs = require('node:fs');
 const path = require('node:path');
 const { Client, Events, GatewayIntentBits, Collection, ActivityType, PresenceUpdateStatus } = require('discord.js');
-const { initSOTD, startSotdCronJob } = require('./command_helpers/sotd');
+const { startSotdCronJob } = require('./command_helpers/sotd');
 const { startMangaCronJob, mangaCheck } = require('./command_helpers/manga');
 const { initQueue } = require('./command_helpers/reminder');
 const { getGuildConfig } = require('./utils/methods');
@@ -46,9 +46,9 @@ client.on(Events.MessageCreate, async (message) => {
   // if (message.content.toLowerCase().includes('aigis')) {
   //   message.reply(`Did you need me ${message.author.displayName}-san?`);
   // }
-  if (process.env.DEV == '1' && message.content.toLowerCase().includes('debug manga') && message.author.id == process.env.OWNER_ID) {
+  //For manually testing manga cronjob
+  if (process.env.DEV == 1 && message.content.toLowerCase().includes('debug manga') && message.author.id == process.env.OWNER_ID) {
     console.log('Debugging manga...');
-    //For manually testing manga cronjob
     await mangaCheck(client);
     message.reply('I have checked for manga updates');
   }
@@ -133,10 +133,6 @@ client.login(token).then(token => {
       status: PresenceUpdateStatus.Online
     });
   }
-});
-
-initSOTD().then(() => {
-  console.info('Song of the Day initialized and ready.')
 });
 
 initQueue(client).then(() => {

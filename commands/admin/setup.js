@@ -121,7 +121,7 @@ module.exports = {
           await submitted.reply({ content: `${username}-san, you really messed up big time. There was an error sending the error message. Please try again.`, ephemeral: true });
         }
       }
-      map.set('bot_config_roleid', roleId);
+      map.set('permission_role_id', roleId);
       map.set('channel_default', defaultChannel);
       map.set('guild_id', guild.id);
       const force = interaction.options.getBoolean('force') ?? false;

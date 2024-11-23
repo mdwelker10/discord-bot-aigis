@@ -247,8 +247,13 @@ exports.mangaCheck = async (client) => {
             console.error(`Could not find config for guild ${guild_id} when doing manga ping.`);
             continue;
           }
-          let channel = client.channels.cache.get(guild_config.channel_manga);
-          if (!channel) {
+          let channel = null;
+          try {
+            channel = client.channels.cache.get(guild_config.channel_manga);
+            if (!channel) {
+              throw new Error('Channel not found');
+            }
+          } catch (err) {
             console.error(`Could not find channel for manga in guild ${guild_id}.`);
             continue;
           }

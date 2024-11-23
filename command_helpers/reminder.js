@@ -11,8 +11,7 @@ exports.initQueue = async (client) => {
       const ch = client.channels.cache.get(channel);
       return ch.send(`<@${user}>-san, you asked me to remind you: ${message}`);
     } catch (err) {
-      console.error(err);
-      throw err;
+      console.error(`Error processing reminder job: ${err}`);
     }
   });
 }

@@ -37,7 +37,7 @@ const rest = new REST().setToken(token);
 (async () => {
   try {
     console.log(`Started refreshing ${commands.length} application (/) commands.`);
-    if (process.env.DEV == '1') { //server config for development
+    if (process.env.DEV == 1) { //server config for development
       console.log('DEVELOPMENT MODE: Deploying to server scope.');
       const ret = await rest.put(
         Routes.applicationGuildCommands(clientId, process.env.TEST_GUILD),
