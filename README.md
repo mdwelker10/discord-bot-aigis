@@ -19,6 +19,7 @@ I am always open to more feature suggestions. If you have a feature you want you
     - [ISO Language Standard](#iso-language-standard)
     - [Random Manga](#random-manga)
     - [Command Reference](#command-reference-1)
+  - [Halted Feature - LLM Integration](#halted-feature---llm-integration)
 
 ## Setup
 
@@ -42,7 +43,7 @@ The setup screen will have 3 input boxes.
 These settings can all be changed later by running `/setup` again with the `force` option set to `True`. The pop up will only be valid for 90 seconds, so I suggest copying the IDs somewhere beforehand for easy access.
 
 <p align="center">
-<img src="pics/setup.png" alt="isolated" width="350"/>
+<img src="attachments/setup.png" alt="Aigis setup pop up" width="350"/>
 </p>
 
 ## Basic Commands
@@ -137,3 +138,32 @@ The following menu can be brought up by Aigis, along with the explanation of man
 - `/manga random <tag-1> <tag-2> <tag-3> <pornographic>` - Get a random manga from Mangadex withe at least one of the given tags. Pornographic manga excluded by default.
 - `/manga stop` - Stop manga chapter release checks for all servers. Bot developer only. 
 
+
+## Halted Feature - LLM Integration
+In the `ai` folder is the outline of what was supposed to be an LLM that would be prompted to respond to pings/replies to Aigis' messages with a message in her style. This would really bring Aigis to life and would be a ton of fun to play around with in a server. However, multiple problems were encountered with setting this up.
+
+1. I know how to program but know next to nothing about implementing AI/ML stuff.
+2. I do not own the computing resources necessary to run an LLM that would be good enough to be worth implementing. My PC has a Nvidia 2060, fine for gaming but AI is a different beast.
+3. Using cloud-based architecture to host a custom LLM would be far too expensive for me right now.
+4. Using the API of a good LLM such as Chat GPT or Gemeni would also be far too expensive for me right now.
+
+One solution to all of these I tried is [Backyard AI](https://backyard.ai/), which can be used to specifically bring characters to life in a similar way as [Character.ai](https://character.ai/). The difference being that Character.ai is terrible and I was able to get some mild success with Backyard AI.
+
+The problem with Backyard AI is their service is the ability to chat with characters thorugh their interface, not an API, meaning it would be extremely difficult or impossible to integreate it into Aigis.
+
+Below are some screenshots of my brief chat with Aigis on Backyard AI after only some slight tuning and editing of a Makoto Nijima model that was prompted [exactly as you might expect](https://github.com/mdwelker10/discord-bot-aigis/blob/main/attachments/makoto.png)
+
+While not perfect, with enough tuning it could be very good and very fun to interact with, that is if I can find a way to use the methods Backyard AI implements without actually using Backyard AI.
+
+<p align="center">
+<img src="attachments/llm1.jpg" alt="isolated" width="500"/>
+</p>
+<p align="center">
+<img src="attachments/llm2.jpg" alt="isolated" width="500"/>
+</p>
+<p align="center">
+<img src="attachments/llm3.jpg" alt="isolated" width="500"/>
+</p>
+<p align="center">
+<img src="attachments/llm4.jpg" alt="isolated" width="500"/>
+</p>
