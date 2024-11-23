@@ -30,7 +30,7 @@ The first thing to do when Aigis joins would be to run the `/setup` command. Thi
 To properly execute `/setup`, the person doing it should have [developer mode enabled to get channel and role IDs](https://support.discord.com/hc/en-us/articles/206346498-Where-can-I-find-my-User-Server-Message-ID)
 
 The setup screen will have 3 input boxes.
-1. **A role ID to allow a user to run bot configuration commands. There are not many of these at the moment.**
+1. **A role ID to allow a user to run privileged bot commands. There are not many of these at the moment.**
    - Being the server owner does not mean you are exempt from needing the role. The server owner should also have this role.
 2. **A default channel ID for Aigis to send messages in**
    - This does not force her to send all messages in this channel, but messages that are not responses to commands will automatically go there. This could be your dedicated bot channel other bots use.
@@ -84,7 +84,7 @@ To identify playlists, Spotify has an internal ID system. That is how playlists 
 
 `https://open.spotify.com/playlist/1F0UF9B5AWMy6YzpQx34dV?si=279ffe2755f641e9`
 
-In the above link, the song ID is `1F0UF9B5AWMy6YzpQx34dV`. The ID will always be after `playlist/` and before `?`.
+In the above link, the playlist ID is `1F0UF9B5AWMy6YzpQx34dV`. The ID will always be after `playlist/` and before `?`.
 
 ### Command Reference
 The following menu can be brought up by Aigis, along with the explanation of playlist IDs, via the `/sotd help` command.
