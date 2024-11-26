@@ -197,7 +197,7 @@ exports.unfollowManga = async (guild_id, manga_id, lang, user_id) => {
 
 exports.startMangaCronJob = async (client) => {
   job = new CronJob(
-    '0 0 */3 * * *',
+    '0 0 * * * *',
     async () => {
       await exports.mangaCheck(client);
     },
