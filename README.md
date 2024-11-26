@@ -97,7 +97,7 @@ The following menu can be brought up by Aigis, along with the explanation of pla
 
 ## Manga Command
 Aigis can also interact with Mangadex's API to retrive information about manga. This feature is mainly used to track manga releases and receive pings when a new chapter is uploaded.
-- Aigis pings Mangadex for updates once every hour. This could change in the future to be more frequent.
+- Aigis pings Mangadex for updates every 3 hours. This could change in the future to be more frequent.
 
 The announcement for manga chapter releases will happen in the channel set using `manga:<channel ID>` in the `/setup` command.
 
