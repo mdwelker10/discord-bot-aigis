@@ -3,9 +3,9 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { Client, Events, GatewayIntentBits, Collection, ActivityType, PresenceUpdateStatus } = require('discord.js');
 const { startSotdCronJob } = require('./command_helpers/sotd');
-const { startMangaCronJob, mangaCheck } = require('./command_helpers/manga');
+const { startMangaCronJob, mangaCheck } = require('./command_helpers/manga/manga');
 const { initQueue } = require('./command_helpers/reminder');
-const { getGuildConfig } = require('./utils/methods');
+const { getGuildConfig } = require('./utils/utils');
 
 //list of commands that require deferred replies (longer than 3 seconds)
 long_commands = ['ping', 'sotd', 'manga']

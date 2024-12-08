@@ -7,7 +7,7 @@ const { CronJob } = require('cron');
 const config = require('../config');
 const fs = require('fs');
 const path = require('path');
-const { cleanTemp } = require('../utils/methods');
+const { cleanTemp } = require('../utils/utils');
 
 exports.MIN_LENGTH = 35;
 

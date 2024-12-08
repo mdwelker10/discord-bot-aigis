@@ -1,10 +1,26 @@
+/*
+ * TO ADD A NEW WEBSITE TO THE MANGA COMMAND:
+ * 1. Add a new case to the parseID function
+ * 2. Copy the command_helpers/manga/manga-template.js file to a new file and complete all functions
+ * 3. Add a new field entry to the idhelp command
+ * 4. Add a new entry in the websites object in this file and the command_helpers/manga/manga.js file
+ */
 const { SlashCommandBuilder, EmbedBuilder, AttachmentBuilder, hyperlink } = require("discord.js");
 const axios = require('axios');
 const AigisError = require('../../utils/AigisError');
 const config = require('../../config');
 const ISO6391 = require('iso-639-1');
-const { checkToken, getCoverArt, followManga, getTitle, getLanguage, listManga, unfollowManga, DEFAULT_IMAGE, stopMangaCronJob } = require('../../command_helpers/manga');
-const { getGuildConfig } = require('../../utils/methods');
+const { stopMangaCronJob, listManga, unfollowManga, getLanguage } = require('../../command_helpers/manga/manga');
+const { getGuildConfig } = require('../../utils/utils');
+const Mangadex = require('../../command_helpers/manga/mangadex');
+
+const websites = {
+  mangadex: Mangadex,
+  mangapill: require('../../command_helpers/manga/mangapill')
+}
+
+/** Array of websites that takes an ISO language to determine the language of the manga  */
+takesLanguage = ['mangadex'];
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -15,16 +31,20 @@ module.exports = {
         .setDescription('Get help with how to use the manga command.')
     )
     .addSubcommand(sub =>
+      sub.setName('idhelp')
+        .setDescription('Get help with how to get a manga ID from a supported website.')
+    )
+    .addSubcommand(sub =>
       sub.setName('follow')
         .setDescription('Follow a manga to get pinged for new releases.')
         .addStringOption(option =>
           option.setName('manga-id')
-            .setDescription('The Mangadex ID of the manga to follow.')
+            .setDescription('The identifier of the manga to follow.')
             .setRequired(true)
         )
         .addStringOption(option =>
           option.setName('language')
-            .setDescription('The language for the manga using the ISO 639-1 standard. Default is en (English).')
+            .setDescription('The language for the manga using ISO 639-1 standard. Default is English, Mangadex only.')
         )
     )
     .addSubcommand(sub =>
@@ -36,12 +56,12 @@ module.exports = {
         .setDescription('Unfollow a manga to stop getting pinged for new releases.')
         .addStringOption(option =>
           option.setName('manga-id')
-            .setDescription('The Mangadex ID of the manga to unfollow.')
+            .setDescription('The identifier of the manga to unfollow.')
             .setRequired(true)
         )
         .addStringOption(option =>
           option.setName('language')
-            .setDescription('The language you read the manga in using the ISO 639-1 standard. Default is English.')
+            .setDescription('The language for the manga using the ISO 639-1 standard. Default is English, Mangadex Only.')
         )
     )
     .addSubcommand(sub =>
@@ -87,12 +107,11 @@ module.exports = {
       const username = interaction.user.displayName;
       if (subcommand === 'help') { //help 
         let desc = `Here is some guidance on how to use the manga command ${username}-san.\n\n`;
-        desc += `Below are the subcommands you can use. The "manga-id" is the internal ID for the manga that Mangadex uses. `
-        desc += `You can get it by going to Mangadex and finding the manga you want to follow. `;
-        desc += `The URL will be something like \`mangadex.org/title/6bf844c8-2ce4-401a-a761-3151042efe30\`, and the ID is the part after \`title/\`. You might find some more text after another slash, but disregard that.\n\n`;
-        desc += `Also ${username}-san, the language option can be used to specify what language you want to follow the manga in. The default is English so this is optional. `
-        desc += `You need to use the ${hyperlink('ISO 639-1 standard', '<https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes>')} for the language code. `;
-        desc += `There are some exceptions listed on ${hyperlink("Mangadex's website", '<https://api.mangadex.org/docs/3-enumerations/')}.`
+        desc += `Below are the subcommands you can use. The "manga-id" is the internal ID for the manga that the website uses. `
+        desc += `For help identifying the manga ID, and for a list of supported manga websites, please use the command \`/manga idhelp\`.\n\n`
+        desc += `Also ${username}-san, the language option can be used to specify what language you want to follow the manga in, however this feature is only available for Mangadex. The default is English so this is optional. `
+        desc += `To specify a language, you need to use the ${hyperlink('ISO 639-1 standard', '<https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes>')} for the language code, `;
+        desc += `there are also some exceptions listed on ${hyperlink("Mangadex's website", '<https://api.mangadex.org/docs/3-enumerations/')}.`
         //string for random command description is very long
         let rand = `Get a random manga from Mangadex with the option to filter by 3 tags using OR logic. To see valid tags visit ${hyperlink("Mangadex's website", '<https://mangadex.org/tag>')}. `
         rand += 'Set the optional pornographic flag to true to include pronographic manga. By default it is false.'
@@ -103,10 +122,26 @@ module.exports = {
           .setThumbnail('https://i.imgur.com/1lZnFBP.jpeg')
           .addFields(
             { name: '/manga help', value: 'This command showing all Manga commands' },
+            { name: '/manga idhelp', value: 'Get help on how to find the ID for a manga on supported websites.' },
             { name: '/manga follow <manga-id> <language>', value: 'Follow a manga to get pinged for new chapter releases.' },
             { name: '/manga list', value: 'List all manga you are following.' },
             { name: '/manga unfollow <manga-id> <language>', value: 'Unfollow a manga to stop getting pinged for new chapter releases.' },
             { name: '/manga random <tag-1> <tag-2> <tag-3> <pornographic>', value: rand }
+          )
+          .setTimestamp();
+        await interaction.editReply({ embeds: [embed] });
+      } else if (subcommand === 'idhelp') { //idhelp command
+        //build strings for descriptions 
+        let desc = `A Manga's ID is a unique identifier used by each website to identify a manga. Below is a guide on how to retrieve the ID for a manga on each supported website. `;
+        desc += `When you provide an ID for me, I will parse it to figure out which website it belongs to automatically, so you do not need to worry about that. `;
+        const embed = new EmbedBuilder()
+          .setTitle('Manga ID Help')
+          .setColor(config.EMBED_COLOR)
+          .setDescription(desc)
+          .setThumbnail('https://i.imgur.com/dzucMJ9.jpeg') //aigis with glasses. Not hosted by me
+          .addFields(
+            { name: 'Mangadex', value: websites['mangadex'].getIdHelpString() },
+            { name: 'Mangapill', value: websites['mangapill'].getIdHelpString() }
           )
           .setTimestamp();
         await interaction.editReply({ embeds: [embed] });
@@ -116,23 +151,29 @@ module.exports = {
           await interaction.editReply(`I'm sorry ${username}-san, I was unable to retrieve the configuration for this server. Please have somone with the "manage server" permission execute the \`/setup\` command`);
           return;
         }
-        //const token = await checkToken();
-        const lang = interaction.options.getString('language') ?? 'en';
-        if (!validateLanguage(lang)) {
-          await interaction.editReply(`I'm sorry ${username}-san, the language code of ${interaction.options.getString('language')} is not valid.`);
-          return;
-        }
+        //parse the ID and check with the corresponding website if the ID is valid
         try {
           const manga_id = interaction.options.getString('manga-id');
-          const res = await axios.get(`https://api.mangadex.org/manga/${manga_id}`);
-          const manga = res.data;
-          if (manga.data.type !== 'manga') {
-            const article = manga.data.type === 'user' || manga.data.type === 'artist' || manga.data.type === 'author' ? 'an' : 'a';
-            await interaction.editReply(`${username}-san, the ID you provided is not for a manga but for ${article} ${manga.data.type}.`);
+          const website = parseID(manga_id);
+          //ID not valid for any website
+          if (!website) {
+            await interaction.editReply(`${username}-san, the ID you provided is not valid. Please see the /manga idhelp command for guidance on getting the correct ID.`);
             return;
           }
-          const manga_title = await followManga(interaction.guildId, manga_id, lang, manga.data, interaction.user.id);
-          await interaction.editReply(`I have added you to the ping list for ${manga_title} in ${getLanguage(lang)} ${username}-san.`);
+          if (takesLanguage.includes(website)) { //if a language check is required
+            //validate language
+            const lang = interaction.options.getString('language') ?? 'en';
+            if (!validateLanguage(lang)) {
+              await interaction.editReply(`I'm sorry ${username}-san, the language code of ${interaction.options.getString('language')} is not valid.`);
+              return;
+            }
+            const title = await Mangadex.followManga(manga_id, interaction.user.id, interaction.guildId, lang);
+            await interaction.editReply(`I have added you to the ping list for ${title} in ${getLanguage(lang)} on Mangadex ${username}-san.`);
+          } else {
+            //dynamically call other website functions
+            const title = await websites[website].followManga(manga_id, interaction.user.id, interaction.guildId);
+            await interaction.editReply(`I have added you to the ping list for ${title} on Mangapill ${username}-san.`);
+          }
         } catch (err) {
           //error handle API responses
           if (!err.response || !err.response.status) {
@@ -140,7 +181,7 @@ module.exports = {
           }
           if (err.response.status === 403) {
             console.error(err);
-            throw new AigisError(`Mangadex has forbidden me from accessing this manga. I am not sure why. Ask a developer to look at my logs.`)
+            throw new AigisError(`I am forbidden from accessing this manga. I am not sure why. Ask a developer to look at my logs.`)
           } else if (err.response.status === 404 || err.response.status === 400) {
             await interaction.editReply(`${username}-san, I could not find the manga with an ID of ${interaction.options.getString('manga-id')}, please make sure you are using the correct ID.`);
             return;
@@ -162,14 +203,13 @@ module.exports = {
           await interaction.editReply(`I'm sorry ${username}-san, I was unable to retrieve the configuration for this server. Please have somone with the "manage server" permission execute the \`/setup\` command`);
           return;
         }
-        //const token = await checkToken();
         const lang = interaction.options.getString('language') ?? 'en';
         const validLang = validateLanguage(lang);
         if (!validLang) {
           await interaction.editReply(`I'm sorry ${username}-san, the language code of ${interaction.options.getString('language')} is not valid.`);
           return;
         }
-        const result = await unfollowManga(interaction.guildId, interaction.options.getString('manga-id'), lang, interaction.user.id);
+        const result = await unfollowManga(interaction.guildId, interaction.options.getString('manga-id'), interaction.user.id, lang);
         if (result) {
           await interaction.editReply(`Alright ${username}-san, I have removed you from the ping list for ${result} in ${getLanguage(lang)}.`);
         } else {
@@ -205,22 +245,23 @@ module.exports = {
           throw new AigisError(`I'm sorry ${username}-san, I could not get a random manga. There was a problem connecting to Mangadex. You can try again at a later time.`);
         }
         // In case there is no ID somehow. It apprently happened once
-        if (!data.data.data.id) {
-          console.log(`Manga with no ID found: ${JSON.stringify(data.data.data)}`);
+        const manga = data.data.data;
+        if (!manga.id) {
+          console.log(`Manga with no ID found: ${JSON.stringify(manga)}`);
           throw new AigisError(`I'm sorry ${username}-san, the manga I received has no ID and I cannot do anything with it. Please try again and maybe "the RNG gods will smile upon us", as they say.`);
         }
         let art = null;
         let cover = null;
-        if (data.data.data.attributes.contentRating !== 'pornographic') {
-          cover = await getCoverArt(data.data.data.id, data.data.data.relationships.filter(rel => rel.type === 'cover_art')[0].id);
+        if (manga.attributes.contentRating !== 'pornographic') {
+          cover = await Mangadex.getCoverArt(manga.id, manga.relationships.filter(rel => rel.type === 'cover_art')[0].id);
           art = Array.isArray(cover) ? cover[0] : cover; //if its an array AttachmentBuilder will be at cover[1]
         }
-        const author_arr = data.data.data.relationships.filter(rel => rel.type === 'author');
+        const author_arr = manga.relationships.filter(rel => rel.type === 'author');
         let author = 'No listed author';
         if (author_arr.length > 0) {
-          author = await getMangaAuthor(author_arr[0].id);
+          author = await Mangadex.getMangaAuthor(author_arr[0].id);
         }
-        let desc = data.data.data.attributes.description;
+        let desc = manga.attributes.description;
         if (desc.en && desc.en.length > 0) {
           desc = desc.en;
         } else if (Object.values(desc).length > 0 && Object.values(desc)[0].length > 0) {
@@ -228,16 +269,17 @@ module.exports = {
         } else {
           desc = `There is no description for this manga.`;
         }
-        console.info(`Random manga selected: ${data.data.data.id}. Tags used: ${tagsUsed.join(', ')}`);
+        console.info(`Random manga selected: ${manga.id}. Tags used: ${tagsUsed.join(', ')}`);
+        const title = manga.attributes.title[manga.lang] ?? manga.attributes.altTitles[manga.lang] ?? Object.values(manga.attributes.title)[0]
         const embed = new EmbedBuilder()
-          .setTitle(getTitle(data.data.data.attributes))
-          .setURL(`https://mangadex.org/title/${data.data.data.id}`)
+          .setTitle(title)
+          .setURL(`https://mangadex.org/title/${manga.id}`)
           .setDescription(desc)
           .addFields(
             { name: 'Author', value: author },
-            { name: 'Status', value: data.data.data.attributes.status },
-            { name: 'Content Rating', value: data.data.data.attributes.contentRating })
-          .setImage(art ?? DEFAULT_IMAGE) //if no image use default of aigis reading
+            { name: 'Status', value: manga.attributes.status },
+            { name: 'Content Rating', value: manga.attributes.contentRating })
+          .setImage(art ?? config.DEFAULT_MANGA_IMAGE) //if no image use default of aigis reading
           .setColor(config.EMBED_COLOR)
           .setFooter({ text: 'via Mangadex' })
           .setTimestamp();
@@ -278,8 +320,14 @@ function validateLanguage(lang) {
   }
 }
 
-async function getMangaAuthor(authorID) {
-  //const token = await checkToken();
-  const data = await axios.get(`https://api.mangadex.org/author/${authorID}`);
-  return data.data.data.attributes.name;
+function parseID(id) {
+  //mangadex
+  if (id.split('-').length === 5) {
+    return 'mangadex';
+  }
+  //mangapill
+  if (id.split('/').length === 2) {
+    return 'mangapill';
+  }
+  return null;
 }

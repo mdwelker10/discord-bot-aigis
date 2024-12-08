@@ -4,7 +4,7 @@ const config = require('../../config');
 
 const db = require('../../database/db');
 const SPECIAL_COMMANDS = ['sotd', 'manga'];
-const { getGuildConfig } = require('../../utils/methods');
+const { getGuildConfig } = require('../../utils/utils');
 
 module.exports = {
   data: new SlashCommandBuilder()
