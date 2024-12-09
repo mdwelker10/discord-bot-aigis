@@ -96,22 +96,27 @@ The following menu can be brought up by Aigis, along with the explanation of pla
 - `/sotd stop` - Stop the Song of the Day selection for all servers. Bot developer only.
 
 ## Manga Command
-Aigis can also interact with Mangadex's API to retrive information about manga. This feature is mainly used to track manga releases and receive pings when a new chapter is uploaded.
-- Aigis pings Mangadex for updates every 3 hours. This could change in the future to be more frequent.
+Aigis can also interact with various manga websites to retrive information about manga. This feature is mainly used to track manga releases and receive pings when a new chapter is uploaded.
+- Aigis pings for updates once every hour. This could change in the future.
 
 The announcement for manga chapter releases will happen in the channel set using `manga:<channel ID>` in the `/setup` command.
 
 Since the manga command is implemented on a user basis instead of a server basis like Song of the Day, there are no privileged subcommands.
 
 ### Manga IDs
-Similar to how Spotify uses playlist IDs to identify playlists, Mangadex uses manga IDs to identify manga. To get the ID of a manga, navigate to it on Mangadex as if you were going to read it (but do not open any chapters). The URL should look something like the following:
+Similar to how Spotify uses playlist IDs to identify playlists, manga websites use manga IDs to identify manga. Getting the ID of a manga is different depending on the website, and some websites do not use IDs unique enough to differentiate them from other websites based on ID alone.
 
-`https://mangadex.org/title/2e0fdb3b-632c-4f8f-a311-5b56952db647/bocchi-the-rock`
+The `/manga idhelp` command should be the go-to documentation for how to retrive the ID of a manga for a website. If a website is not listed, then it is not supported. If you need futher clarification on getting the manga ID right, or need help, open an issue or message me on Discord.
 
-The manga's ID in this case is `2e0fdb3b-632c-4f8f-a311-5b56952db647`
+If you would like to request a manga website to be supported, you can create an issue, message me on discord, or code it yourself and create a pull request (I need to set the repository up to allow pull requests from forks so if you code it for now just message me).
+
+Instructions for adding a new manga are in [the main Manga command file](https://github.com/mdwelker10/discord-bot-aigis/blob/978d12fee44197e76a01ff09af9e67a50baec33c/commands/feature/manga.js), but most of the process is filling out the functions defined in the [Manga Template file](https://github.com/mdwelker10/discord-bot-aigis/blob/main/command_helpers/manga/manga-template.js).
 
 ### ISO Language Standard
 When following a manga, you can specify what language you want to follow the manga in using the correlating [ISO 639 language code](https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes). The language parameter is optional and will default to English if not included. Note that there is no check to determine if any chapter releases contain the specified language (or if there are even any chapter releases at all for that matter).
+
+This feature is not available for every manga website. If you follow a manga on a website that does not support language variants, then the language parameter is ignored even if you provide it. The websites below support language variants:
+- Mangadex
 
 It is worth mentioning that Mangadex has some codes not defined by the standard that can be found [here](https://api.mangadex.org/docs/3-enumerations/). These are mostly language variants (like Latin-American Spanish) or Romanized languages (like Romanized Japanese).
 
@@ -127,11 +132,12 @@ The command can take up to 3 tags. The list of valid tags can be found [here](ht
 
 The tags are used with **OR logic**. This means if you use 2 tags the chosen manga is guaranteed to have at least one of them, but not both. Although it is possible it will have both.
 
-Aigis will attempt to display the title and description in English, but if English is unavailable will either display them in the native language or just say the title/description is unavailable.
+Aigis will attempt to display the title and description in English, but if English is unavailable she will either display it in the manga's native language or just say the title/description is unavailable.
 
 ### Command Reference
-The following menu can be brought up by Aigis, along with the explanation of manga IDs and language codes, via the `/manga help` command.
+The following menu can be brought up by Aigis, along with the explanation of the command basics and language codes, via the `/manga help` command.
 
+- `/manga idhelp` - The command that documents what to use for a manga's ID for each supported website.
 - `/manga follow <manga-id> <language>` - Follow a manga to get pinged for new chapter releases.
 - `/manga list` - List all manga you are following.
 - `/manga unfollow <manga-id> <language>` - Unfollow a manga to stop getting pinged for new chapter releases.
