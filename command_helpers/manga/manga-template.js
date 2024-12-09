@@ -19,6 +19,7 @@ exports.getIdHelpString = () => {
 
 /**
  * If a database entry for the manga does not exist, create one. If one does exist add this user to the ping list
+ * Uses the insertManga function from manga-general.js to insert the manga into the database
  * @param {String} manga_id The ID of the manga to follow
  * @param {String} user_id The user ID of the person following the manga
  * @param {String} guild_id The guild ID of the user following the manga
@@ -27,18 +28,18 @@ exports.getIdHelpString = () => {
  */
 exports.followManga = async (manga_id, user_id, guild_id, lang = 'en') => {
   /**
-   * Retrieve the manga information from the website and insert it into the database.
-   * This function should check if the manga exists on the website
+   * Retrieve the manga information from the website and create an object to be saved to the database.
+   * This function should check if the manga exists on the website and throw an AigisError with an appropriate message if it does not.
    * 
    * Do not save the manga to the database in this function, instead call the imported insertManga function.
-   * This function takes an object with manga info, which is defined below.
+   * the insertManga function takes an object with manga info, which is defined below.
    * 
-   * Set the following variables and end this function with the code below:
+   * Set the following variables and end this function with the code below
    * - title: The title of the manga
    * - latest_chapter: The ID of the latest chapter
    * - latest_chapter_num: The number of the latest chapter
    * - art: The filename of the cover art, not the whole path
-   * - website: The name of the website
+   * - website: The name of the website. This can (and should) be all lowercase with dashes or underscores separating words
    * 
    * leave ping_list as it is, it will be updated in the insertManga function if needed
    */
@@ -63,7 +64,7 @@ exports.followManga = async (manga_id, user_id, guild_id, lang = 'en') => {
 getCoverArt = async (params) => {
   /*
     Retrieve cover art for a manga. Parameters vary based on how the image needs to be retrieved.
-    If web scraping is being used, a single parameter of the HTML of the manga page should suffice.
+    If web scraping with Cheerio is being used, a single parameter of the HTML of the manga page should suffice.
     If the image cannot be retrieved, return config.DEFAULT_MANGA_IMAGE.
     Should be used only in this file, but is a very nice helper function to have.
   */
@@ -78,7 +79,7 @@ getCoverArt = async (params) => {
  * }
  * No database updates take place in this function. If there is a cover art update, it will not be acknowledged until a new chapter is released.
  * @param {*} manga The manga object retrieved from the database of the manga to check for updates
- * @returns {*} A manga object with fields for the latest chapter ID, latest chapter number, and latest cover art if there is a new chapter, otherwise null
+ * @returns {Promise<*>} A manga object with fields for the latest chapter ID, latest chapter number, and latest cover art if there is a new chapter, otherwise null
  */
 exports.checkForUpdates = async (manga) => {
   /*
@@ -97,9 +98,9 @@ exports.checkForUpdates = async (manga) => {
     }
 
     Retrieve the most recent chapter number and link from the website. 
-    If chapter number is new also check for updated cover art and return the object in noted docstring.
-    If there are no updates return null
-    Do not handle removing the old cover art image and updating the database, that is done in the manga.js cronjob execute function
+    If chapter number indicates the chapter is new, also check for updated cover art and return the object in noted docstring.
+    If there is no chapter update return null
+    Do not handle removing the old cover art image and updating the database with new chapter info, that is done in the manga.js cronjob execute function
   */
 }
 
