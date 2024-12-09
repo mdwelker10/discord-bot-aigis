@@ -16,7 +16,9 @@ let job; //cronjob object
 
 const websites = {
   mangadex: require('./mangadex'),
-  mangapill: require('./mangapill')
+  mangapill: require('./mangapill'),
+  mangakakalot: require('./mangakakalot'),
+  manganato: require('./manganato'),
 }
 
 exports.startMangaCronJob = async (client) => {
@@ -117,9 +119,9 @@ exports.listManga = async (guild_id, user_id) => {
     try {
       const link = websites[m.website].generateMangaLink(m.manga_id);
       if (m.lang !== 'en') {
-        str += `- ${hyperlink(`${m.title} on ${websites[m.website].NAME} in ${exports.getLanguage(m.lang)}`, `<${link}>`)}\n`;
+        str += `- ${hyperlink(`${m.title}`, `<${link}>`)} on ${websites[m.website].NAME} in ${exports.getLanguage(m.lang)}\n`;
       } else {
-        str += `- ${hyperlink(`${m.title} on ${websites[m.website].NAME}`, `<${link}>`)}\n`;
+        str += `- ${hyperlink(`${m.title}`, `<${link}>`)} on ${websites[m.website].NAME}\n`;
       }
     } catch (err) {
       console.error(`Could not generate link for ${m.title} on ${m.website} in ${m.lang}.`);
@@ -145,9 +147,9 @@ exports.unfollowManga = async (guild_id, manga_id, user_id, lang = 'en') => {
   }
   if (Object.keys(data.ping_list).length === 1 && data.ping_list[guild_id].length === 1) {
     await db.deleteOne(config.DB_NAME, exports.COLLECTION_NAME, { manga_id: manga_id, lang: lang });
-    const path = path.join(__dirname, '..', 'images', data.cover_art);
-    if (fs.existsSync(path)) {
-      fs.unlink(path);
+    const fp = path.join(__dirname, '..', '..', 'images', data.cover_art);
+    if (fs.existsSync(fp)) {
+      fs.unlinkSync(fp);
     }
   } else {
     //$pull will remove the specified user id from the ping list

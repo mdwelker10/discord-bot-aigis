@@ -16,7 +16,9 @@ const Mangadex = require('../../command_helpers/manga/mangadex');
 
 const websites = {
   mangadex: Mangadex,
-  mangapill: require('../../command_helpers/manga/mangapill')
+  mangapill: require('../../command_helpers/manga/mangapill'),
+  mangakakalot: require('../../command_helpers/manga/mangakakalot'),
+  manganato: require('../../command_helpers/manga/manganato'),
 }
 
 /** Array of websites that takes an ISO language to determine the language of the manga  */
@@ -141,7 +143,9 @@ module.exports = {
           .setThumbnail('https://i.imgur.com/dzucMJ9.jpeg') //aigis with glasses. Not hosted by me
           .addFields(
             { name: 'Mangadex', value: websites['mangadex'].getIdHelpString() },
-            { name: 'Mangapill', value: websites['mangapill'].getIdHelpString() }
+            { name: 'Mangapill', value: websites['mangapill'].getIdHelpString() },
+            { name: 'Mangakakalot', value: websites['mangakakalot'].getIdHelpString() },
+            { name: 'Manganato', value: websites['manganato'].getIdHelpString() }
           )
           .setTimestamp();
         await interaction.editReply({ embeds: [embed] });
@@ -167,12 +171,12 @@ module.exports = {
               await interaction.editReply(`I'm sorry ${username}-san, the language code of ${interaction.options.getString('language')} is not valid.`);
               return;
             }
-            const title = await Mangadex.followManga(manga_id, interaction.user.id, interaction.guildId, lang);
-            await interaction.editReply(`I have added you to the ping list for ${title} in ${getLanguage(lang)} on Mangadex ${username}-san.`);
+            const title = await websites[website].followManga(manga_id, interaction.user.id, interaction.guildId, lang);
+            await interaction.editReply(`I have added you to the ping list for ${title} in ${getLanguage(lang)} on ${websites[website].NAME} ${username}-san.`);
           } else {
             //dynamically call other website functions
             const title = await websites[website].followManga(manga_id, interaction.user.id, interaction.guildId);
-            await interaction.editReply(`I have added you to the ping list for ${title} on Mangapill ${username}-san.`);
+            await interaction.editReply(`I have added you to the ping list for ${title} on ${websites[website].NAME} ${username}-san.`);
           }
         } catch (err) {
           //error handle API responses
@@ -328,6 +332,14 @@ function parseID(id) {
   //mangapill
   if (id.split('/').length === 2) {
     return 'mangapill';
+  }
+  //mangakakalot
+  if (id.includes('kakalot') && id.split('-').length === 2) {
+    return 'mangakakalot';
+  }
+  //manganato
+  if (id.includes('nato') && id.split('-').length === 2) {
+    return 'manganato';
   }
   return null;
 }

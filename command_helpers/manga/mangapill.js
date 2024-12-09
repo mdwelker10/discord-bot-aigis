@@ -4,6 +4,7 @@ const { downloadImage } = require('../../utils/utils');
 const cheerio = require('cheerio');
 const { insertManga } = require('./manga-general');
 const config = require('../../config');
+const AigisError = require('../../utils/AigisError');
 
 /** The display name of the website */
 exports.NAME = 'Mangapill';
@@ -13,8 +14,8 @@ exports.NAME = 'Mangapill';
  * @returns {String} A string with the help message for how to get the Manga ID for a manga on this website
  */
 exports.getIdHelpString = () => {
-  let mangapill = `Navigate to the overview page of the manga you wish to follow. The URL will look something like \`https://mangapill.com/manga/601/boku-no-hero-academia\`. `;
-  mangapill += `Both the ID and the title are required. So in this case, you would enter "601/boku-no-hero-academia" as the ID in commands.`;
+  let mangapill = 'Navigate to the overview page of the manga you wish to follow. The URL will look something like https://mangapill.com/manga/601/boku-no-hero-academia. ';
+  mangapill += 'Both the ID and the title are required. So in this case, you would enter `601/boku-no-hero-academia` as the ID in commands.';
   return mangapill;
 }
 
@@ -28,13 +29,16 @@ exports.getIdHelpString = () => {
  */
 exports.followManga = async (manga_id, user_id, guild_id, lang = 'en') => {
   const ret = await axios.get(`https://mangapill.com/manga/${manga_id}`);
+  if (ret.status !== 200) {
+    throw new AigisError(`I could not find manga with ID ${manga_id} on Mangapill.`);
+  }
   const $ = cheerio.load(ret.data);
   //get chapter data
   const chapter = $('#chapters').find('a').first();
   const latest_chapter = chapter.attr('href').split('/chapters/')[1] ?? 0;
   const latest_chapter_num = latest_chapter == 0 ? -1 : chapter.text().split(' ')[1];
   //get cover art
-  const art = await exports.getCoverArt(ret.data);
+  const art = await getCoverArt(ret.data);
   //get title
   let title = $('div').filter('.text-secondary').first().text();
   if (title === '') {
@@ -59,7 +63,7 @@ exports.followManga = async (manga_id, user_id, guild_id, lang = 'en') => {
  * @param {*} html The HTML of the manga page retrieved via axios.get(url).data
  * @returns The string of the cover art file name or the default imgur image to use if the cover art cannot be retrieved
  */
-exports.getCoverArt = async (html) => {
+getCoverArt = async (html) => {
   const $ = cheerio.load(html);
   const img = $('img').first().attr('data-src'); //image link
   const img_name = `mangapill-${img.split('/').pop()}`;
@@ -88,8 +92,8 @@ exports.checkForUpdates = async (manga) => {
   const chapter = $('#chapters').find('a').first();
   const latest_chapter = chapter.attr('href').split('/chapters/')[1] ?? 0;
   const latest_chapter_num = latest_chapter == 0 ? -1 : chapter.text().split(' ')[1];
-  if (latest_chapter_num > manga.latest_chapter_num) {
-    let cover = await exports.getCoverArt(ret.data);
+  if (parseFloat(latest_chapter_num) > parseFloat(manga.latest_chapter_num)) {
+    let cover = await getCoverArt(ret.data);
     if (cover == config.DEFAULT_MANGA_IMAGE) {
       console.error(`Could not retrieve cover art for ${manga.title} on Mangapill.`);
       cover = manga.cover_art;

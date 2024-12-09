@@ -63,8 +63,8 @@ exports.checkToken = async () => {
  * @returns {String} A string with the help message for how to get the Manga ID for a manga on this website
  */
 exports.getIdHelpString = () => {
-  let mangadex = `Navigate to the overview page of the manga you wish to follow. The URL will look something like \`https://mangadex.org/title/2e0fdb3b-632c-4f8f-a311-5b56952db647/bocchi-the-rock\`. `;
-  mangadex += `In this case, the ID is "2e0fdb3b-632c-4f8f-a311-5b56952db647". The title might not be included in the URL, but the ID will always be there.`;
+  let mangadex = 'Navigate to the overview page of the manga you wish to follow. The URL will look something like https://mangadex.org/title/2e0fdb3b-632c-4f8f-a311-5b56952db647/bocchi-the-rock. ';
+  mangadex += 'In this case, the ID is `2e0fdb3b-632c-4f8f-a311-5b56952db647`. The title might not be included in the URL, but the ID will always be there.';
   return mangadex;
 }
 

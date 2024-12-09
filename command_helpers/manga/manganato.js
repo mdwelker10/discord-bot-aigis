@@ -4,16 +4,20 @@ const path = require('path');
 const { downloadImage } = require('../../utils/utils');
 const { insertManga } = require('./manga-general');
 const config = require('../../config');
+const cheerio = require('cheerio');
 
 /** The display name of the website */
-exports.NAME = 'Website';
+exports.NAME = 'Manganato';
+
+SITE_URL = 'https://chapmanganato.to';
 
 /**
  * Get a string detailing how to get the Manga ID for a manga on this website
  * @returns {String} A string with the help message for how to get the Manga ID for a manga on this website
  */
 exports.getIdHelpString = () => {
-  let str = '';
+  let str = 'Use this ID format if your website is `chapmanganato.to` or `manganato.com`. Navigate to the overview page of the manga you wish to follow. The URL should end with something like `/manga-bv100520`. ';
+  str += 'The ID is "bv1005204", but to differentiate from other websites, you should enter `nato-bv1005204` as the ID in commands.';
   return str;
 }
 
@@ -26,31 +30,23 @@ exports.getIdHelpString = () => {
  * @returns {Promise<String>} Manga title
  */
 exports.followManga = async (manga_id, user_id, guild_id, lang = 'en') => {
-  /**
-   * Retrieve the manga information from the website and insert it into the database.
-   * This function should check if the manga exists on the website
-   * 
-   * Do not save the manga to the database in this function, instead call the imported insertManga function.
-   * This function takes an object with manga info, which is defined below.
-   * 
-   * Set the following variables and end this function with the code below:
-   * - title: The title of the manga
-   * - latest_chapter: The ID of the latest chapter
-   * - latest_chapter_num: The number of the latest chapter
-   * - art: The filename of the cover art, not the whole path
-   * - website: The name of the website
-   * 
-   * leave ping_list as it is, it will be updated in the insertManga function if needed
-   */
+  const res = await axios.get(`${SITE_URL}/manga-${manga_id.split('-')[1]}`);
+  const $ = cheerio.load(res.data);
+  if (res.status != 200) {
+    throw new AigisError(`I could not find manga with ID ${manga_id} on Manganato.`);
+  }
+  const chapterInfo = getChapterInfo($);
+  const title = $('.story-info-right').find('h1').first().text();
+  const art = await getCoverArt($);
   let manga = {
     title: title,
     manga_id: manga_id,
     lang: lang,
-    latest_chapter: latest_chapter,
-    latest_chapter_num: latest_chapter_num,
+    latest_chapter: chapterInfo[1],
+    latest_chapter_num: chapterInfo[0],
     cover_art: art,
     ping_list: { [`${guild_id}`]: [user_id] },
-    website: 'mangapill'
+    website: 'manganato'
   }
   await insertManga(manga, guild_id, user_id);
   return title;
@@ -60,13 +56,16 @@ exports.followManga = async (manga_id, user_id, guild_id, lang = 'en') => {
  * Get cover art
  * @returns {Promise<String>} The filename of the cover art. Not the whole path, just the filename.
  */
-getCoverArt = async (params) => {
-  /*
-    Retrieve cover art for a manga. Parameters vary based on how the image needs to be retrieved.
-    If web scraping is being used, a single parameter of the HTML of the manga page should suffice.
-    If the image cannot be retrieved, return config.DEFAULT_MANGA_IMAGE.
-    Should be used only in this file, but is a very nice helper function to have.
-  */
+getCoverArt = async ($) => {
+  try {
+    const img = $('.info-image').find('img').first();
+    const src = img.attr('src');
+    const img_name = `nato-${img.attr('src').split('/').pop()}`;
+    await downloadImage(src, path.join(__dirname, '..', '..', 'images', img_name));
+    return img_name;
+  } catch (err) {
+    return config.DEFAULT_MANGA_IMAGE;
+  }
 }
 
 /**
@@ -81,26 +80,24 @@ getCoverArt = async (params) => {
  * @returns {*} A manga object with fields for the latest chapter ID, latest chapter number, and latest cover art if there is a new chapter, otherwise null
  */
 exports.checkForUpdates = async (manga) => {
-  /*
-    The manga object will look like this:
-    {
-      title: 'Title of the manga',
-      manga_id: 'Manga ID',
-      lang: 'ISO language code',
-      latest_chapter: 'Latest chapter ID',
-      latest_chapter_num: 'Latest chapter number',
-      cover_art: 'Cover art filename (not path)',
-      ping_list: {
-        guild_id: [user_id],
-      },
-      website: 'website name'
+  const res = await axios.get(`${SITE_URL}/manga-${manga.manga_id.split('-')[1]}`);
+  const $ = cheerio.load(res.data);
+  const chapterInfo = getChapterInfo($);
+  if (parseFloat(chapterInfo[0]) > parseFloat(manga.latest_chapter_num)) {
+    //update cover art
+    let cover = await getCoverArt($);
+    if (cover == config.DEFAULT_MANGA_IMAGE) {
+      console.error(`Could not retrieve cover art for ${manga.title} on Manganato.`);
+      cover = manga.cover_art;
     }
-
-    Retrieve the most recent chapter number and link from the website. 
-    If chapter number is new also check for updated cover art and return the object in noted docstring.
-    If there are no updates return null
-    Do not handle removing the old cover art image and updating the database, that is done in the manga.js cronjob execute function
-  */
+    return {
+      latest_chapter: chapterInfo[1],
+      latest_chapter_num: chapterInfo[0],
+      cover_art: cover,
+    }
+  } else {
+    return null;
+  }
 }
 
 /**
@@ -109,7 +106,7 @@ exports.checkForUpdates = async (manga) => {
  * @returns {String} Link to the manga chapter
  */
 exports.generateChapterLink = (chapter_id) => {
-  //return `https://website.com/chapter/${chapter_id}`;
+  return `${SITE_URL}/manga-${chapter_id}`;
 }
 
 /**
@@ -118,5 +115,19 @@ exports.generateChapterLink = (chapter_id) => {
  * @returns {String} Link to the manga
  */
 exports.generateMangaLink = (manga_id) => {
-  //return `https://website.com/manga/${manga_id}`;
+  return `${SITE_URL}/manga-${manga_id.split('-')[1]}`;
+}
+
+/** Returns array that is [chapter number, chapter link] */
+function getChapterInfo($) {
+  const chapters = $('ul.row-content-chapter');
+  //defaults if there are no chapters
+  let latest_chapter_num = -1;
+  let latest_chapter = '0';
+  if (chapters.length != 0) {
+    //at least 1 chapter
+    latest_chapter = chapters.find('a').first().attr('href').split('/manga-')[1];
+    latest_chapter_num = latest_chapter.split('-')[1];
+  }
+  return [latest_chapter_num, latest_chapter];
 }
