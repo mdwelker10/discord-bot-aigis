@@ -215,9 +215,9 @@ module.exports = {
         }
         const result = await unfollowManga(interaction.guildId, interaction.options.getString('manga-id'), interaction.user.id, lang);
         if (result) {
-          await interaction.editReply(`Alright ${username}-san, I have removed you from the ping list for ${result} in ${getLanguage(lang)}.`);
+          await interaction.editReply(`Alright ${username}-san, I have removed you from the ping list for ${result}.`);
         } else {
-          await interaction.editReply(`${username}-san, you do not appear to be following that manga in that language.`);
+          await interaction.editReply(`${username}-san, you do not appear to be following that manga.`);
         }
       } else if (subcommand === 'random') { //random manga command
         const porn = interaction.options.getBoolean('pornographic') ?? false;
