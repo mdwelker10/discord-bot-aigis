@@ -58,7 +58,7 @@ exports.followManga = async (manga_id, user_id, guild_id, lang = 'en') => {
  * Get cover art
  * @returns {Promise<String>} The filename of the cover art. Not the whole path, just the filename.
  */
-getCoverArt = async (html) => {
+async function getCoverArt(html) {
   try {
     const $ = cheerio.load(html);
     const img = $('.manga-info-pic').find('img').first();
@@ -67,6 +67,7 @@ getCoverArt = async (html) => {
     await downloadImage(src, path.join(__dirname, '..', '..', 'images', img_name));
     return img_name;
   } catch {
+    console.error(err);
     return config.DEFAULT_MANGA_IMAGE;
   }
 }

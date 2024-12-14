@@ -6,7 +6,7 @@ const AigisError = require('../../utils/AigisError');
 const { insertPlaylist, removePlaylist, checkToken, selectSong, stopSotdCronJob } = require('../../command_helpers/sotd');
 const { PLAYLISTS_COLL_NAME, MIN_LENGTH } = require('../../command_helpers/sotd');
 const config = require('../../config');
-const { getGuildConfig, isDeveloper } = require('../../utils/utils');
+const { getGuildConfig, isDeveloper, checkPermission } = require('../../utils/utils');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -117,7 +117,7 @@ module.exports = {
           return;
         }
         //check for permission
-        if (!interaction.member.roles.cache.has(cfg['permission_role_id'])) {
+        if (!checkPermission(interaction.member, cfg)) {
           return await interaction.editReply(`I'm sorry ${interaction.user.displayName}-san, but you do not have the permission for that.`);
         }
         let pid = interaction.options.getString('playlist-id');
@@ -132,7 +132,7 @@ module.exports = {
           return;
         }
         //check for permission
-        if (!interaction.member.roles.cache.has(cfg['permission_role_id'])) {
+        if (!checkPermission(interaction.member, cfg)) {
           return await interaction.editReply(`I'm sorry ${interaction.user.displayName}-san, but you do not have the permission for that.`);
         }
         let pid = interaction.options.getString('playlist-id');

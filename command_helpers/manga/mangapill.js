@@ -38,7 +38,7 @@ exports.followManga = async (manga_id, user_id, guild_id, lang = 'en') => {
   const latest_chapter = chapter.attr('href').split('/chapters/')[1] ?? 0;
   const latest_chapter_num = latest_chapter == 0 ? -1 : chapter.text().split(' ')[1];
   //get cover art
-  const art = await getCoverArt(ret.data);
+  const art = await getCoverArt($);
   //get title
   let title = $('div').filter('.text-secondary').first().text();
   if (title === '') {
@@ -63,14 +63,14 @@ exports.followManga = async (manga_id, user_id, guild_id, lang = 'en') => {
  * @param {*} html The HTML of the manga page retrieved via axios.get(url).data
  * @returns The string of the cover art file name or the default imgur image to use if the cover art cannot be retrieved
  */
-getCoverArt = async (html) => {
-  const $ = cheerio.load(html);
-  const img = $('img').first().attr('data-src'); //image link
-  const img_name = `mangapill-${img.split('/').pop()}`;
+async function getCoverArt($) {
   try {
+    const img = $('img').first().attr('data-src'); //image link
+    const img_name = `mangapill-${img.split('/').pop()}`;
     await downloadImage(img, path.join(__dirname, '..', '..', 'images', img_name), 'https://mangapill.com');
     return img_name;
   } catch (err) {
+    console.error(err);
     return config.DEFAULT_MANGA_IMAGE;
   }
 }
@@ -93,7 +93,7 @@ exports.checkForUpdates = async (manga) => {
   const latest_chapter = chapter.attr('href').split('/chapters/')[1] ?? 0;
   const latest_chapter_num = latest_chapter == 0 ? -1 : chapter.text().split(' ')[1];
   if (parseFloat(latest_chapter_num) > parseFloat(manga.latest_chapter_num)) {
-    let cover = await getCoverArt(ret.data);
+    let cover = await getCoverArt($);
     if (cover == config.DEFAULT_MANGA_IMAGE) {
       console.error(`Could not retrieve cover art for ${manga.title} on Mangapill.`);
       cover = manga.cover_art;

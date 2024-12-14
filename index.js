@@ -71,7 +71,7 @@ client.on(Events.InteractionCreate, async interaction => {
     try {
       //get guild config to check if command is disabled
       const server = await getGuildConfig(interaction.guildId);
-      if (server && server.disabled_commands.includes(interaction.commandName)) {
+      if (server && server.disabled_commands && server.disabled_commands.includes(interaction.commandName)) {
         return await interaction.reply({ content: `I'm sorry ${interaction.user.displayName}-san, but the command ${interaction.commandName} has been disabled for this server.`, ephemeral: true });
       }
       //log command execution

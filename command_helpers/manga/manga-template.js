@@ -61,10 +61,10 @@ exports.followManga = async (manga_id, user_id, guild_id, lang = 'en') => {
  * Get cover art
  * @returns {Promise<String>} The filename of the cover art. Not the whole path, just the filename.
  */
-getCoverArt = async (params) => {
+async function getCoverArt(params) {
   /*
     Retrieve cover art for a manga. Parameters vary based on how the image needs to be retrieved.
-    If web scraping with Cheerio is being used, a single parameter of the HTML of the manga page should suffice.
+    If web scraping with Cheerio is being used, the $ variable can be the only parameter
     If the image cannot be retrieved, return config.DEFAULT_MANGA_IMAGE.
     Should be used only in this file, but is a very nice helper function to have.
   */

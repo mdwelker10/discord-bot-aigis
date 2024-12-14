@@ -56,7 +56,7 @@ exports.followManga = async (manga_id, user_id, guild_id, lang = 'en') => {
  * Get cover art
  * @returns {Promise<String>} The filename of the cover art. Not the whole path, just the filename.
  */
-getCoverArt = async ($) => {
+async function getCoverArt($) {
   try {
     const img = $('.info-image').find('img').first();
     const src = img.attr('src');

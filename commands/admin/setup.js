@@ -29,7 +29,7 @@ module.exports = {
     const roleIdInput = new TextInputBuilder()
       .setCustomId('roleID')
       .setPlaceholder('Enter a role ID')
-      .setLabel('Role ID for Aigis config privileges')
+      .setLabel('Role ID for privileged commands')
       .setStyle(TextInputStyle.Short)
       .setRequired(true);
 
@@ -68,12 +68,14 @@ module.exports = {
       const defaultChannel = submitted.fields.getTextInputValue('defaultChannel');
       //check if the role ID and default channel ID are valid IDs. If identifier is invalid a DiscordAPI error is thrown, so 2 checks needed 
       try {
-        let role = await guild.roles.fetch(roleId)
-        if (role == null) {
-          return await submitted.reply({ content: `${username}-san! The role ID ${roleId} is not valid. Please try the setup again.`, ephemeral: true });
+        if (roleId.trim().toLowerCase() != 'everyone') {
+          let role = await guild.roles.fetch(roleId);
+          if (role == null) {
+            return await submitted.reply({ content: `${username}-san! The role ID "${roleId}" is not valid. Please try the setup again.`, ephemeral: true });
+          }
         }
       } catch (error) {
-        return await submitted.reply({ content: `${username}-san! The role ID ${roleId} is not valid. Please try the setup again.`, ephemeral: true });
+        return await submitted.reply({ content: `${username}-san! The role ID "${roleId}" is not valid. Please try the setup again.`, ephemeral: true });
       }
       //since channel id check also happens later, get all channels in one go
       let channels = null

@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const db = require('../database/db.js');
 const axios = require('axios');
+const AigisError = require('./AigisError.js');
 
 /** Will clean the temp directory if the number of files is greater than config.TEMP_MAX_LENGTH */
 exports.cleanTemp = () => {
@@ -75,4 +76,30 @@ exports.getCommandNames = (ignoreAllEntry = false) => {
 /** Uses process.env.DEVELOPER_IDS to determine if a given ID is a developer */
 exports.isDeveloper = (userId) => {
   return process.env.DEVELOPER_IDS.split(',').includes(userId);
+}
+
+/**
+ * Check if the user can execute a privileged command by seeing if they have the appropriate role.
+ * Throws an AigisError if the role no longer exists or an error occurs while checking.
+ * @param {*} guildMember A GuildMember object representing the user as a member of the guild in question. This can be obtained via interaction.member
+ * @param {*} guildConfig The guild config object for the guild in question
+ * @returns {Promise<boolean>} A promise that resolves to true if the user has the appropriate role, or false if they do not
+ */
+exports.checkPermission = async (guildMember, guildConfig) => {
+  const roleId = guildConfig['permission_role_id'];
+  if (roleId == 'everyone') {
+    return true;
+  }
+  //ensure role still exists
+  try {
+    let exists = await guildMember.guild.roles.fetch(roleId);
+    if (!exists) {
+      console.warn(`Privileged role ${roleId} no longer exists in guild ${guildMember.guild.id}`);
+      throw new AigisError('the privileged role no longer exists in this server. Please run /setup again.');
+    }
+    return guildMember.roles.cache.has(roleId);
+  } catch (err) {
+    console.error(`Error checking user ${guildMember.id} for privileged permissions in guild ${guildMember.guild.id}:\n ${err}`);
+    throw new AigisError('an error occurred while checking your permissions. Ask for help from one of my developers if this continues.');
+  }
 }

@@ -1,29 +1,30 @@
+<!-- omit in toc -->
 # Aigis
 A multi-purpose Discord bot I made for fun because I like programming and I like Persona. She just does a bunch of silly things I thought would be neat to implement and perhaps useful too. And yes, Aigis will addresses you with the "-san" honorific.
 <br>
 <br>
-I am always open to more feature suggestions. If you have a feature you want you can open an issue, or DM me on Discord (username: `trashpanda70`)
+You can join [the "official" Aigis Discord support server](https://discord.gg/CQyQYXBtca) for questions or feature requests. If you want to hang out and have more casual chats you can also join [another discord server](https://discord.com/invite/hpyeSZ4XCU) I am more active in. That is where I use Aigis' functionality.
 
+<!-- omit in toc -->
 ## Quick Links
 
-- [Aigis](#aigis)
-  - [Quick Links](#quick-links)
-  - [Setup](#setup)
-  - [Basic Commands](#basic-commands)
-  - [Remindme Command](#remindme-command)
-  - [Song of the Day Command (SOTD)](#song-of-the-day-command-sotd)
-    - [Playlist IDs](#playlist-ids)
-    - [Command Reference](#command-reference)
-  - [Manga Command](#manga-command)
-    - [Manga IDs](#manga-ids)
-    - [ISO Language Standard](#iso-language-standard)
-    - [Random Manga](#random-manga)
-    - [Command Reference](#command-reference-1)
-  - [Halted Feature - LLM Integration](#halted-feature---llm-integration)
+- [Setup](#setup)
+- [Enabling and Disabling Commands](#enabling-and-disabling-commands)
+- [Basic Commands](#basic-commands)
+- [Remindme Command](#remindme-command)
+- [Song of the Day Command (SOTD)](#song-of-the-day-command-sotd)
+  - [Playlist IDs](#playlist-ids)
+  - [Command Reference](#command-reference)
+- [Manga Command](#manga-command)
+  - [Manga IDs](#manga-ids)
+  - [ISO Language Standard](#iso-language-standard)
+  - [Random Manga](#random-manga)
+  - [Command Reference](#command-reference-1)
+
 
 ## Setup
 
-To invite Aigis to your server, use [this link](https://discord.com/oauth2/authorize?client_id=1241558106396168192&permissions=277025508416&integration_type=0&scope=bot+applications.commands).
+To invite Aigis to your server, use [this link](https://discord.com/oauth2/authorize?client_id=1241558106396168192&permissions=563364418149440&integration_type=0&scope=bot+applications.commands).
 
 The first thing to do when Aigis joins would be to run the `/setup` command. This command helps configure Aigis' core features for the server. The person running `/setup` needs "manage server" permissions. If they can invite Aigis, they can run `/setup`.
 
@@ -32,6 +33,9 @@ To properly execute `/setup`, the person doing it should have [developer mode en
 The setup screen will have 3 input boxes.
 1. **A role ID to allow a user to run privileged bot commands. There are not many of these at the moment.**
    - Being the server owner does not mean you are exempt from needing the role. The server owner should also have this role.
+   - This does not include administrative commands like `setup` and `purge`. For those, the user needs "manage server" permissions. This role is used for Aigis' feature configuration.
+   - To allow everyone in the server to run privileged bot commands, put "everyone" for the role ID.
+   - This might be removed if it is decided that only separating "manager server" permissions from everyone else makes more sense.
 2. **A default channel ID for Aigis to send messages in**
    - This does not force her to send all messages in this channel, but messages that are not responses to commands will automatically go there. This could be your dedicated bot channel other bots use.
 3. **A list of commands with channel IDs for them to use**
@@ -45,6 +49,11 @@ These settings can all be changed later by running `/setup` again with the `forc
 <p align="center">
 <img src="attachments/setup.png" alt="Aigis setup pop up" width="350"/>
 </p>
+
+## Enabling and Disabling Commands
+Aigis comes with the ability to customize which commands are enabled and disabled on your server. This was added due to the fact that Aigis is a [shape](https://wiki.shapes.inc/), and some people might only want her for that functionality. Others might only want the manga functionality, etc.
+
+
 
 ## Basic Commands
 
@@ -69,7 +78,7 @@ Some valid examples of `/remindme` are:
 ## Song of the Day Command (SOTD)
 One of Aigis' core features is that she can choose a "Song of the Day". This works by using Spotify's API to add playlists to select from. Aigis will shuffle through the playlists and select random song from one each day at 12:00 AM EST.
 
-The announcement for what song is chosen to be the Song of the Day will happen in the channel set using `sotd:<channel ID>` in the `/setup` command. There is no `@everyone`, `@here`, or role ping for this, just a message.
+The announcement for what song is chosen to be the Song of the Day will happen in the channel set using `sotd:<channel ID>` in the `/setup` command or the default bot channel if one is not specified. There is no `@everyone`, `@here`, or role ping for this, just a message.
 
 There are a few restrictions on what playlists can be chosen:
 1. The playlist **MUST** be a Spotify playlist, no other platforms are supported.
@@ -97,9 +106,14 @@ The following menu can be brought up by Aigis, along with the explanation of pla
 
 ## Manga Command
 Aigis can also interact with various manga websites to retrive information about manga. This feature is mainly used to track manga releases and receive pings when a new chapter is uploaded.
-- Aigis pings for updates once every hour. This could change in the future.
+- Aigis checks for updates once every hour. This could change in the future.
+- Aigis can check the following websites for manga updates:
+  - [Mangadex](https://mangadex.org)
+  - [Mangapill](https://mangapill.com)
+  - [Mangakakalot](https://mangakakalot.com)
+  - [Manganato](https://manganato.com)
 
-The announcement for manga chapter releases will happen in the channel set using `manga:<channel ID>` in the `/setup` command.
+The announcement for manga chapter releases will happen in the channel set using `manga:<channel ID>` in the `/setup` command, or the default bot channel if one is not specified.
 
 Since the manga command is implemented on a user basis instead of a server basis like Song of the Day, there are no privileged subcommands.
 
@@ -143,33 +157,3 @@ The following menu can be brought up by Aigis, along with the explanation of the
 - `/manga unfollow <manga-id> <language>` - Unfollow a manga to stop getting pinged for new chapter releases.
 - `/manga random <tag-1> <tag-2> <tag-3> <pornographic>` - Get a random manga from Mangadex with at least one of the given tags. Pornographic manga excluded by default.
 - `/manga stop` - Stop manga chapter release checks for all servers. Bot developer only. 
-
-
-## Halted Feature - LLM Integration
-In the `ai` folder is the outline of what was supposed to be an LLM that would be prompted to respond to pings/replies to Aigis' messages with a message in her style. This would really bring Aigis to life and would be a ton of fun to play around with in a server. However, multiple problems were encountered with setting this up.
-
-1. I know how to program but know next to nothing about implementing AI/ML stuff.
-2. I do not own the computing resources necessary to run an LLM that would be good enough to be worth implementing. My PC has a Nvidia 2060, fine for gaming but AI is a different beast.
-3. Using cloud-based architecture to host a custom LLM would be far too expensive for me right now.
-4. Using the API of a good LLM such as Chat GPT or Gemeni would also be far too expensive for me right now.
-
-One solution to all of these I tried is [Backyard AI](https://backyard.ai/), which can be used to specifically bring characters to life in a similar way as [Character.ai](https://character.ai/). The difference being that Character.ai is terrible and I was able to get some mild success with Backyard AI.
-
-The problem with Backyard AI is their service is the ability to chat with characters thorugh their interface, not an API, meaning it would be extremely difficult or impossible to integreate it into Aigis.
-
-Below are some screenshots of my brief chat with Aigis on Backyard AI after only some slight tuning and editing of a Makoto Nijima model I found that was prompted [exactly as you might expect](https://github.com/mdwelker10/discord-bot-aigis/blob/main/attachments/makoto.png).
-
-While not perfect, with enough tuning it could be very good and very fun to interact with, that is if I can find a way to use the methods Backyard AI implements without actually using Backyard AI.
-
-<p align="center">
-<img src="attachments/llm1.jpg" alt="isolated" width="500"/>
-</p>
-<p align="center">
-<img src="attachments/llm2.jpg" alt="isolated" width="500"/>
-</p>
-<p align="center">
-<img src="attachments/llm3.jpg" alt="isolated" width="500"/>
-</p>
-<p align="center">
-<img src="attachments/llm4.jpg" alt="isolated" width="500"/>
-</p>
