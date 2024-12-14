@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, time, TimestampStyles } = require('discord.js');
+const { SlashCommandBuilder } = require('discord.js');
 const config = require('../../config');
 const { addItem } = require('../../command_helpers/reminder');
 

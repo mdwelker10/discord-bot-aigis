@@ -6,7 +6,7 @@ const AigisError = require('../../utils/AigisError');
 const { insertPlaylist, removePlaylist, checkToken, selectSong, stopSotdCronJob } = require('../../command_helpers/sotd');
 const { PLAYLISTS_COLL_NAME, MIN_LENGTH } = require('../../command_helpers/sotd');
 const config = require('../../config');
-const { getGuildConfig } = require('../../utils/utils');
+const { getGuildConfig, isDeveloper } = require('../../utils/utils');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -55,7 +55,7 @@ module.exports = {
           .setColor(config.EMBED_COLOR)
           .setTitle('Song of the Day Help')
           .setDescription(str)
-          .setThumbnail('https://i.imgur.com/U0ze5EY.png')
+          .setThumbnail(config.AIGIS_DANCING_IMAGE)
           .addFields(
             { name: '/sotd help', value: 'This command showing all the Song of the Day commands' },
             { name: '/sotd add-playlist <playlist-id>', value: 'Add a playlist to the list of playlists to select from for Song of the Day. Playlist must have at least 50 songs.' },
@@ -145,7 +145,7 @@ module.exports = {
         }
       }
       else if (interaction.options.getSubcommand() === 'stop') { //stop song of the day selection
-        if (interaction.user.id != process.env.OWNER_ID) {
+        if (isDeveloper(interaction.user.id)) {
           await interaction.editReply(`I'm sorry ${username}-san, but only developers can stop the Song of the Day.`);
           return;
         } else {

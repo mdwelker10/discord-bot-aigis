@@ -2,20 +2,23 @@ require('dotenv').config();
 const fs = require('node:fs');
 const path = require('node:path');
 const { Client, Events, GatewayIntentBits, Collection, ActivityType, PresenceUpdateStatus } = require('discord.js');
-const { startSotdCronJob } = require('./command_helpers/sotd');
-const { startMangaCronJob, mangaCheck } = require('./command_helpers/manga/manga');
+const { startSotd, startMangaChecks } = require('./command_helpers/cronjobs');
+const { mangaCheck } = require('./command_helpers/manga/manga');
 const { initQueue } = require('./command_helpers/reminder');
-const { getGuildConfig } = require('./utils/utils');
-
+const { getGuildConfig, isDeveloper } = require('./utils/utils');
+const { purgeAll } = require('./command_helpers/purge');
 //list of commands that require deferred replies (longer than 3 seconds)
-long_commands = ['ping', 'sotd', 'manga']
-//list of commands that need the server configuration to work
-setup_required = []
+long_commands = ['ping', 'sotd', 'manga', 'command', 'purge']
+//list of commands that need the server configuration to work. All of these should also be in the long_commands list
+setup_required = ['command']
 
 // BOT token
 const token = process.env.TOKEN;
 //create client
-const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent] });
+const client = new Client({
+  allowedMentions: { parse: ['users', 'roles'] },
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent]
+});
 
 //attach .commands property to client to allow access to commands in other files
 client.commands = new Collection();
@@ -43,14 +46,18 @@ client.once(Events.ClientReady, readyClient => {
 
 client.on(Events.MessageCreate, async (message) => {
   if (message.author.bot) return;
-  // if (message.content.toLowerCase().includes('aigis')) {
-  //   message.reply(`Did you need me ${message.author.displayName}-san?`);
-  // }
   //For manually testing manga cronjob
-  if (process.env.DEV == 1 && message.content.toLowerCase().includes('debug manga') && message.author.id == process.env.OWNER_ID) {
-    console.log('Debugging manga...');
-    await mangaCheck(client);
-    message.reply('I have checked for manga updates');
+  if (process.env.DEV == 1) {
+    // if (message.content.toLowerCase().includes('debug purge') && isDeveloper(message.author.id)) {
+    //   console.log('Debugging purge...');
+    //   await purgeAll(message.guild.id);
+    //   return message.reply('I have purged all data for this server');
+    // }
+    if (message.content.toLowerCase().includes('debug manga') && isDeveloper(message.author.id)) {
+      console.log('Debugging manga...');
+      await mangaCheck(client);
+      return message.reply('I have checked for manga updates');
+    }
   }
 });
 
@@ -62,6 +69,11 @@ client.on(Events.InteractionCreate, async interaction => {
       return;
     }
     try {
+      //get guild config to check if command is disabled
+      const server = await getGuildConfig(interaction.guildId);
+      if (server && server.disabled_commands.includes(interaction.commandName)) {
+        return await interaction.reply({ content: `I'm sorry ${interaction.user.displayName}-san, but the command ${interaction.commandName} has been disabled for this server.`, ephemeral: true });
+      }
       //log command execution
       let subcommand = interaction.options.getSubcommand(false);
       let str = `User ${interaction.user.id} executed command: ${interaction.commandName}`
@@ -70,11 +82,10 @@ client.on(Events.InteractionCreate, async interaction => {
       //defer reply if command could take longer than 3 seconds
       if (long_commands.includes(interaction.commandName))
         await interaction.deferReply();
-      //get server configuration if command requires it
+      //if command requires server configuration
       if (setup_required.includes(interaction.commandName)) {
-        const server = await getGuildConfig(interaction.guildId);
         if (!server)
-          return await interaction.reply(`I'm sorry ${interaction.user.username}-san, I was unable to retrieve the configuration for this server. Please have somone with the "manage server" permission execute the \`/setup\` command`);
+          return await interaction.editReply(`I'm sorry ${interaction.user.displayName}-san, I was unable to retrieve the configuration for this server. Please have somone with the "manage server" permission execute the \`/setup\` command`);
         return await command.execute(interaction, server); //execute the command passing in server config
       }
       //execute commands
@@ -116,15 +127,16 @@ client.on(Events.InteractionCreate, async interaction => {
 
 //login with client token
 client.login(token).then(token => {
-  if (process.env.DEV == 1) { //dev status
+  if (process.env.DEV == 1) {
+    console.info('Bot is running in development mode.');
     client.user.setPresence({
       activities: [{
-        name: 'Trashpanda-san incorrectly program me',
+        name: 'The error messages rolling in',
         type: ActivityType.Watching
       }],
       status: PresenceUpdateStatus.Online
     });
-  } else { //prod status
+  } else {
     client.user.setPresence({
       activities: [{
         name: 'The 1s and 0s of AWS',
@@ -140,8 +152,8 @@ initQueue(client).then(() => {
 });
 
 if (process.env.DEV != 1) {
-  startSotdCronJob(client);
+  startSotd(client);
   console.info('Cron job for Song of the Day started.');
-  startMangaCronJob(client);
+  startMangaChecks(client);
   console.info('Cron job for Manga updates started.');
 }

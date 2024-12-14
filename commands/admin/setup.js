@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, PermissionsBitField, ActionRowBuilder,
-  ModalBuilder, TextInputBuilder, TextInputStyle, DiscordAPIError } = require('discord.js');
+  ModalBuilder, TextInputBuilder, TextInputStyle } = require('discord.js');
 const config = require('../../config');
 
 const db = require('../../database/db');
@@ -19,8 +19,7 @@ module.exports = {
     const username = interaction.user.displayName;
     //check for permission to set up the bot (anyone with manage server permission)
     if (!interaction.memberPermissions.has(PermissionsBitField.Flags.ManageGuild)) {
-      await interaction.reply({ content: `${username}-san, you do not have permission to do that!`, ephemeral: true });
-      return;
+      return await interaction.reply({ content: `${username}-san, you do not have permission to do that!`, ephemeral: true });
     }
     //build modal
     const modal = new ModalBuilder()
@@ -127,6 +126,8 @@ module.exports = {
       const force = interaction.options.getBoolean('force') ?? false;
       //get the config document for the server if it exists.
       const guildConfig = await getGuildConfig(guild.id);
+      const disabledCommands = guildConfig ? guildConfig.disabled_commands : [];
+      map.set('disabled_commands', disabledCommands);
       if (!guildConfig || force) {
         //if no config document exists or force enabled then replace/upsert config document
         await db.replace(config.DB_NAME, 'config', { guild_id: guild.id }, map, true);

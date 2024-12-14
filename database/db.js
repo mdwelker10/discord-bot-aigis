@@ -118,7 +118,7 @@ exports.find = async function find(databaseName, collectionName, query) {
 
 /**
  * generic update function. Filter used to determine what to update, "update" used as the actual update function EX: { $set: { 'count': 50 } }
- * returns newly updated data. Upsert will insert if no documents match the filter
+ * returns number of modified entries. Upsert will insert if no documents match the filter
  */
 exports.updateOne = async function updateOne(databaseName, collectionName, filter, update, upsert = false) {
   try {
@@ -136,7 +136,7 @@ exports.updateOne = async function updateOne(databaseName, collectionName, filte
 
 /**
  * generic update many function. Filter used to determine what to update, "update" used as the actual update function EX: { $set: { 'count': 50 } }
- * returns newly updated data. Upsert will insert if no documents match the filter
+ * returns number of modified entries. Upsert will insert if no documents match the filter
  */
 exports.updateMany = async function updateMany(databaseName, collectionName, filter, update, upsert = false) {
   try {

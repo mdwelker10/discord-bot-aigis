@@ -4,7 +4,11 @@ exports.EMBED_COLOR = 0xFFC54A;
 exports.TEMP_MAX_LENGTH = 50;
 exports.DB_NAME = 'aigis';
 exports.TEMP_PATH = path.join(__dirname, 'temp');
-exports.DEFAULT_MANGA_IMAGE = 'https://i.imgur.com/usdIJxN.png'
+exports.DEFAULT_MANGA_IMAGE = 'https://i.imgur.com/usdIJxN.png';
+exports.AIGIS_BUSTUP_IMAGE = 'https://i.imgur.com/rqiiY75.png';
+exports.AIGIS_YUKATA_IMAGE = 'https://i.imgur.com/6kKYY7X.png';
+exports.AIGIS_DANCING_IMAGE = 'https://i.imgur.com/ozS5bjO.png';
+exports.AIGIS_COOLDOWN_IMAGE = 'https://i.imgur.com/j0ilNtL.png';
 exports.USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:133.0) Gecko/20100101 Chrome/110 Firefox/133.0';
 exports.MANGADEX_ISO6391 = {
   'en': 'English',

@@ -3,7 +3,6 @@ const AigisError = require('../utils/AigisError');
 const { EmbedBuilder, bold } = require('discord.js');
 const db = require('../database/db');
 const axios = require('axios');
-const { CronJob } = require('cron');
 const config = require('../config');
 const fs = require('fs');
 const path = require('path');
@@ -16,7 +15,6 @@ exports.PLAYLISTS_COLL_NAME = 'sotd-playlists';
 
 const MAX_TRIES = 5; //number of tries before giving up on finding a new song
 const MAX_CHARS = Number.MAX_SAFE_INTEGER; //max number of characters for embed values (experimenting)
-let job; //cronjob object
 
 //check if Spotify JWT token is expired and create a new one if necessary. Return token value
 exports.checkToken = async () => {
@@ -45,35 +43,7 @@ exports.checkToken = async () => {
   }
 }
 
-exports.startSotdCronJob = (client) => {
-  job = new CronJob(
-    '0 0 0 * * *',
-    async () => {
-      //get all server configurations
-      const data = await db.find(config.DB_NAME, 'config', {});
-      //execute song of the day for each server
-      for (const d of data) {
-        try {
-          let channel = client.channels.cache.get(d.channel_sotd);
-          const arr = await exports.selectSong(d.guild_id);
-          await channel.send({ embeds: [arr[0]] });
-          if (arr[1] != null) {
-            await channel.send({ files: [arr[1]] });
-          }
-        } catch (err) {
-          console.error(`Could not get song of the day for guild ${d.guild_id}. Error: ${err}`);
-        }
-      }
-    },
-    null,
-    true,
-    'America/New_York'
-  );
-}
 
-exports.stopSotdCronJob = () => {
-  job.stop();
-}
 
 exports.insertPlaylist = async (playlist, guildId) => {
   data = await db.findOne(config.DB_NAME, exports.PLAYLISTS_COLL_NAME, { 'spotify_id': playlist.spotify_id });

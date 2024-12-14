@@ -196,7 +196,6 @@ exports.checkForUpdates = async (manga) => {
     if (err.response && err.response.status === 400) {
       console.error(`Mangadex error with ${manga.title} in ${exports.getLanguage(manga.lang)}. Details below:\n${JSON.stringify(err.response.data.errors[0])}`);
       return null;
-      //  throw new AigisError(`<@${process.env.OWNER_ID}-san, in trying to check for manga updates Mangadex has told me my request is invalid. They say "${err.response.data.errors[0].detail}.`);
     } else {
       throw err;
     }

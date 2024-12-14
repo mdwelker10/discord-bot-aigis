@@ -5,13 +5,14 @@
  * 3. Add a new field entry to the idhelp command
  * 4. Add a new entry in the websites object in this file and the command_helpers/manga/manga.js file
  */
-const { SlashCommandBuilder, EmbedBuilder, AttachmentBuilder, hyperlink } = require("discord.js");
+const { SlashCommandBuilder, EmbedBuilder, hyperlink } = require("discord.js");
 const axios = require('axios');
 const AigisError = require('../../utils/AigisError');
 const config = require('../../config');
 const ISO6391 = require('iso-639-1');
-const { stopMangaCronJob, listManga, unfollowManga, getLanguage } = require('../../command_helpers/manga/manga');
-const { getGuildConfig } = require('../../utils/utils');
+const { listManga, unfollowManga, getLanguage } = require('../../command_helpers/manga/manga');
+const { stopMangaCronJob } = require('../../command_helpers/cronjobs');
+const { getGuildConfig, isDeveloper } = require('../../utils/utils');
 const Mangadex = require('../../command_helpers/manga/mangadex');
 
 const websites = {
@@ -121,7 +122,7 @@ module.exports = {
           .setTitle('Manga Command Help')
           .setColor(config.EMBED_COLOR)
           .setDescription(desc)
-          .setThumbnail('https://i.imgur.com/1lZnFBP.jpeg')
+          .setThumbnail(config.AIGIS_YUKATA_IMAGE)
           .addFields(
             { name: '/manga help', value: 'This command showing all Manga commands' },
             { name: '/manga idhelp', value: 'Get help on how to find the ID for a manga on supported websites.' },
@@ -140,7 +141,7 @@ module.exports = {
           .setTitle('Manga ID Help')
           .setColor(config.EMBED_COLOR)
           .setDescription(desc)
-          .setThumbnail('https://i.imgur.com/dzucMJ9.jpeg') //aigis with glasses. Not hosted by me
+          .setThumbnail(config.AIGIS_YUKATA_IMAGE)
           .addFields(
             { name: 'Mangadex', value: websites['mangadex'].getIdHelpString() },
             { name: 'Mangapill', value: websites['mangapill'].getIdHelpString() },
@@ -295,7 +296,7 @@ module.exports = {
           await interaction.editReply({ embeds: [embed] });
         }
       } else if (subcommand === 'stop') {
-        if (interaction.user.id != process.env.OWNER_ID) {
+        if (isDeveloper(interaction.user.id)) {
           await interaction.editReply(`I'm sorry ${username}-san, but only developers can stop the manga checks.`);
           return;
         } else {

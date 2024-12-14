@@ -1,7 +1,6 @@
 /**
  * @fileoverview Contains helper functions for the manga command, including the cron job for checking for new chapters.
  */
-const { CronJob } = require('cron');
 const fs = require('fs');
 const path = require('path');
 const { AttachmentBuilder, EmbedBuilder, hyperlink } = require('discord.js');
@@ -11,7 +10,6 @@ const { getGuildConfig } = require('../../utils/utils');
 
 exports.COLLECTION_NAME = 'manga';
 
-let job; //cronjob object
 /** Map of website names to their update function */
 
 const websites = {
@@ -19,22 +17,6 @@ const websites = {
   mangapill: require('./mangapill'),
   mangakakalot: require('./mangakakalot'),
   manganato: require('./manganato'),
-}
-
-exports.startMangaCronJob = async (client) => {
-  job = new CronJob(
-    '0 0 * * * *',
-    async () => {
-      await exports.mangaCheck(client);
-    },
-    null,
-    true,
-    'America/New_York'
-  );
-}
-
-exports.stopMangaCronJob = () => {
-  job.stop();
 }
 
 exports.mangaCheck = async (client) => {

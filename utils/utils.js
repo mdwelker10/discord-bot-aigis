@@ -1,10 +1,10 @@
-/** Clean the temp directory every X files */
 const config = require('../config.js');
 const fs = require('fs');
 const path = require('path');
 const db = require('../database/db.js');
 const axios = require('axios');
 
+/** Will clean the temp directory if the number of files is greater than config.TEMP_MAX_LENGTH */
 exports.cleanTemp = () => {
   const len = fs.readdirSync(config.TEMP_PATH).length;
   if (len >= config.TEMP_MAX_LENGTH) {
@@ -14,9 +14,14 @@ exports.cleanTemp = () => {
   }
 }
 
+/**
+ * Returns the guild config object from the database, or null if it doesn't exist
+ * @param {*} guildId The ID of the guild to get the config for
+ * @returns {Promise<Object|null>} The guild config object from the database, or null if it doesn't exist
+ */
 exports.getGuildConfig = async (guildId) => {
   const server = await db.findOne(config.DB_NAME, 'config', { 'guild_id': guildId });
-  return server;
+  return server ?? null;
 }
 
 /**
@@ -46,4 +51,28 @@ exports.downloadImage = async (url, savepath, referer = null) => {
       reject();
     });
   });
+}
+
+/**
+ * returns a map of filename -> folder/filename for all non-admin command files. 
+ * By default includes an "all" entry to represetn an all commands selection options
+ * */
+exports.getCommandNames = (ignoreAllEntry = false) => {
+  commands = ignoreAllEntry ? {} : { all: 'all' };
+  const foldersPath = path.join(__dirname, '..', 'commands');
+  const commandFolders = fs.readdirSync(foldersPath).filter(folder => folder !== 'admin');
+  for (const folder of commandFolders) {
+    const commandsPath = path.join(foldersPath, folder);
+    const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
+    for (const file of commandFiles) {
+      const commandName = file.split('.')[0];
+      commands[commandName] = `${folder}/${commandName}`;
+    }
+  }
+  return commands;
+}
+
+/** Uses process.env.DEVELOPER_IDS to determine if a given ID is a developer */
+exports.isDeveloper = (userId) => {
+  return process.env.DEVELOPER_IDS.split(',').includes(userId);
 }

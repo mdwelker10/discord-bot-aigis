@@ -43,12 +43,7 @@ const rest = new REST().setToken(token);
         Routes.applicationGuildCommands(clientId, process.env.TEST_GUILD),
         { body: commands },
       );
-      console.log(`Successfully reloaded ${ret.length} application (/) commands to server 1.`);
-      const ret2 = await rest.put(
-        Routes.applicationGuildCommands(clientId, process.env.TEST_GUILD_2),
-        { body: commands },
-      );
-      console.log(`Successfully reloaded ${ret2.length} application (/) commands to server 2.`);
+      console.log(`Successfully reloaded ${ret.length} application (/) commands to test server.`);
     } else { //global config
       const data = await rest.put(
         Routes.applicationCommands(clientId),
