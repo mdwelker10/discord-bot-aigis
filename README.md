@@ -4,22 +4,29 @@ A multi-purpose Discord bot I made for fun because I like programming and I like
 <br>
 <br>
 You can join [the "official" Aigis Discord support server](https://discord.gg/CQyQYXBtca) for questions or feature requests. If you want to hang out and have more casual chats you can also join [another discord server](https://discord.com/invite/hpyeSZ4XCU) I am more active in. That is where I use Aigis' functionality.
+<br>
+<br>
+Aigis is a [shape](https://wiki.shapes.inc/), and thus has AI functionality. To get more information about shapes, join the [Shapes.inc Discord server](https://discord.gg/shapes). To get more information about Aigis' specific AI configurations, check out the documentation for it [here](https://github.com/mdwelker10/discord-bot-aigis/blob/main/README-AI.md).
+<br>
+<br>
+To get information on what data Aigis stores, and how to remove your server's data from her database, check out the documentation for the[purge command](https://github.com/mdwelker10/discord-bot-aigis/blob/main/README-Purge.md).
 
 <!-- omit in toc -->
 ## Quick Links
 
 - [Setup](#setup)
 - [Enabling and Disabling Commands](#enabling-and-disabling-commands)
+  - [Command Reference](#command-reference)
 - [Basic Commands](#basic-commands)
 - [Remindme Command](#remindme-command)
 - [Song of the Day Command (SOTD)](#song-of-the-day-command-sotd)
   - [Playlist IDs](#playlist-ids)
-  - [Command Reference](#command-reference)
+  - [Command Reference](#command-reference-1)
 - [Manga Command](#manga-command)
   - [Manga IDs](#manga-ids)
   - [ISO Language Standard](#iso-language-standard)
   - [Random Manga](#random-manga)
-  - [Command Reference](#command-reference-1)
+  - [Command Reference](#command-reference-2)
 
 
 ## Setup
@@ -46,14 +53,35 @@ The setup screen will have 3 input boxes.
 
 These settings can all be changed later by running `/setup` again with the `force` option set to `True`. The pop up will only be valid for 90 seconds, so I suggest copying the IDs somewhere beforehand for easy access.
 
+>Sometimes Aigis will respond twice when you run `/setup`, especially if you closed the pop-up and ran the command again. If you receive a successful response then you can ignore any error responses.
+
 <p align="center">
 <img src="attachments/setup.png" alt="Aigis setup pop up" width="350"/>
 </p>
 
 ## Enabling and Disabling Commands
 Aigis comes with the ability to customize which commands are enabled and disabled on your server. This was added due to the fact that Aigis is a [shape](https://wiki.shapes.inc/), and some people might only want her for that functionality. Others might only want the manga functionality, etc.
+- This functionality is locked behind "manage server" permissions. 
+- This command also requires that `/setup` has been run successfully.
+- Administrative commands (this command, setup, purge) cannot be disabled.
+- Subcommands cannot be individually disabled, so you cannot disable `/manga follow` while keeping `/manga random` enabled for example.
+- All commands are enabled by default
 
+To disable a command, run `/command disable <command-name>`, and to enable it again, run `/command enable <command-name>`. If you wish to enable/disable all commands, use `all` as the command name. If a command that has scheduled pings, such as `manga` or `remindme` is disabled, scheduled pings are not stopped. If you would like to stop the scheduled pings.
+- The command name is what you would put after the forward slash when typing a command. Valid names include `manga`, `echo`, and `sotd` for example.
+- If you would like to stop scheduled pings, you have 3 options:
+  - Ask users to run commands such as `/sotd playlist remove` or `/manga unfollow` to get rid of any pings that would happen.
+  - Start a data purge, which will stop all pings in 7 days and remove all data Aigis has saved about your server. This cannot be done with specific commands (cannot purge only manga information for example). After 7 days all data will be removed and the `/setup` command will need to be run again. For more information see the [purge command documentation](https://github.com/mdwelker10/discord-bot-aigis/blob/main/README-Purge.md).
+  - Make a forum post on the support server with the `Data Deletion` tag describing why the two options above will not work, and I will manually remove the data. If this happens enough I will look into implementing command-based data deletion.
 
+To see all Aigis commands, and whether they are enabled or disabled on your server, run `/command list`. This functionality and `/command help`, are not locked behind manage server permissions.
+- Administrative commands are not shown on this list since they are always enabled.
+
+### Command Reference
+- `/command help` - Get more information on enabling/disabling commands, similar to the documentation.
+- `/command list <datastore>` - Get a list of all non-admin Aigis commands. Optionally, set `datastore` to true to only list commands that store data.
+- `/command enable <command-name>` - Enable an Aigis command on the server. Use command name "all" to enable all non-admin commands.
+- `/command disable <command-name>` - Disable an Aigis command on the server. Use command name "all" to disable all non-admin commands.
 
 ## Basic Commands
 

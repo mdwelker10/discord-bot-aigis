@@ -57,12 +57,13 @@ module.exports = {
       if (!cfg) {
         return await interaction.editReply(`I was unable to retrieve the configuration for this server ${username}-san, There is no data to delete.`);
       }
+      const ping = cfg.permission_role_id == 'everyone' ? `<@${interaction.guild.ownerId}` : `<@&${cfg.permission_role_id}>`
       if (subcommand == 'revert') { //revert command
         let ret = await db.updateOne(config.DB_NAME, 'config', { guild_id: guildId, purge_date: { $exists: true } }, { $unset: { purge_date: "" } });
         if (ret === 0) {
           throw new AigisError(`you do not have a data deletion scheduled.`);
         }
-        return await interaction.editReply(`<@&${cfg.permission_role_id}> The schedule purge deletion has been reverted.`);
+        return await interaction.editReply(`${ping} The schedule purge deletion has been reverted.`);
       }
       let purgeDate = new Date();
       purgeDate.setDate(purgeDate.getDate() + 7);
@@ -72,7 +73,7 @@ module.exports = {
         throw new AigisError(`you already have a data deletion scheduled. It will take place on ${cfg.purge_date.toDateString()}.`);
       }
       console.log(`Purge scheduled for ${guildId} on ${purgeDate.toDateString()}`);
-      await interaction.editReply(`<@&${cfg.permission_role_id}> A purge deletion has been scheduled for ${purgeDate.toDateString()}.`);
+      await interaction.editReply(`${ping} A purge deletion has been scheduled for ${purgeDate.toDateString()}.`);
     } catch (err) {
       if (err instanceof AigisError) {
         await interaction.editReply(`${interaction.user.displayName}-san! I'm sorry but I have encountered an issue while executing your command. The problem is ${err.message}`);

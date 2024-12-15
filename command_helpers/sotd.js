@@ -132,6 +132,9 @@ exports.selectSong = async (guildId) => {
           exports.removePlaylist(id, guildId, playlists, true);
         }
       });
+      if (songs.length >= exports.MIN_LENGTH) {
+        songs.shift();
+      }
       songs.push(song.track.id);
       await writeSongs(guildId, songs);
       await writePlaylists(guildId, playlists);
