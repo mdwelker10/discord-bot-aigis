@@ -19,15 +19,15 @@ The purge command is used to delete all data Aigis has stored about your server.
 - Song of the Day data, including playlist rotation
 - Manga data, including manga that members of the server follow
 
-The deletion does not happen right away, but 7 days from the when the command is used. Data is marked for deletion but still used, so users will still receive manga pings, the Song of the Day will still be chosen, etc. This is implemented mianly for two reasons
+The deletion does not happen right away, but 7 days from when the command is used. Data is marked for deletion but still used, so users will still receive manga pings, the Song of the Day will still be chosen, etc. This is implemented mianly for two reasons
 - In case you want to reverse the decision to delete data.
-- If the deletion was scheduled my a malicious actor.
+- If the deletion was scheduled by a malicious actor.
 
 After the deletion, it will be like Aigis has joined your server for the first time with one exception, **reminders are not deleted**. This is due to the fact that reminders are stored in a queue using [bull](https://github.com/OptimalBits/bull#readme), and deleting a particular entry from that queue is more trouble than it's worth (for me since I am a bad programmer). This also means that the `/setup` command will need to be rerun, assuming you want to configure Aigis again.
 
 A few more notes on the purge command:
 - When a data deletion is scheduled, Aigis will ping the privileged role ID set via the `/setup` command. If it was set to everyone, Aigis will ping the server owner. This is to ensure that others know a data deletion is occuring.
-  - The same occurs for if the deletion is reverted.
+  - The same occurs if the deletion is reverted.
 - The deletion is not *exactly* 7 days from the time the command was run. A cronjob is scheduled once a day at midnight EST to check if the date to delete (7 days from when the command was run) has passed. So the real time is a few hours longer than 7 days.
 - Once 7 days have passed and the data has been deleted **it cannot be recovered**
 
