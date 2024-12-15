@@ -9,7 +9,7 @@ You can join [the "official" Aigis Discord support server](https://discord.gg/CQ
 Aigis is a [shape](https://wiki.shapes.inc/), and thus has AI functionality. To get more information about shapes, join the [Shapes.inc Discord server](https://discord.gg/shapes). To get more information about Aigis' specific AI configurations, check out the documentation for it [here](https://github.com/mdwelker10/discord-bot-aigis/blob/main/README-AI.md).
 <br>
 <br>
-To get information on what data Aigis stores, and how to remove your server's data from her database, check out the documentation for the[purge command](https://github.com/mdwelker10/discord-bot-aigis/blob/main/README-Purge.md).
+To get information on what data Aigis stores, and how to remove your server's data from her database, check out the documentation for the [purge command](https://github.com/mdwelker10/discord-bot-aigis/blob/main/README-Purge.md).
 
 <!-- omit in toc -->
 ## Quick Links
