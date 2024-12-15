@@ -104,7 +104,7 @@ Some valid examples of `/remindme` are:
 - `/remindme 5m Hey <@365986896733536278>! Aigis can ping with reminders!`
 
 ## Song of the Day Command (SOTD)
-One of Aigis' core features is that she can choose a "Song of the Day". This works by using Spotify's API to add playlists to select from. Aigis will shuffle through the playlists and select random song from one each day at 12:00 AM EST.
+One of Aigis' core features is that she can choose a "Song of the Day". This works by using Spotify's API to add playlists to select from. Aigis will shuffle through the playlists and select a random song from one each day at 12:00 AM EST.
 
 The announcement for what song is chosen to be the Song of the Day will happen in the channel set using `sotd:<channel ID>` in the `/setup` command or the default bot channel if one is not specified. There is no `@everyone`, `@here`, or role ping for this, just a message.
 
