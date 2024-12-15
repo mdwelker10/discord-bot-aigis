@@ -4,6 +4,7 @@ const { selectSong } = require('./sotd');
 const { mangaCheck } = require('./manga/manga');
 const { purgeAll } = require('./purge');
 const { getGuildConfig } = require('../utils/utils');
+const db = require('../db/db');
 
 //All cronjob objects
 let sotdJob;
