@@ -116,7 +116,7 @@ module.exports = {
         desc += `Also ${username}-san, the language option can be used to specify what language you want to follow the manga in, however this feature is only available for Mangadex. The default is English so this is optional. `;
         desc += `To specify a language, you need to use the ${hyperlink('ISO 639-1 standard', '<https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes>')} for the language code, `;
         desc += `there are also some exceptions listed on ${hyperlink("Mangadex's website", '<https://api.mangadex.org/docs/3-enumerations/')}.\n\n`;
-        desc += `If you wish to follow explicit manga that is pornographic or 18+ content, the channel which does manga chapter ping releases must be marked as NSFW. `;
+        desc += `If you wish to follow explicit manga that is pornographic or 18+ content, the channel which does manga chapter ping releases must be marked as "age restricted". `;
         desc += `This is to ensure that the content is only seen by those who wish to see it, and to comply with Discord's Terms of Service.`;
         desc += `For more information, please use \`/manga ratinghelp\`.`;
         //string for random command description is very long

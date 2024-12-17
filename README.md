@@ -3,7 +3,7 @@
 A multi-purpose Discord bot I made for fun because I like programming and I like Persona. She just does a bunch of silly things I thought would be neat to implement and perhaps useful too. And yes, Aigis will address you with the "-san" honorific.
 <br>
 <br>
-You can join [the "official" Aigis Discord support server](https://discord.gg/CQyQYXBtca) for questions or feature requests. If you want to hang out and have more casual chats you can also join [another discord server](https://discord.com/invite/hpyeSZ4XCU) I am more active in. That is where I use Aigis' functionality.
+You can join [the "official" Aigis Discord support server](https://discord.gg/CQyQYXBtca) for questions or feature requests. If you want to hang out and have more casual chats you can join [a different discord server](https://discord.com/invite/hpyeSZ4XCU) I am more active in. That is where I use Aigis' functionality.
 <br>
 <br>
 Aigis is a [shape](https://wiki.shapes.inc/), and thus has AI functionality. To get more information about shapes, join the [Shapes.inc Discord server](https://discord.gg/shapes). To get more information about Aigis' specific AI configurations, check out the documentation for it [here](https://github.com/mdwelker10/discord-bot-aigis/blob/main/README-AI.md).
@@ -26,6 +26,8 @@ To get information on what data Aigis stores, and how to remove your server's da
   - [Manga IDs](#manga-ids)
   - [ISO Language Standard](#iso-language-standard)
   - [Random Manga](#random-manga)
+  - [Content Rating and 18+ Manga](#content-rating-and-18-manga)
+  - [Supported Websites and Content Rating](#supported-websites-and-content-rating)
   - [Command Reference](#command-reference-2)
 
 
@@ -42,7 +44,7 @@ The setup screen will have 3 input boxes.
    - Being the server owner does not mean you are exempt from needing the role. The server owner should also have this role.
    - This does not include administrative commands like `setup` and `purge`. For those, the user needs "manage server" permissions. This role is used for Aigis' feature configuration.
    - To allow everyone in the server to run privileged bot commands, put "everyone" for the role ID.
-   - This might be removed if it is decided that only separating "manager server" permissions from everyone else makes more sense.
+   - This might be removed if it is decided that only separating "manage server" permissions from everyone else makes more sense.
 2. **A default channel ID for Aigis to send messages in**
    - This does not force her to send all messages in this channel, but messages that are not responses to commands will automatically go there. This could be your dedicated bot channel other bots use.
 3. **A list of commands with channel IDs for them to use**
@@ -135,11 +137,7 @@ The following menu can be brought up by Aigis, along with the explanation of pla
 ## Manga Command
 Aigis can also interact with various manga websites to retrive information about manga. This feature is mainly used to track manga releases and receive pings when a new chapter is uploaded.
 - Aigis checks for updates once every hour. This could change in the future.
-- Aigis can check the following websites for manga updates:
-  - [Mangadex](https://mangadex.org)
-  - [Mangapill](https://mangapill.com)
-  - [Mangakakalot](https://mangakakalot.com)
-  - [Manganato](https://manganato.com)
+- Click [here](#supported-websites-and-content-rating) a list of supported Manga websites.
 
 The announcement for manga chapter releases will happen in the channel set using `manga:<channel ID>` in the `/setup` command, or the default bot channel if one is not specified.
 
@@ -163,12 +161,9 @@ This feature is not available for every manga website. If you follow a manga on 
 It is worth mentioning that Mangadex has some codes not defined by the standard that can be found [here](https://api.mangadex.org/docs/3-enumerations/). These are mostly language variants (like Latin-American Spanish) or Romanized languages (like Romanized Japanese).
 
 ### Random Manga
-Unrelated to the following of manga, Aigis can also grab a random manga from Mangadex. This can be a fun way to pass time seeing the different kinds of manga and stories there are. The syntax of the random manga command is:
+Unrelated to the following of manga, Aigis can also grab a random manga from Mangadex. This can be a fun way to pass time seeing the different kinds of manga and stories there are. Pornographic manga will *not* be chosen. The syntax of the random manga command is:
 
-`/manga random <tag> <tag> <tag> <pornographic>`
-
-- The `pornographic` field is an optional boolean to determine whether to include pornographic manga in the query to Mangadex for a random manga. It is `False` by default. If it is set to `True` and a pornographic manga is chosen, the cover will **not** be shown.
-  - Since it is false by default, *I am not responsible for anything that happens if you enable it.*
+`/manga random <tag> <tag> <tag>`
 
 The command can take up to 3 tags. The list of valid tags can be found [here](https://mangadex.org/tag/). There is also autocomplete functionality when typing in a tag name. 
 
@@ -176,12 +171,37 @@ The tags are used with **OR logic**. This means if you use 2 tags the chosen man
 
 Aigis will attempt to display the title and description in English, but if English is unavailable she will either display it in the manga's native language or just say the title/description is unavailable.
 
+### Content Rating and 18+ Manga
+The following message can be brought up by Aigis by using the `/manga ratinghelp` command. For the SparkNotes version, here are some bullet points:
+- To comply with Discord TOS, if you wish to follow pornographic manga, the channel that announces chapter releases must be marked as "age restricted".
+- If I am unable to programatically determine a manga's content rating on a website, all mangas from that website are assumed to be pornographic.
+- Erotica and suggestive manga is not impacted by this.
+- For an idea of what manga falls under this rule, I am essentailly using Mangadex's rating system.
+- If the channel was age restricted, and loses that status, you will still get chapter release pings but the link and manga title will not be sent. Instead you will essentially be told "A manga you are following has released chapter X".
+- After this message is a list of the supported Manga websites and whether the content rating can be determined programatically.
+
+**The full message and details:**
+
+To comply with Discord's Terms of Service, manga with age restricted content can only be followed if the manga release channel is marked as age restricted. This channel is where manga chapter pings will occur, and is determined during the /setup command. If one is not provided, the default bot channel is used.
+
+If the channel was marked as age restricted when you followed an 18+ manga and later lost it's age restricted status, you will receive a ping notifying you of this during the next chapter release. Due to how manga IDs are collected and the possibility of a NSFW title, the manga itself will not be specified and no links to chapters or the manga will be shared. However, the chapter number will be shown. If this happens, pings notifying you of chapter releases will continue unless you unfollow the manga, but the manga itself will not be specified. If a moderator marks the channel as age restricted again, pings will resume as normal.
+
+For the purpose of this command, age restricted manga is defined as a manga featuring pornographic material, such as uncensored nudity/sexual content. In general, Mangadex's rating system can be applied. Manga with suggestive or erotica content will not be restricted as this is more akin to PG-13 content, and Discord requires users to be 13 years old to use the platform. Also, some websites do not provide a way to programatically determine the content rating of a manga. If this is the case, and the website actually serves explicit manga, then all manga will be assumed to be NSFW, and the rules above will apply even if the manga itself is not explicit.
+
+### Supported Websites and Content Rating
+Here is a full list of the supported websites and whether their content rating can be programatically determined.
+- [Mangadex](https://mangadex.org/) - Content rating can be determined
+- [Mangapill](https://mangapill.com/) - Content rating cannot be determined, but does not host manga that would need to be age restricted.
+- [Mangakakalot](https://mangakakalot.com/) - Content rating cannot be determined. All manga marked as age restricted.
+- [Manganato](https://manganato.com/) - Content rating cannot be determined. All manga marked as age restricted.
+
 ### Command Reference
 The following menu can be brought up by Aigis, along with the explanation of the command basics and language codes, via the `/manga help` command.
 
 - `/manga idhelp` - The command that documents what to use for a manga's ID for each supported website.
+- `/manga ratinghelp` - The command that gives an outlines of how manga content rating is handled.
 - `/manga follow <manga-id> <language>` - Follow a manga to get pinged for new chapter releases.
 - `/manga list` - List all manga you are following.
 - `/manga unfollow <manga-id> <language>` - Unfollow a manga to stop getting pinged for new chapter releases.
-- `/manga random <tag-1> <tag-2> <tag-3> <pornographic>` - Get a random manga from Mangadex with at least one of the given tags. Pornographic manga excluded by default.
+- `/manga random <tag-1> <tag-2> <tag-3>` - Get a random manga from Mangadex with at least one of the given tags.
 - `/manga stop` - Stop manga chapter release checks for all servers. Bot developer only. 
