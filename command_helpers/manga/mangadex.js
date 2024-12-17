@@ -3,11 +3,19 @@ const AigisError = require('../../utils/AigisError');
 const path = require('path');
 const { AttachmentBuilder } = require('discord.js');
 const { downloadImage } = require('../../utils/utils');
-const { insertManga } = require('./manga-general');
+const { insertManga, mangaChannelNSFW } = require('./manga-general');
 const config = require('../../config');
 
 /** The display name of the website */
 exports.NAME = 'Mangadex';
+
+/** 
+ * True if the followManga method can determine the age rating of a manga. False if not. Some cases:
+ * - True if the website has the data available via an API like Mangadex
+ * - True if the website does not host pornographic/18+ manga like Mangapill
+ * - False if the website hosts pornographic manga and does not have a way to determine the rating like Mangakakalot
+ */
+exports.CAN_CHECK_RATING = true;
 
 /** check if token is valid and refresh if not. Return token value */
 exports.checkToken = async () => {
@@ -72,22 +80,37 @@ exports.getIdHelpString = () => {
  * If a database entry for the manga does not exist, create one. If one does exist add this user to the ping list
  * @param {String} manga_id The ID of the manga to follow
  * @param {String} user_id The user ID of the person following the manga
- * @param {String} guild_id The guild ID of the user following the manga
+ * @param {Object} guild The guild object of the server the command was run in
  * @param {String} [lang="en"] The language to follow the manga in. Default is English
- * @returns Manga title
+ * @returns {Promise<String>} Manga title
  */
-exports.followManga = async (manga_id, user_id, guild_id, lang = 'en') => {
+exports.followManga = async (manga_id, user_id, guild, lang = 'en') => {
+  const guild_id = guild.id;
   const res = await axios.get(`https://api.mangadex.org/manga/${manga_id}`);
   const manga_data = res.data.data;
+  let chapter_str = `https://api.mangadex.org/manga/${manga_id}/feed?translatedLanguage[]=${lang}&order[chapter]=desc&limit=1`;
   if (manga_data.type !== 'manga') {
     const article = manga_data.type === 'user' || manga_data.type === 'artist' || manga_data.type === 'author' ? 'an' : 'a';
     throw new AigisError(`${username}-san, the ID you provided is not for a manga but for ${article} ${manga.type}.`);
+  }
+  //check rating and get cover art
+  let cover_file_name = 'https://i.imgur.com/usdIJxN.png';
+  let ch_nsfw = await mangaChannelNSFW(guild);
+  if (manga_data.attributes.contentRating == 'pornographic' && !ch_nsfw) {
+    throw new AigisError(`this manga is pornographic or otherwise too explicit. Please mark the manga channel as age-restricted to follow this manga.`);
+  }
+  if (manga_data.attributes.contentRating == 'pornographic') {
+    //pornographic manga needs special url param to retrieve chapters
+    chapter_str += '&contentRating[]=pornographic';
+  } else {
+    //get cover art for non-porn
+    cover_file_name = await exports.getCoverArt(manga_id, manga_data.relationships.filter(rel => rel.type === 'cover_art')[0].id, true);
   }
   const title = manga_data.attributes.title[lang] ?? manga_data.attributes.altTitles[lang] ?? Object.values(manga_data.attributes.title)[0];
   //get chapter data
   let ret = {};
   try {
-    ret = await axios.get(`https://api.mangadex.org/manga/${manga_id}/feed?translatedLanguage[]=${lang}&order[chapter]=desc&limit=1`);
+    ret = await axios.get(chapter_str);
   } catch (err) {
     if (err.response.status === 400) {
       console.error(`Mangadex request error, details below:\n${JSON.stringify(err.response.data.errors[0])}`);
@@ -98,10 +121,6 @@ exports.followManga = async (manga_id, user_id, guild_id, lang = 'en') => {
   }
   //collect data for manga
   let data = {};
-  let cover_file_name = 'https://i.imgur.com/usdIJxN.png';
-  if (manga_data.contentRating !== 'pornographic') {
-    cover_file_name = await exports.getCoverArt(manga_id, manga_data.relationships.filter(rel => rel.type === 'cover_art')[0].id, true);
-  }
   //if no chapters in this language for this manga use some default values
   if (ret.data.data.length === 0) {
     data = {
@@ -112,7 +131,8 @@ exports.followManga = async (manga_id, user_id, guild_id, lang = 'en') => {
       latest_chapter_num: -1,
       cover_art: cover_file_name,
       ping_list: { [`${guild_id}`]: [user_id] },
-      website: 'mangadex'
+      website: 'mangadex',
+      nsfw: manga_data.attributes.contentRating == 'pornographic'
     }
   } else {
     const chapter = ret.data.data[0];
@@ -124,7 +144,8 @@ exports.followManga = async (manga_id, user_id, guild_id, lang = 'en') => {
       latest_chapter_num: chapter.attributes.chapter,
       cover_art: cover_file_name,
       ping_list: { [`${guild_id}`]: [user_id] },
-      website: 'mangadex'
+      website: 'mangadex',
+      nsfw: manga_data.attributes.contentRating == 'pornographic'
     }
   }
   await insertManga(data, guild_id, user_id);
@@ -170,7 +191,11 @@ exports.getCoverArt = async (mangaID, coverID, keep = false) => {
  */
 exports.checkForUpdates = async (manga) => {
   try {
-    let ret = await axios.get(`https://api.mangadex.org/manga/${manga.manga_id}/feed?translatedLanguage[]=${manga.lang}&order[chapter]=desc&limit=1`);
+    let str = `https://api.mangadex.org/manga/${manga.manga_id}/feed?translatedLanguage[]=${manga.lang}&order[chapter]=desc&limit=1`;
+    if (manga.nsfw) {
+      str += '&contentRating[]=pornographic';
+    }
+    let ret = await axios.get(str);
     //no chapters
     if (ret.data.data.length === 0) {
       return null;
@@ -182,11 +207,13 @@ exports.checkForUpdates = async (manga) => {
       //update return object with new chapter data
       obj.latest_chapter = ret.data.data[0].id;
       obj.latest_chapter_num = ret.data.data[0].attributes.chapter;
-      //check for cover art update
-      const updated_data = await axios.get(`https://api.mangadex.org/manga/${manga.manga_id}`);
-      const new_cover = await exports.getCoverArt(manga.manga_id, updated_data.data.data.relationships.filter(rel => rel.type === 'cover_art')[0].id, true);
-      if (new_cover !== manga.cover_art) {
-        obj.cover_art = new_cover; //update manga object to reflect new cover art for sending ping
+      //check for cover art update if non-porn manga
+      if (!manga.nsfw) {
+        const updated_data = await axios.get(`https://api.mangadex.org/manga/${manga.manga_id}`);
+        const new_cover = await exports.getCoverArt(manga.manga_id, updated_data.data.data.relationships.filter(rel => rel.type === 'cover_art')[0].id, true);
+        if (new_cover !== manga.cover_art) {
+          obj.cover_art = new_cover; //update manga object to reflect new cover art for sending ping
+        }
       }
       return obj;
     } else {

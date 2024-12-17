@@ -9,6 +9,14 @@ const cheerio = require('cheerio');
 /** The display name of the website */
 exports.NAME = 'Manganato';
 
+/** 
+ * True if the followManga method can determine the age rating of a manga. False if not. Some cases:
+ * - True if the website has the data available via an API like Mangadex
+ * - True if the website does not host pornographic/18+ manga like Mangapill
+ * - False if the website hosts pornographic manga and does not have a way to determine the rating like Mangakakalot
+ */
+exports.CAN_CHECK_RATING = false;
+
 SITE_URL = 'https://chapmanganato.to';
 
 /**
@@ -25,11 +33,12 @@ exports.getIdHelpString = () => {
  * If a database entry for the manga does not exist, create one. If one does exist add this user to the ping list
  * @param {String} manga_id The ID of the manga to follow
  * @param {String} user_id The user ID of the person following the manga
- * @param {String} guild_id The guild ID of the user following the manga
+ * @param {Object} guild The guild object of the server the command was run in
  * @param {String} [lang="en"] The language to follow the manga in. Default is English
  * @returns {Promise<String>} Manga title
  */
-exports.followManga = async (manga_id, user_id, guild_id, lang = 'en') => {
+exports.followManga = async (manga_id, user_id, guild, lang = 'en') => {
+  const guild_id = guild.id;
   const res = await axios.get(`${SITE_URL}/manga-${manga_id.split('-')[1]}`);
   const $ = cheerio.load(res.data);
   if (res.status != 200) {
@@ -46,7 +55,8 @@ exports.followManga = async (manga_id, user_id, guild_id, lang = 'en') => {
     latest_chapter_num: chapterInfo[0],
     cover_art: art,
     ping_list: { [`${guild_id}`]: [user_id] },
-    website: 'manganato'
+    website: 'manganato',
+    nsfw: !exports.CAN_CHECK_RATING
   }
   await insertManga(manga, guild_id, user_id);
   return title;
@@ -57,15 +67,16 @@ exports.followManga = async (manga_id, user_id, guild_id, lang = 'en') => {
  * @returns {Promise<String>} The filename of the cover art. Not the whole path, just the filename.
  */
 async function getCoverArt($) {
-  try {
-    const img = $('.info-image').find('img').first();
-    const src = img.attr('src');
-    const img_name = `nato-${img.attr('src').split('/').pop()}`;
-    await downloadImage(src, path.join(__dirname, '..', '..', 'images', img_name));
-    return img_name;
-  } catch (err) {
-    return config.DEFAULT_MANGA_IMAGE;
-  }
+  return config.DEFAULT_MANGA_IMAGE;
+  // try {
+  //   const img = $('.info-image').find('img').first();
+  //   const src = img.attr('src');
+  //   const img_name = `nato-${img.attr('src').split('/').pop()}`;
+  //   await downloadImage(src, path.join(__dirname, '..', '..', 'images', img_name));
+  //   return img_name;
+  // } catch (err) {
+  //   return config.DEFAULT_MANGA_IMAGE;
+  // }
 }
 
 /**

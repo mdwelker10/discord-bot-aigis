@@ -9,6 +9,14 @@ const AigisError = require('../../utils/AigisError');
 /** The display name of the website */
 exports.NAME = 'Mangapill';
 
+/** 
+ * True if the followManga method can determine the age rating of a manga. False if not. Some cases:
+ * - True if the website has the data available via an API like Mangadex
+ * - True if the website does not host pornographic/18+ manga like Mangapill
+ * - False if the website hosts pornographic manga and does not have a way to determine the rating like Mangakakalot
+ */
+exports.CAN_CHECK_RATING = true;
+
 /**
  * Get a string detailing how to get the Manga ID for a manga on this website
  * @returns {String} A string with the help message for how to get the Manga ID for a manga on this website
@@ -23,11 +31,12 @@ exports.getIdHelpString = () => {
  * If a database entry for the manga does not exist, create one. If one does exist add this user to the ping list
  * @param {*} manga_id The manga ID to follow
  * @param {*} user_id The user ID of the user following the manga
- * @param {*} guild_id The guild ID of the user
+ * @param {Object} guild The guild object of the server the command was run in
  * @param {*} lang The language to follow the manga in. Mangapill does not support languages other than English (afaik)
- * @returns The title of the manga followed
+ * @returns {Promise<String>} Manga title
  */
-exports.followManga = async (manga_id, user_id, guild_id, lang = 'en') => {
+exports.followManga = async (manga_id, user_id, guild, lang = 'en') => {
+  const guild_id = guild.id;
   const ret = await axios.get(`https://mangapill.com/manga/${manga_id}`);
   if (ret.status !== 200) {
     throw new AigisError(`I could not find manga with ID ${manga_id} on Mangapill.`);
@@ -52,7 +61,8 @@ exports.followManga = async (manga_id, user_id, guild_id, lang = 'en') => {
     latest_chapter_num: latest_chapter_num,
     cover_art: art,
     ping_list: { [`${guild_id}`]: [user_id] },
-    website: 'mangapill'
+    website: 'mangapill',
+    nsfw: !exports.CAN_CHECK_RATING
   }
   await insertManga(manga, guild_id, user_id);
   return title;

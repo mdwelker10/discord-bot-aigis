@@ -5,6 +5,7 @@
 const AigisError = require('../../utils/AigisError');
 const db = require('../../database/db');
 const config = require('../../config');
+const { getGuildConfig } = require('../../utils/utils');
 
 COLLECTION_NAME = 'manga';
 /** Function to insert/update a manga when someone follows it. Pass in the JSON object that would get saved the the database. The form of:
@@ -32,5 +33,24 @@ exports.insertManga = async (manga, guild_id, user_id) => {
     await db.updateOne(config.DB_NAME, COLLECTION_NAME, { manga_id: manga_id, lang: lang }, { $push: { [`ping_list.${guild_id}`]: user_id } });
   } else {
     await db.insert(config.DB_NAME, COLLECTION_NAME, manga);
+  }
+}
+
+/**
+ * Gets whether the manga channel for the server is marked as NSFW or not
+ * @param {*} guild The guild object for the server
+ * @returns {Promise<boolean>} True if the channel is marked as NSFW, false otherwise
+ */
+exports.mangaChannelNSFW = async (guild) => {
+  try {
+    const guild_config = await getGuildConfig(guild.id);
+    if (!guild_config) {
+      throw new AigisError('I was unable to retrieve the configuration for this server. Please have somone with the "manage server" permission execute the \`/setup\` command.');
+    }
+    //get channel Manga releases happen in
+    const ch = guild.channels.cache.get(guild_config.channel_manga);
+    return ch.nsfw;
+  } catch (err) {
+    throw new AigisError('I was unable to retrieve the manga channel for this server. Please have someone with the "manage server" permission execute the \`/setup\` command.');
   }
 }

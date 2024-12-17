@@ -63,11 +63,27 @@ exports.mangaCheck = async (client) => {
           console.error(`Could not find channel for manga in guild ${guild_id}.`);
           continue;
         }
+        //generate ping from pinglist
         let link = websites[manga.website].generateChapterLink(chapter.latest_chapter);
         let ping = '';
         for (let id of manga.ping_list[guild_id]) {
           ping += `<@${id}>-san `;
         }
+        //Check if channel needs to be marked NSFW for this ping to occur. If not send message explaining situation
+        if (manga.nsfw && !channel.nsfw) {
+          console.info(`Channel for manga in guild ${guild_id} is not marked as NSFW. Skipping chapter release ping.`);
+          let msg = `${ping}a manga you are following has a new chapter. However, the manga releases channel has not been marked as age restricted. `;
+          if (websites[manga.website].CAN_CHECK_RATING) {
+            msg += `The manga in question has just released chapter ${chapter.latest_chapter_num} is marked as adult content on the website hosting it. `;
+          } else {
+            msg += `The manga in question has just released chapter ${chapter.latest_chapter_num} and there is not a reliable way to check the content rating on the website hosting it. `;
+          }
+          msg += `Please have a server moderator mark the channel as age restricted to receive updates or unfollow this manga.`;
+          await channel.send(msg);
+          continue;
+        }
+        console.log('ping actually sending');
+        //generate ping for chapter release
         const manga_link = websites[manga.website].generateMangaLink(manga.manga_id);
         ping += `A new chapter of ${hyperlink(manga.title, manga_link)} on ${websites[manga.website].NAME} in ${exports.getLanguage(manga.lang)} has been released! You can read it ${hyperlink('here', `<${link}>`)}.`;
         const cover = path.join(__dirname, '..', '..', 'images', chapter.cover_art);
@@ -97,13 +113,14 @@ exports.mangaCheck = async (client) => {
 exports.listManga = async (guild_id, user_id) => {
   let data = await db.find(config.DB_NAME, exports.COLLECTION_NAME, { [`ping_list.${guild_id}`]: user_id });
   let str = '';
+  const emote = String.fromCodePoint(0x1F51E);
   for (const m of data) {
     try {
       const link = websites[m.website].generateMangaLink(m.manga_id);
       if (m.lang !== 'en') {
-        str += `- ${hyperlink(`${m.title}`, `<${link}>`)} on ${websites[m.website].NAME} in ${exports.getLanguage(m.lang)}\n`;
+        str += `- ${m.nsfw ? `${m.title}` : hyperlink(`${m.title}`, `<${link}>`)} on ${websites[m.website].NAME} in ${exports.getLanguage(m.lang)} ${m.nsfw ? `${emote}` : ''}\n`;
       } else {
-        str += `- ${hyperlink(`${m.title}`, `<${link}>`)} on ${websites[m.website].NAME}\n`;
+        str += `- ${m.nsfw ? `${m.title}` : hyperlink(`${m.title}`, `<${link}>`)} on ${websites[m.website].NAME} ${m.nsfw ? `${emote}` : ''}\n`;
       }
     } catch (err) {
       console.error(`Could not generate link for ${m.title} on ${m.website} in ${m.lang}.`);

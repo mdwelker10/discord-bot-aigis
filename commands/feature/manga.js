@@ -3,7 +3,8 @@
  * 1. Add a new case to the parseID function
  * 2. Copy the command_helpers/manga/manga-template.js file to a new file and complete all functions
  * 3. Add a new field entry to the idhelp command
- * 4. Add a new entry in the websites object in this file and the command_helpers/manga/manga.js file
+ * 4. Add a new field entry to the ratinghelp command
+ * 5. Add a new entry in the websites object in this file and the command_helpers/manga/manga.js file
  */
 const { SlashCommandBuilder, EmbedBuilder, hyperlink } = require("discord.js");
 const axios = require('axios');
@@ -38,6 +39,10 @@ module.exports = {
         .setDescription('Get help with how to get a manga ID from a supported website.')
     )
     .addSubcommand(sub =>
+      sub.setName('ratinghelp')
+        .setDescription("Get help understanding how a manga's content rating affects this command's functionality.")
+    )
+    .addSubcommand(sub =>
       sub.setName('follow')
         .setDescription('Follow a manga to get pinged for new releases.')
         .addStringOption(option =>
@@ -70,10 +75,6 @@ module.exports = {
     .addSubcommand(sub =>
       sub.setName('random')
         .setDescription('Get a random manga from Mangadex')
-        .addBooleanOption(option =>
-          option.setName('pornographic')
-            .setDescription('Set to true to include pornographic manga. Default is false.')
-        )
         .addStringOption(option =>
           option.setName('tag-1')
             .setDescription('Optional tag to filter the random manga by.')
@@ -110,14 +111,16 @@ module.exports = {
       const username = interaction.user.displayName;
       if (subcommand === 'help') { //help 
         let desc = `Here is some guidance on how to use the manga command ${username}-san.\n\n`;
-        desc += `Below are the subcommands you can use. The "manga-id" is the internal ID for the manga that the website uses. `
-        desc += `For help identifying the manga ID, and for a list of supported manga websites, please use the command \`/manga idhelp\`.\n\n`
-        desc += `Also ${username}-san, the language option can be used to specify what language you want to follow the manga in, however this feature is only available for Mangadex. The default is English so this is optional. `
+        desc += `Below are the subcommands you can use. The "manga-id" is the internal ID for the manga that the website uses. `;
+        desc += `For help identifying the manga ID, and for a list of supported manga websites, please use the command \`/manga idhelp\`.\n\n`;
+        desc += `Also ${username}-san, the language option can be used to specify what language you want to follow the manga in, however this feature is only available for Mangadex. The default is English so this is optional. `;
         desc += `To specify a language, you need to use the ${hyperlink('ISO 639-1 standard', '<https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes>')} for the language code, `;
-        desc += `there are also some exceptions listed on ${hyperlink("Mangadex's website", '<https://api.mangadex.org/docs/3-enumerations/')}.`
+        desc += `there are also some exceptions listed on ${hyperlink("Mangadex's website", '<https://api.mangadex.org/docs/3-enumerations/')}.\n\n`;
+        desc += `If you wish to follow explicit manga that is pornographic or 18+ content, the channel which does manga chapter ping releases must be marked as NSFW. `;
+        desc += `This is to ensure that the content is only seen by those who wish to see it, and to comply with Discord's Terms of Service.`;
+        desc += `For more information, please use \`/manga ratinghelp\`.`;
         //string for random command description is very long
-        let rand = `Get a random manga from Mangadex with the option to filter by 3 tags using OR logic. To see valid tags visit ${hyperlink("Mangadex's website", '<https://mangadex.org/tag>')}. `
-        rand += 'Set the optional pornographic flag to true to include pronographic manga. By default it is false.'
+        let rand = `Get a random manga from Mangadex with the option to filter by 3 tags using OR logic. To see valid tags visit ${hyperlink("Mangadex's website", '<https://mangadex.org/tag>')}.`;
         const embed = new EmbedBuilder()
           .setTitle('Manga Command Help')
           .setColor(config.EMBED_COLOR)
@@ -129,7 +132,7 @@ module.exports = {
             { name: '/manga follow <manga-id> <language>', value: 'Follow a manga to get pinged for new chapter releases.' },
             { name: '/manga list', value: 'List all manga you are following.' },
             { name: '/manga unfollow <manga-id> <language>', value: 'Unfollow a manga to stop getting pinged for new chapter releases.' },
-            { name: '/manga random <tag-1> <tag-2> <tag-3> <pornographic>', value: rand }
+            { name: '/manga random <tag-1> <tag-2> <tag-3>', value: rand }
           )
           .setTimestamp();
         await interaction.editReply({ embeds: [embed] });
@@ -150,10 +153,37 @@ module.exports = {
           )
           .setTimestamp();
         await interaction.editReply({ embeds: [embed] });
+      } else if (subcommand === 'ratinghelp') { //ratinghelp command
+        //build strings for descriptions 
+        let desc = `The following message is from my developer ${username}-san: \n\n`
+        desc += "To comply with Discord's Terms of Service, manga with age restricted content can only be followed if the manga release channel is marked as age restricted. ";
+        desc += "This channel is where manga chapter pings will occur, and is determined during the `/setup` command. If one is not provided, the default bot channel is used.\n\n";
+        desc += "If the channel was marked as age restricted when you followed an 18+ manga and later lost it's age restricted status, you will receive a ping notifying you of this during the next chapter release. ";
+        desc += "Due to how manga IDs are collected and the possibility of a NSFW title, the manga itself will not be specified and no links to chapters or the manga will be shared. However, the chapter number will be shown. ";
+        desc += "If this happens, pings notifying you of chapter releases will continue unless you unfollow the manga, but the manga itself will not be specified. ";
+        desc += "If a moderator marks the channel as age restricted again, pings will resume as normal.\n\n";
+        desc += "For the purpose of this command, age restricted manga is defined as a manga featuring pornographic material, such as uncensored nudity/sexual content. In general, Mangadex's rating system can be applied. ";
+        desc += "Manga with suggestive or erotica content will not be restricted as this is more akin to PG-13 content, and Discord requires users to be 13 years old to use the platform. ";
+        desc += "Also, some websites do not provide a way to programatically determine the content rating of a manga. ";
+        desc += "If this is the case, and the website actually serves explicit manga, then all manga will be assumed to be NSFW, and the rules above will apply even if the manga itself is not explicit. ";
+        desc += "Below is a list of supported websites, and whether or not the content rating can be determined programatically.\n\n";
+        const embed = new EmbedBuilder()
+          .setTitle('Manga ID Help')
+          .setColor(config.EMBED_COLOR)
+          .setDescription(desc)
+          .setThumbnail(config.AIGIS_YUKATA_IMAGE)
+          .addFields(
+            { name: 'Mangadex', value: "Content rating can be determined." },
+            { name: 'Mangapill', value: "Does not have 18+ Manga." },
+            { name: 'Mangakakalot', value: "Content rating cannot be determined." },
+            { name: 'Manganato', value: "Content rating cannot be determined." }
+          )
+          .setTimestamp();
+        await interaction.editReply({ embeds: [embed] });
       } else if (subcommand === 'follow') { //follow manga command
         const cfg = await getGuildConfig(interaction.guildId);
         if (!cfg) {
-          await interaction.editReply(`I'm sorry ${username}-san, I was unable to retrieve the configuration for this server. Please have somone with the "manage server" permission execute the \`/setup\` command`);
+          await interaction.editReply(`I'm sorry ${username}-san, I was unable to retrieve the configuration for this server. Please have somone with the "manage server" permission execute the \`/setup\` command.`);
           return;
         }
         //parse the ID and check with the corresponding website if the ID is valid
@@ -172,11 +202,11 @@ module.exports = {
               await interaction.editReply(`I'm sorry ${username}-san, the language code of ${interaction.options.getString('language')} is not valid.`);
               return;
             }
-            const title = await websites[website].followManga(manga_id, interaction.user.id, interaction.guildId, lang);
+            const title = await websites[website].followManga(manga_id, interaction.user.id, interaction.guild, lang);
             await interaction.editReply(`I have added you to the ping list for ${title} in ${getLanguage(lang)} on ${websites[website].NAME} ${username}-san.`);
           } else {
             //dynamically call other website functions
-            const title = await websites[website].followManga(manga_id, interaction.user.id, interaction.guildId);
+            const title = await websites[website].followManga(manga_id, interaction.user.id, interaction.guild);
             await interaction.editReply(`I have added you to the ping list for ${title} on ${websites[website].NAME} ${username}-san.`);
           }
         } catch (err) {
@@ -197,7 +227,7 @@ module.exports = {
       } else if (subcommand === 'list') { //list manga command
         const cfg = await getGuildConfig(interaction.guildId);
         if (!cfg) {
-          await interaction.editReply(`I'm sorry ${username}-san, I was unable to retrieve the configuration for this server. Please have somone with the "manage server" permission execute the \`/setup\` command`);
+          await interaction.editReply(`I'm sorry ${username}-san, I was unable to retrieve the configuration for this server. Please have somone with the "manage server" permission execute the \`/setup\` command.`);
           return;
         }
         let embed = await listManga(interaction.guildId, interaction.user.id);
@@ -205,7 +235,7 @@ module.exports = {
       } else if (subcommand === 'unfollow') { //unfollow command
         const cfg = await getGuildConfig(interaction.guildId);
         if (!cfg) {
-          await interaction.editReply(`I'm sorry ${username}-san, I was unable to retrieve the configuration for this server. Please have somone with the "manage server" permission execute the \`/setup\` command`);
+          await interaction.editReply(`I'm sorry ${username}-san, I was unable to retrieve the configuration for this server. Please have somone with the "manage server" permission execute the \`/setup\` command.`);
           return;
         }
         const lang = interaction.options.getString('language') ?? 'en';
@@ -221,7 +251,6 @@ module.exports = {
           await interaction.editReply(`${username}-san, you do not appear to be following that manga.`);
         }
       } else if (subcommand === 'random') { //random manga command
-        const porn = interaction.options.getBoolean('pornographic') ?? false;
         let url = 'https://api.mangadex.org/manga/random?includedTagsMode=OR';
         //handle tags
         const tag1 = interaction.options.getString('tag-1') ?? false;
@@ -234,10 +263,6 @@ module.exports = {
             console.log(`Tag: ${tag}`);
             url += `&includedTags[]=${tag}`;
           }
-        }
-        //handle content rating
-        if (porn) {
-          url += '&contentRating[]=safe&contentRating[]=suggestive&contentRating[]=erotica&contentRating[]=pornographic';
         }
         let data;
         try {
@@ -257,10 +282,8 @@ module.exports = {
         }
         let art = null;
         let cover = null;
-        if (manga.attributes.contentRating !== 'pornographic') {
-          cover = await Mangadex.getCoverArt(manga.id, manga.relationships.filter(rel => rel.type === 'cover_art')[0].id);
-          art = Array.isArray(cover) ? cover[0] : cover; //if its an array AttachmentBuilder will be at cover[1]
-        }
+        cover = await Mangadex.getCoverArt(manga.id, manga.relationships.filter(rel => rel.type === 'cover_art')[0].id);
+        art = Array.isArray(cover) ? cover[0] : cover; //if its an array AttachmentBuilder will be at cover[1]
         const author_arr = manga.relationships.filter(rel => rel.type === 'author');
         let author = 'No listed author';
         if (author_arr.length > 0) {
