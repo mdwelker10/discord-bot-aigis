@@ -15,6 +15,10 @@ const foldersPath = path.join(__dirname, '..', 'commands');
 const commandFolders = fs.readdirSync(foldersPath);
 
 for (const folder of commandFolders) {
+  //only deploy dev commands in dev environment
+  if (folder == 'dev' && process.env.DEV != 1) {
+    continue;
+  }
   // Grab all the command files from the commands directory
   const commandsPath = path.join(foldersPath, folder);
   const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));

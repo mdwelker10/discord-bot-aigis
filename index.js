@@ -8,9 +8,9 @@ const { initQueue } = require('./command_helpers/reminder');
 const { getGuildConfig, isDeveloper } = require('./utils/utils');
 const { purgeAll } = require('./command_helpers/purge');
 //list of commands that require deferred replies (longer than 3 seconds)
-long_commands = ['ping', 'sotd', 'manga', 'command', 'purge']
+long_commands = ['ping', 'sotd', 'manga', 'command', 'purge'];
 //list of commands that need the server configuration to work. All of these should also be in the long_commands list
-setup_required = ['command']
+setup_required = ['command'];
 
 // BOT token
 const token = process.env.TOKEN;
@@ -46,19 +46,16 @@ client.once(Events.ClientReady, readyClient => {
 
 client.on(Events.MessageCreate, async (message) => {
   if (message.author.bot) return;
-  //For manually testing manga cronjob
-  if (process.env.DEV == 1) {
-    // if (message.content.toLowerCase().includes('debug purge') && isDeveloper(message.author.id)) {
-    //   console.log('Debugging purge...');
-    //   await purgeAll(message.guild.id);
-    //   return message.reply('I have purged all data for this server');
-    // }
-    if (message.content.toLowerCase().includes('debug manga') && isDeveloper(message.author.id)) {
-      console.log('Debugging manga...');
-      await mangaCheck(client);
-      return message.reply('I have checked for manga updates');
-    }
+  if (message.content.toLowerCase().includes('debug manga') && isDeveloper(message.author.id)) { //For manually testing manga cronjob
+    console.log('Debugging manga...');
+    await mangaCheck(client);
+    return message.reply('I have checked for manga updates');
   }
+  // if (message.content.toLowerCase().includes('debug purge') && isDeveloper(message.author.id)) {
+  //   console.log('Debugging purge...');
+  //   await purgeAll(message.guild.id);
+  //   return message.reply('I have purged all data for this server');
+  // }
 });
 
 client.on(Events.InteractionCreate, async interaction => {
