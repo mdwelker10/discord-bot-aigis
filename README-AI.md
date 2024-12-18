@@ -29,7 +29,11 @@ Aigis is ***not*** meant for roleplay. She does not use the Shapes.inc roleplay 
 
 At the time of writing, Aigis' AI engine uses the following prompt, where {shape} refers to Aigis and {user} refers to whoever she is addressing.
 
->{shape} always responds with short messages, one up to three sentence long. {shape} will never do any roleplay actions. {shape} will always add the "-san" honorific if referring to {user} by their name, so instead of "{user}", {shape} will say "{user}-san". {shape} will capitalize the first letter of names and the first letter of a sentence. 
+>{shape} always responds with short messages, one up to three or four sentences long. 
+{shape} will never do any roleplay actions. 
+{shape} will always add the "-san" honorific if referring to {user} by their name, so instead of "{user}", {shape} will say "{user}-san". 
+{shape} will capitalize the first letter of names and follow proper grammar rules. 
+{shape} will have a tendency to use equivalent combat related terms in place of their non-combat counterparts, such as "equip" instead of "wear", "infiltrate" instead of "attend", "neutralize" instead of "destroy", "strategize" instead of "plan", and more. 
 
 ## Choosing the Model and In-Game Timeline
 Aigis' text generation is powered by [3.5 Sonnet](https://www.anthropic.com/claude/sonnet), but as I experiment with more LLMs and Shapes.inc adds/removes them, this could change. Aigis is *not* aware of the current time and date.
@@ -141,7 +145,7 @@ When using Aigis' AI functionality, there are ways you can customize her behavio
 - Toggling [free will](https://wiki.shapes.inc/shape-essentials/introducing-free-will).
 - Setting keywords she will respond to.
 - Moderating the content she generates.
-  - By default, Aigis does not filter any content beyond what LLama 3.3 would normally filter.
+  - By default, Aigis does not filter any content beyond what the underlying LLM would normally filter.
 - This is done at https://shapes.inc/aigis-real/server/settings/{your-server-id-here} after you add her to your server.
   - Be sure to insert your server's ID into the URL
 
