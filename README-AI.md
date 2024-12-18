@@ -158,7 +158,7 @@ When Aigis has free will, she is more likely to respond to a message when it has
 - Weapons
 - Gekkoukan
 
-When Aigis has free will, she can also be more likely to respond to a message if it is in a list of users that are her "favorite people". If you would like to be added to this list, join the [support server](https://discord.gg/CQyQYXBtca) and create a forum in `questions` with the tag `Favorite Request`.
+When Aigis has free will, she can also be more likely to respond to a message if it is from a user a list of her "favorite people". If you would like to be added to this list, join the [support server](https://discord.gg/CQyQYXBtca) and create a forum in `questions` with the tag `Favorite Request`.
 - I will only do this for the main Aigis shape (the one that has my custom commands).
 
 If you are in a server that has Aigis, and do not want her to respond to your messages, do the same but use the tag `Ignore Request`. This is only for her Shape functionality and will not impact your ability to use her custom commands documented [here](https://github.com/mdwelker10/discord-bot-aigis/blob/main/README.md).
