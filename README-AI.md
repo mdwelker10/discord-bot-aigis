@@ -62,7 +62,7 @@ In case you are curious, or want to make your own Shape character, here are note
   - Will avoid certain topics but not really censored. 
   - A slightly better version of it's turbo counterpart
 - **Gemini Flash 2.0**
-  - Responses are short by default but can be easily changes/crafted
+  - Responses are short by default but can be easily changed/crafted
   - Capable of solving moral dilemmas with enough prompting and will accept good solutions if provided
   - Uncensored and can pull memory information but struggles with some specifics
   - Seems overly eager to answer correctly even if it's wrong. For example, if you point out it's wrong about something it will try to correct itself and say it has stored it's newly corrected answer in memory even if the new answer is also wrong
@@ -74,7 +74,7 @@ In case you are curious, or want to make your own Shape character, here are note
 - **Lunaris L3 8b**
   - Has more emotion and "attitude" which makes it feel more human. This is probably good for most characters but Aigis is a special case.
   - Not capable of solving easy moral dilemmas without a lot of prompting
-  - Will sometimes state incorrect information that should be in the wiki, or will make up insane things (she said a move in Pesona allowed her to slow down time)
+  - Will sometimes state incorrect information that should be in the wiki, or will make up insane things (she said a move in Persona allowed her to slow down time)
   - Seems uncensored but I get the feeling that is not the intention
 - **3.5 Haiku**
   - Not great at following response length guidelines, can be prompted to be better at this
