@@ -1,64 +1,155 @@
+const { SlashCommandBuilder, AttachmentBuilder } = require('discord.js');
+const config = require('../../config');
+const AigisError = require('../../utils/AigisError');
+const { createCanvas, loadImage } = require('canvas');
+const path = require('path');
+
+const CARD_PATH = path.join(__dirname, '..', '..', 'images', 'cards');
+
+//testing variables
+const JACK = path.join(CARD_PATH, 'wand-jack.png');
+const QUEEN = path.join(CARD_PATH, 'sword-queen.png');
+const KING = path.join(CARD_PATH, 'coin-king.png');
+const ACE = path.join(CARD_PATH, 'cup-ace.png');
+const JOKER = path.join(CARD_PATH, 'joker.png');
+const DEALER_TEST = [JACK, QUEEN, KING, ACE, QUEEN];
+const PLAYER_TEST = [
+  JOKER,
+  path.join(CARD_PATH, 'cup-8.png'),
+  path.join(CARD_PATH, 'sword-2.png'),
+  path.join(CARD_PATH, 'wand-5.png')
+];
+
+const CARD_WIDTH = 284;
+const CARD_HEIGHT = 400;
+const CANVAS_WIDTH = 1920;
+const CANVAS_WIDTH_WIDE = 2937;
+const CANVAS_HEIGHT = 1200;
+const CARDS_WIDE = 5; //number of cards required to switch to wide table (must be over this value)
+
+module.exports = {
+  data: new SlashCommandBuilder()
+    .setName('bj') //TODO change to "blackjack" for final release
+    .setDescription('Start a new Blackjack table with the specified turn time limit')
+    .addSubcommand(cmd =>
+      cmd.setName('help')
+        .setDescription('Get help with the Blackjack game')
+    )
+    .addSubcommand(cmd =>
+      cmd.setName('rules')
+        .setDescription('Get the rules for Blackjack')
+    )
+    .addSubcommand(cmd =>
+      cmd.setName('start')
+        .setDescription('Start a new Blackjack table with the specified turn time limit')
+        .addIntegerOption(option =>
+          option.setName('time-limit')
+            .setDescription('The amount of time in seconds for each turn. Default 30 seconds.')
+            .setMinValue(10)
+            .setMaxValue(60)
+        )
+    )
+    .addSubcommand(cmd =>
+      cmd.setName('join')
+        .setDescription('Join a Blackjack table')
+        .addStringOption(option =>
+          option.setName('table-id')
+            .setDescription('The ID of the table you want to join')
+            .setRequired(true)
+        )
+    )
+    .addSubcommand(cmd =>
+      cmd.setName('code')
+        .setDescription('Get the code for the Blackjack table you are in')
+    )
+    .addSubcommand(cmd =>
+      cmd.setName('bet')
+        .setDescription('Change your bet amount')
+        .addIntegerOption(option =>
+          option.setName('amount')
+            .setDescription('The amount of money you want to bet')
+            .setRequired(true)
+            .setMinValue(config.MIN_BET)
+            .setMaxValue(config.MAX_BET)
+        )
+    ),
+  async execute(interaction) {
+    const user = interaction.user.displayName;
+    const subcommand = interaction.options.getSubcommand();
+    try {
+      if (subcommand == 'help') {
+        //TODO - get card paths before this, and load dealer and player card arrays with file paths
+        const buffer = await drawTable(user, config.MAX_BET, Number.MAX_SAFE_INTEGER, DEALER_TEST, PLAYER_TEST);
+        const attachment = new AttachmentBuilder(buffer, { name: 'table.jpeg' });
+        return await interaction.editReply({ files: [attachment] });
+      }
+      return await interaction.editReply(`${user}-san. Hi!`);
+    } catch (err) {
+      if (err instanceof AigisError) {
+        await interaction.editReply(`${user}-san! I'm sorry but I have encountered an issue while executing your command. The problem is ${err.message}`);
+      } else {
+        console.error(err);
+        await interaction.editReply(`${user}-san... I do not know what happened. My programming indicated there was an issue but it is unknown to me. The issue is ${err.message}`)
+      }
+    }
+  }
+};
+
+/** Convert a number to a string with commans */
+function numberToString(num) {
+  if (num < 1000)
+    return num.toString();
+  return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); //<-- copilot magic idk what this is 
+}
+
+/** Draw the blackjack table */
+async function drawTable(username, bet, balance, dealerCards, playerCards = []) {
+  const wide = dealerCards.length > CARDS_WIDE || playerCards.length > CARDS_WIDE;
+  const canvas = createCanvas(wide ? CANVAS_WIDTH_WIDE : CANVAS_WIDTH, CANVAS_HEIGHT);
+  const ctx = canvas.getContext('2d');
+  //draw table
+  if (wide) {
+    //wide
+    const table = await loadImage(path.join(CARD_PATH, 'table-wide.jpg'));
+    ctx.drawImage(table, 0, 0, CANVAS_WIDTH_WIDE, CANVAS_HEIGHT);
+  } else {
+    const table = await loadImage(path.join(CARD_PATH, 'table.jpg'));
+    ctx.drawImage(table, 0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+  }
+
+  //player name and bet
+  ctx.font = '40px Arial';
+  ctx.fillStyle = '#ffffff';
+  ctx.fillText(`Player - ${username}`, 20, 40);
+  ctx.fillText(`Balance - ${numberToString(balance)} VT`, 20, 100);
+  ctx.fillText(`Bet - ${numberToString(bet)} VT`, 20, 160);
+
+  //draw cards 
+  await drawCards(ctx, dealerCards, 200, wide);
+  await drawCards(ctx, playerCards, 780, wide);
+  //finalize image and return buffer to be used with attachment
+  return canvas.toBuffer('image/jpeg');
+}
+
 /**
- * BLACKJACK COMMAND initial thoughts
- * - /blackjack start <time-limit> 
- *    - Time limit is optional, default is 30 seconds per action. Must be between 10 and 60 seconds
- * - /blackjack join
- * - /blackjack bet <amount>
- *    - Can be used to change your bet at any point
- *    - minimum is 10 (might change), maximum is 1,000,000 (might change)
- *    - ensure players cannot go over 9,007,199,254,740,991 
- * - Actions will be buttons attached to message
- * 
- * - If a player leaves, they will be removed from the game and their bet will be returned
- * - If a player does not respond, auto stand for 2 turns. 3rd turn they are removed from the game and their bet is returned
- * - TODO: Figure out a way to prevent abusing leave, which might allow a player to only play good deals
- *    - Maybe in database or whatever store time of leaving and dont allow them to join back for a certain amount of time
- * - If a player cannot cover their bet, it is reset to 10. If they cannot cover 10 they are kicked from the table
- * - When all players have left or been kicked, the game ends
- * 
- * CURRENCY:
- * - Velvet Tokens (VT)
- * - Yoink Velvet Room emblem/logo and put it on something to make it look like a chip
- * - Figure out starting amount and interest rate and stuff later, and maybe ways to earn more
- * - Maybe have a leaderboard for the top 10 players across all servers (opt in to have name displayed)
- *    - New command to claim daily tokens, see your balance, opt in to global leaderboard, see server leaderboard, maybe add bonuses for consecutive dailys
- * 
- * GAMEPLAY:
- * - Max of 7 players per table
- * - Each table assigned a unique ID, players can only interact with 1 table at a time across all servers
- * - Use 10 decks, reshuffle at 64 cards remaining
- * - Aigis will be the dealer - she will always hit on 16 or lower, stand on 17 or higher
- * 
- * - Player order is join time, dealer last
- * - Each player turn send:
- *    - Canvas (npm) image with Player name, Player cards, dealer card (maybe with back of 2nd card for aesthetic), player bet, player balance 
- *    - Buttons for hit, stand, double down, leave, and split if it's a valid move. Button handling in index.js
- *    - Text message stating the time limit
- * 
- * SCENARIOS:
- * - Blackjack (first turn) 
- *   - Send a public ping with player(s) that hit blackjack and their canva image. Maybe one image / player at a time
- *   - If dealer has blackjack, show that canva image and send it publically
- * - Hit = Draw card, send message that player X hit, send updated canvas to player
- * - Stand = Send message that player X stood, move on to next turn
- * - Double down = Double bet, draw 1 card, show canva image to player, move on to next turn
- * - Leave = Remove player from game, return bet, send message that player X left
- * - Split (player needs 2 cards of same denomination)
- *   - Only allow 1 split per turn
- *   - Essentially have 2 turns in 1, play first hand then second hand separately
- *      - TODO: Figure out specifics of how to handle this
- *   - Place bet on each hand
- *   - Announce that "player X split - playing their first hand", show canva image of hand 1 to player, then play that hand
- *   - When hand 1 is played, send public message "player X started second hand", show canva image of hand 2 to player, then play that hand
- *   - Remember to handle the bets for each hand separately
- * - Insurance (not implementing)
- * 
- * GAMBLING:
- * - Take away bet from player at turn start
- * - Bust = lose bet
- * - Win = 2x bet
- * - Blackjack = 2.5x bet
- * - Tie = bet returned
- * - Dealer bust = bet back + winnings
- * 
+ * Draw the cards on the given 2d canvas
+ * @param {*} ctx the canvas
+ * @param {*} cards the array of cards to draw
+ * @param {*} y the starting y position of the cards. X is dynamically calculated
  */
+async function drawCards(ctx, cards, y, wide) {
+  const canvasWidth = wide ? CANVAS_WIDTH_WIDE : CANVAS_WIDTH;
+  //calculate x pos of first card
+  let cardLengths = Math.floor(cards.length / 2);
+  let x = (canvasWidth / 2) - (cardLengths * CARD_WIDTH) - (cardLengths * 20);
+  //account for odd number of cards
+  if (cards.length % 2 == 1) {
+    x -= CARD_WIDTH / 2;
+  }
+  //draw all cards
+  for (let i = 0; i < cards.length; i++) {
+    const image = await loadImage(cards[i]);
+    ctx.drawImage(image, x, y, CARD_WIDTH, CARD_HEIGHT);
+    x += CARD_WIDTH + 20;
+  }
+}

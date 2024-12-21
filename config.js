@@ -10,6 +10,8 @@ exports.AIGIS_YUKATA_IMAGE = 'https://i.imgur.com/6kKYY7X.png';
 exports.AIGIS_DANCING_IMAGE = 'https://i.imgur.com/ozS5bjO.png';
 exports.AIGIS_COOLDOWN_IMAGE = 'https://i.imgur.com/j0ilNtL.png';
 exports.USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:133.0) Gecko/20100101 Chrome/110 Firefox/133.0';
+exports.MIN_BET = 10;
+exports.MAX_BET = 1000000000; //1 billion
 exports.MANGADEX_ISO6391 = {
   'en': 'English',
   'ja': 'Japanese',

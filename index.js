@@ -8,7 +8,7 @@ const { initQueue } = require('./command_helpers/reminder');
 const { getGuildConfig, isDeveloper } = require('./utils/utils');
 const { purgeAll } = require('./command_helpers/purge');
 //list of commands that require deferred replies (longer than 3 seconds)
-long_commands = ['ping', 'sotd', 'manga', 'command', 'purge'];
+long_commands = ['ping', 'sotd', 'manga', 'command', 'purge', 'bj'];
 //list of commands that need the server configuration to work. All of these should also be in the long_commands list
 setup_required = ['command'];
 
