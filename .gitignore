@@ -4,7 +4,6 @@
 .DS_*
 **/temp/
 **/logs
-**/images/*
 ai/__pycache__/
 ai/venv/
 ai/venv_win/
