@@ -2,7 +2,9 @@ const { SlashCommandBuilder, AttachmentBuilder } = require('discord.js');
 const config = require('../../config');
 const AigisError = require('../../utils/AigisError');
 const { createCanvas, loadImage } = require('canvas');
+const { numberToString } = require('../../utils/utils');
 const path = require('path');
+const { startGame, joinGame } = require('../../command_helpers/blackjack');
 
 const CARD_PATH = path.join(__dirname, '..', '..', 'images', 'cards');
 
@@ -44,23 +46,18 @@ module.exports = {
         .setDescription('Start a new Blackjack table with the specified turn time limit')
         .addIntegerOption(option =>
           option.setName('time-limit')
-            .setDescription('The amount of time in seconds for each turn. Default 30 seconds.')
-            .setMinValue(10)
-            .setMaxValue(60)
+            .setDescription('The amount of time in seconds for each action. Default 30 seconds.')
+            .setMinValue(15)
+            .setMaxValue(45)
         )
     )
     .addSubcommand(cmd =>
       cmd.setName('join')
         .setDescription('Join a Blackjack table')
-        .addStringOption(option =>
-          option.setName('table-id')
-            .setDescription('The ID of the table you want to join')
-            .setRequired(true)
-        )
     )
     .addSubcommand(cmd =>
-      cmd.setName('code')
-        .setDescription('Get the code for the Blackjack table you are in')
+      cmd.setName('leave')
+        .setDescription('Leave the Blackjack table')
     )
     .addSubcommand(cmd =>
       cmd.setName('bet')
@@ -76,14 +73,25 @@ module.exports = {
   async execute(interaction) {
     const user = interaction.user.displayName;
     const subcommand = interaction.options.getSubcommand();
+    const guildId = interaction.guild.id;
+    const userId = interaction.user.id;
     try {
-      if (subcommand == 'help') {
-        //TODO - get card paths before this, and load dealer and player card arrays with file paths
-        const buffer = await drawTable(user, config.MAX_BET, Number.MAX_SAFE_INTEGER, DEALER_TEST, PLAYER_TEST);
-        const attachment = new AttachmentBuilder(buffer, { name: 'table.jpeg' });
-        return await interaction.editReply({ files: [attachment] });
+      switch (subcommand) {
+        case 'help':
+        case 'rules':
+        case 'start':
+          await startGame(guildId, userId, interaction.options.getInteger('time-limit') ?? 30);
+          await interaction.editReply(`A new Blackjack game has been started ${user}-san! Use the \`/bet <amount>\` command to change your bet amount.`);
+        case 'join':
+          await joinGame(guildId, userId);
+          await interaction.editReply(`You have joined the Blackjack game ${user}-san! Use the \`/bet <amount>\` command to change your bet amount. You will be dealt in on the next turn.`);
+        case 'leave':
+        case 'bet':
       }
-      return await interaction.editReply(`${user}-san. Hi!`);
+      //TODO - get card paths before this, and load dealer and player card arrays with file paths
+      const buffer = await drawTable(user, config.MAX_BET, Number.MAX_SAFE_INTEGER, DEALER_TEST, PLAYER_TEST);
+      const attachment = new AttachmentBuilder(buffer, { name: 'table.jpeg' });
+      return await interaction.editReply({ files: [attachment] });
     } catch (err) {
       if (err instanceof AigisError) {
         await interaction.editReply(`${user}-san! I'm sorry but I have encountered an issue while executing your command. The problem is ${err.message}`);
@@ -94,13 +102,6 @@ module.exports = {
     }
   }
 };
-
-/** Convert a number to a string with commans */
-function numberToString(num) {
-  if (num < 1000)
-    return num.toString();
-  return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); //<-- copilot magic idk what this is 
-}
 
 /** Draw the blackjack table */
 async function drawTable(username, bet, balance, dealerCards, playerCards = []) {

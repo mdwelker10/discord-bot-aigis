@@ -3,6 +3,7 @@ const config = require('../config.js');
 const { selectSong } = require('./sotd');
 const { mangaCheck } = require('./manga/manga');
 const { purgeAll } = require('./purge');
+const { resetDaily } = require('./daily');
 const { getGuildConfig } = require('../utils/utils');
 const db = require('../database/db');
 
@@ -10,6 +11,7 @@ const db = require('../database/db');
 let sotdJob;
 let mangaJob;
 let purgeJob;
+let tokenJob;
 
 /* --------------- SOTD --------------- */
 exports.startSotd = (client) => {
@@ -89,4 +91,20 @@ exports.stopPurgeChecks = () => {
   purgeJob.stop();
 }
 
+/* --------------- Tokens --------------- */
+exports.startDailyTokenChecks = (client) => {
+  tokenJob = new CronJob(
+    '0 0 0 * * *',
+    async () => {
+      await resetDaily();
+    },
+    null,
+    true,
+    'America/New_York'
+  );
+}
+
+exports.stopDailyTokenChecks = () => {
+  tokenJob.stop();
+}
 

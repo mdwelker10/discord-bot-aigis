@@ -2,22 +2,27 @@ require('dotenv').config();
 const fs = require('node:fs');
 const path = require('node:path');
 const { Client, Events, GatewayIntentBits, Collection, ActivityType, PresenceUpdateStatus } = require('discord.js');
-const { startSotd, startMangaChecks } = require('./command_helpers/cronjobs');
+const { startSotd, startMangaChecks, startPurgeChecks, startDailyTokenChecks } = require('./command_helpers/cronjobs');
 const { mangaCheck } = require('./command_helpers/manga/manga');
 const { initQueue } = require('./command_helpers/reminder');
 const { getGuildConfig, isDeveloper } = require('./utils/utils');
 const { purgeAll } = require('./command_helpers/purge');
 //list of commands that require deferred replies (longer than 3 seconds)
-long_commands = ['ping', 'sotd', 'manga', 'command', 'purge', 'bj'];
+long_commands = ['ping', 'sotd', 'manga', 'command', 'purge', 'bj', 'vt', 'claim'];
 //list of commands that need the server configuration to work. All of these should also be in the long_commands list
 setup_required = ['command'];
 
 // BOT token
 const token = process.env.TOKEN;
+
 //create client
 const client = new Client({
   allowedMentions: { parse: ['users', 'roles'] },
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent]
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent,
+    GatewayIntentBits.GuildMembers]
 });
 
 //attach .commands property to client to allow access to commands in other files
@@ -153,4 +158,8 @@ if (process.env.DEV != 1) {
   console.info('Cron job for Song of the Day started.');
   startMangaChecks(client);
   console.info('Cron job for Manga updates started.');
+  startPurgeChecks(client);
+  console.info('Cron job for purging data started.');
+  startDailyTokenChecks(client);
+  console.info('Cron job for daily token checks started.');
 }

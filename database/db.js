@@ -5,6 +5,11 @@ const AigisError = require('../utils/AigisError');
 
 let database;
 
+/** For opening a connection for manual use. try to avoid */
+exports.connect = createConnection;
+/** For closing a manually opened collection. Always use when using connect() */
+exports.disconnect = closeConnection;
+
 async function createConnection(dbName) {
   if (!database) {
     try {

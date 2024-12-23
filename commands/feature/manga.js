@@ -127,7 +127,7 @@ module.exports = {
           .setDescription(desc)
           .setThumbnail(config.AIGIS_YUKATA_IMAGE)
           .addFields(
-            { name: '/manga help', value: 'This command showing all Manga commands' },
+            { name: '/manga help', value: 'This command showing all Manga commands.' },
             { name: '/manga idhelp', value: 'Get help on how to find the ID for a manga on supported websites.' },
             { name: '/manga follow <manga-id> <language>', value: 'Follow a manga to get pinged for new chapter releases.' },
             { name: '/manga list', value: 'List all manga you are following.' },

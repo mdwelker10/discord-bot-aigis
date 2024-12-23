@@ -103,3 +103,8 @@ exports.checkPermission = async (guildMember, guildConfig) => {
     throw new AigisError('an error occurred while checking your permissions. Ask for help from one of my developers if this continues.');
   }
 }
+
+/** Convert a number to a string with commans. Works with BigNumber objects */
+exports.numberToString = (num) => {
+  return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); //<-- copilot magic idk what this is 
+}
