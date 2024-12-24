@@ -17,7 +17,7 @@ exports.claim = async (guildMember) => {
     const diffDays = Math.round(Math.abs((now - joinDate) / oneDay));
     const tokens = 1000 + diffDays;
     console.info(`Created token database entry for user ${userId} in guild ${guildId}`);
-    await db.insert(config.DB_NAME, 'vt', { user_id: userId, guild_id: guildId, vt: Number.toString(tokens), daily_claimed: true, daily_streak: 1 });
+    await db.insert(config.DB_NAME, 'vt', { user_id: userId, guild_id: guildId, vt: Number.toString(tokens), daily_claimed: true, daily_streak: 1, bet: config.MIN_BET });
     return { tokens: numberToString(tokens), bonus: false, streak: 1, new_member: true };
   } else {
     //user in database, collect daily tokens

@@ -84,7 +84,7 @@ module.exports = {
           let name = null;
           try {
             let user = await interaction.guild.members.fetch(data[i].user_id);
-            name = user.displayName;
+            name = user.user.username;
           } catch (err) {
             //member not found
             name = data[i].user_id;
