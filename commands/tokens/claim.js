@@ -5,7 +5,7 @@ const { claim } = require('../../command_helpers/daily');
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('claim')
-    .setDescription('Claim you daily Velvet Tokens. Shortcut for /vt daily'),
+    .setDescription('Claim your daily Velvet Tokens. Shortcut for /vt daily'),
   async execute(interaction) {
     const user = interaction.user.displayName;
     try {

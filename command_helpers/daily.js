@@ -17,7 +17,8 @@ exports.claim = async (guildMember) => {
     const diffDays = Math.round(Math.abs((now - joinDate) / oneDay));
     const tokens = 1000 + diffDays;
     console.info(`Created token database entry for user ${userId} in guild ${guildId}`);
-    await db.insert(config.DB_NAME, 'vt', { user_id: userId, guild_id: guildId, vt: Number.toString(tokens), daily_claimed: true, daily_streak: 1, bet: config.MIN_BET, gamble_history: '0' });
+    const insertTokens = new BigNumber(tokens).toString();
+    await db.insert(config.DB_NAME, 'vt', { user_id: userId, guild_id: guildId, vt: insertTokens, daily_claimed: true, daily_streak: 1, bet: config.MIN_BET, gamble_history: '0' });
     return { tokens: numberToString(tokens), bonus: false, streak: 1, new_member: true };
   } else {
     //user in database, collect daily tokens
@@ -30,9 +31,10 @@ exports.claim = async (guildMember) => {
     if (ret.daily_streak % 7 == 0) {
       //weekly bonus: 3 * daily streak
       const bonus = 3 * config.daily_streak + 1;
-      ret.tokens = ret.tokens.plus(bonus).toString();
+      ret.tokens = ret.tokens.plus(bonus);
       ret.bonus = bonus;
     }
+    ret.tokens = ret.tokens.toString();
     //update database
     let update = { daily_claimed: true, vt: ret.tokens, daily_streak: ret.daily_streak };
     const res = await db.updateOne(config.DB_NAME, 'vt', { user_id: userId, guild_id: guildId }, { $set: update });
