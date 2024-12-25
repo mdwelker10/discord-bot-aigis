@@ -547,6 +547,7 @@ async function sendOutcome(interaction, dealerVal, outcomes) {
   game.splitCards = [];
   game.playerCards = [];
   game.dealerCards = [];
+  game.splitAces = false;
   return {
     content: str + '\nWould you like to play again? Please use the buttons below to make your choice within 60 seconds.',
     files: [attachment],
@@ -564,13 +565,13 @@ async function payout(userId, game, result, insuranceBet = 0) {
   let vtChange = 0;
   switch (result) {
     case 'bj':
-      vtChange = bet * 2.5;
+      vtChange = bet * 1.5;
       break;
     case 'push':
       vtChange = 0;
       break;
     case 'win':
-      vtChange = bet * 2;
+      vtChange = bet;
       break;
     case 'loss':
       vtChange = -1 * bet;
