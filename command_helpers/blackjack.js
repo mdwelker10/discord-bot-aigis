@@ -424,7 +424,9 @@ async function dealersTurn(interaction, handValue) {
   let dealerVal = calculateHandValue(game.dealerCards);
   if (dealerVal.includes('/')) {
     const split = dealerVal.split('/')[1].trim();
-    dealerVal = game.hard && split == '17' ? '7' : '17';
+    if (split == '17') {
+      dealerVal = game.hard ? '7' : '17';
+    }
   }
   dealerVal = parseInt(dealerVal);
   //dealer must hit on 16 or less, stand on 17 or more (unless soft 17 in hard mode, taken care of above)
@@ -433,7 +435,9 @@ async function dealersTurn(interaction, handValue) {
     dealerVal = calculateHandValue(game.dealerCards);
     if (dealerVal.includes('/')) {
       const split = dealerVal.split('/')[1].trim();
-      dealerVal = game.hard && split == '17' ? '7' : '17';
+      if (split == '17') {
+        dealerVal = game.hard ? '7' : '17';
+      }
     }
     dealerVal = parseInt(dealerVal);
   }
@@ -490,8 +494,29 @@ async function sendOutcome(interaction, dealerVal, outcomes) {
   let vtChange = await payout(userId, game, outcomes[0].outcome, insureAmt);
   let str = '';
   if (outcomes.length == 2) {
+    //account for second hand
     const change2 = await payout(userId, game, outcomes[1].outcome);
-    vtChange = outcomes[1].outcome == 'loss' ? vtChange - change2 : vtChange + change2;
+    //if they are the same add together and check for loss
+    if (outcomes[0].outcome == outcomes[1].outcome) {
+      //works for win/win, draw/draw, and loss/loss
+      vtChange += change2;
+      if (outcomes[0].outcome == 'loss') {
+        vtChange = -1 * vtChange;
+      }
+    } else {
+      //if they are different find the winner, subtract the loss from the win
+      if (outcomes[0].outcome == 'loss') {
+        //works for loss/draw and loss/win
+        vtChange = change2 - vtChange;
+      } else if (outcomes[1].outcome == 'loss') {
+        //works for win/loss and draw/loss
+        vtChange = vtChange - change2;
+      } else {
+        //works for draw/win and win/draw
+        vtChange += change2;
+      }
+    }
+    //build message for split hands
     str = `<@${userId}>-san, between your split hands, **you have ${outcomes[0].outcome == 'loss' && outcomes[1].outcome == 'loss' ? 'lost' : 'gained'} ${numberToString(vtChange)} VT**.\n${insureStr}\n`;
     //hands get switched during processing
     str += `Your first hand total was **${outcomes[1].val}**\n`;
