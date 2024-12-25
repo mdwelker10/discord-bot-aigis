@@ -236,13 +236,13 @@ exports.startTurn = async (guildId, userDisplayName, userId, interaction) => {
     throw new AigisError('you do not have a blackjack game in progress.', 400);
   }
   //deal 2 cards to player
-  // game.playerCards.push(game.cards[game.pointer++]);
-  // game.playerCards.push(game.cards[game.pointer++]);
+  game.playerCards.push(game.cards[game.pointer++]);
+  game.playerCards.push(game.cards[game.pointer++]);
 
   //split test
-  const card = 'swords-a';
-  game.playerCards.push(card);
-  game.playerCards.push(card);
+  // const card = 'swords-a';
+  // game.playerCards.push(card);
+  // game.playerCards.push(card);
 
   //deal 2 cards to dealer
   game.dealerCards.push(game.cards[game.pointer++]);
