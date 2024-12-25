@@ -16,7 +16,7 @@ module.exports = {
     )
     .addSubcommand(sub =>
       sub.setName('balance')
-        .setDescription('Check your current Velvet Token balance')
+        .setDescription('Check your current Velvet Token balance and gambling profits/losses')
     )
     .addSubcommand(sub =>
       sub.setName('leaderboard')
@@ -39,7 +39,7 @@ module.exports = {
             .setDescription('The amount of Velvet Tokens to give')
             .setRequired(true)
             .setMinValue(1)
-            .setMaxValue(1000000000000) //1 trillion
+            .setMaxValue(1_000_000_000_000) //1 trillion
         )
     ),
   async execute(interaction) {
@@ -47,10 +47,11 @@ module.exports = {
     const user = interaction.user.displayName;
     try {
       if (subcommand === 'info') {
-        let str = `Velvet Tokens (VT) are a currency that I keep track of for you to use in the server ${user}-san. As such, they do not have a conversion rate to USD or other currency. `;
+        let str = `Velvet Tokens (VT) are a currency that I keep track of for you to use in the server ${user}-san. As such, they do not have a conversion rate to Yen, USD or other currency. `;
         str += `You can earn VT by claiming your daily tokens with the \`/vt daily\` or \`/claim\` commands. You can earn bonus VT by collecting daily tokens on consecutive days and building a streak. `;
-        str += `Every 7 consecutive days you collect your daily VT, you will receive a bonus equal to 3 times the number of consecutive days your streak is.\n\n`;
+        str += `Every 7 consecutive days you collect your daily VT, you will receive a bonus equal to 3 times the number of consecutive days your streak is at.\n\n`;
         str += `You can use this VT to play various games, such as Blackjack, and possibly earn more by doing so. At the moment, there is no actual use for VT other than this. `;
+        str += `Although, I do keep track of all VT that you have gained or lost via gambling means, and you can see this information with the \`/vt balance\` command. `;
         str += `Below are the commands you can use with regards to Velvet Tokens, not including the games you can play with them:\n\n`;
         const embed = new EmbedBuilder()
           .setColor(config.EMBED_COLOR)
@@ -59,9 +60,9 @@ module.exports = {
           .setDescription(str)
           .addFields(
             { name: '/vt info', value: 'This command showing information about Velvet Tokens.' },
-            { name: '/vt balance', value: 'Check your current Velvet Token balance.' },
+            { name: '/vt balance', value: 'Check your current Velvet Token balance and total won/lost via gambling.' },
             { name: '/vt leaderboard', value: 'View the server leaderboard for Velvet Tokens.' },
-            { name: '/vt give {user} {amount}', value: 'Give Velvet Tokens to another user.' },
+            { name: '/vt give <user> <amount>', value: 'Give Velvet Tokens to another user.' },
             { name: '/vt daily', value: 'Claim daily Velvet Tokens.' },
             { name: '/claim', value: 'Claim daily Velvet Tokens, alias for /vt daily.' }
           )
@@ -72,12 +73,15 @@ module.exports = {
         if (!data) {
           return await interaction.editReply(`${user}-san, you do not have any Velvet Tokens yet. You can claim your daily tokens with the /vt daily command.`);
         } else {
-          return await interaction.editReply(`You have ${data.vt} VT.`);
+          let str = `You have **${numberToString(new BigNumber(data.vt))} VT**.\n`;
+          let history = new BigNumber(data.gamble_history);
+          str += `You have ${history.isNegative() ? 'lost' : 'won'} ${numberToString(history.abs())} VT from gambling.`;
+          return await interaction.editReply(str);
         }
       } else if (subcommand === 'leaderboard') { //show leaderboard
         const conn = await db.connect(config.DB_NAME);
         const collection = conn.collection('vt');
-        const data = await collection.find().sort({ vt: -1 }).limit(10).toArray();
+        const data = await collection.find().sort({ vt: -1 }).collation({ locale: "en_US", numericOrdering: true }).limit(10).toArray();
         await db.disconnect();
         str = data.length === 0 ? 'No users have any Velvet Tokens yet.' : '';
         for (let i = 0; i < data.length; i++) {

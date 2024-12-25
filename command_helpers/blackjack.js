@@ -4,12 +4,13 @@
  */
 const AigisError = require("../utils/AigisError");
 const config = require("../config");
-const { AttachmentBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder } = require("discord.js");
+const { AttachmentBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder, ComponentType } = require("discord.js");
 const db = require("../database/db")
 const BigNumber = require('bignumber.js');
 const path = require('path');
 const { createCanvas, loadImage } = require('canvas');
 const { numberToString } = require("../utils/utils");
+const { setTimeout } = require('node:timers/promises');
 
 let games = new Map(); //map of game objects, key is player's user id
 
@@ -24,6 +25,36 @@ const CARDS_WIDE = 5; //number of cards required to switch to wide table (must b
 
 const values = {
   '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, '10': 10, 'j': 10, 'q': 10, 'k': 10, 'a': "11/1"
+}
+
+process.on('SIGINT', async () => {
+  await shutdown();
+  process.exit(0);
+});
+
+process.on('SIGTERM', async () => {
+  await shutdown();
+  process.exit(0);
+});
+
+/** Since game is stored in memory, a bot restart will stop the game */
+async function shutdown() {
+  if (games.size == 0) {
+    return;
+  }
+  for (let [userId, game] of games) {
+    try {
+      //give bet back to user
+      let playerVT = await db.findOne(config.DB_NAME, 'vt', { user_id: userId, guild_id: game.guildId });
+      await db.updateOne(config.DB_NAME, 'vt', { user_id: userId, guild_id: game.guildId }, { $set: { vt: new BigNumber(playerVT.vt).plus(game.bet).toString() } });
+      //send message saying game is ending
+      await game.channel.send(`I'm sorry <@${userId}>-san, but I am going to briefly shut down or restart. The game must end. I will return your bet.`);
+      games.delete(userId);
+    } catch (err) {
+      console.error(`Error gracefully shutting down game for ${userId} in guild ${game.guildId}: ${err.message}`);
+    }
+  }
+  games.clear();
 }
 
 function getDeck() {
@@ -100,12 +131,14 @@ exports.startGame = async (guildId, userId, timeLimit = 30, hardmode = false) =>
     dealerCards: [], //dealers first card (index 0) is face down
     playerCards: [],
     splitCards: [],
+    splitAces: false,
     bet: playerVT.bet,
     insurance: false,
     doubledown: false,
     guildId: guildId,
     hard: hardmode,
-    timeouts: 0
+    timeouts: 0,
+    channel: null //used only for shutdown
   };
   games.set(userId, game);
 }
@@ -125,11 +158,13 @@ exports.placeBet = async (guildId, userId, amount) => {
     return true;
   }
   if (amount < config.MIN_BET || amount > config.MAX_BET) {
-    throw new AigisError(`you must bet between ${config.MIN_BET} and ${config.MAX_BET} tokens.`, 400);
+    //throw new AigisError(`you must bet between ${config.MIN_BET} and ${config.MAX_BET} tokens.`, 400);
+    return false;
   }
   let playerVT = await db.findOne(config.DB_NAME, 'vt', { user_id: userId, guild_id: guildId });
   if (!playerVT || playerVT.vt < amount) {
-    throw new AigisError('you do not have enough Velvet Tokens to make that bet.', 400);
+    //throw new AigisError('you do not have enough Velvet Tokens to make that bet.', 400);
+    return false;
   }
   const ret = await db.updateOne(config.DB_NAME, 'vt', { user_id: userId, guild_id: guildId }, { $set: { bet: amount } });
   if (ret == 0) {
@@ -139,103 +174,160 @@ exports.placeBet = async (guildId, userId, amount) => {
   return true;
 }
 
+/**
+ * Use to prompt the user for a turn action after sending a message. Will wait for the button click and resolve with the action
+ * @param {*} response The response object from the interaction.followUp or whatever message was sent to prompt for a button click
+ * @param {*} game The game object
+ * @param {String} userId The user ID of the player
+ * @param {*} buttonRow The row of buttons to be sent to the player, the same one used in the prompt (the prompt the response object is from)
+ * @param {*} channel The channel to send messages into
+ * @param {String} defaultAction The action to take if the player times out. Default is 'stand'
+ * @returns {Promise<String>} The action chosen by the player
+ */
+async function getCollectorResponse(response, game, userId, buttonRow, channel, defaultAction = 'stand') {
+  const guildId = game.guildId;
+  return new Promise(async (resolve) => {
+    const collectorFilter = i => i.user.id === userId;
+    const collector = await response.createMessageComponentCollector({ componentType: ComponentType.Button, filter: collectorFilter, time: game.timeLimit * 1000 });
+
+    //stop listening after a response is collected
+    collector.on('collect', async (i) => {
+      game.timeouts = 0;
+      await i.deferUpdate();
+      collector.stop('done');
+    });
+
+    collector.on('end', async (collected, reason) => {
+      const i = collected.first()
+      //disable buttons when collection over
+      for (const button of buttonRow.components) {
+        button.setDisabled(true);
+      }
+
+      //timeout
+      if (reason == 'time') {
+        game.timeouts += 1;
+        if (game.timeouts >= 3) {
+          await i.channel.send({ content: `I'm sorry <@${userId}>-san, but you have timed out too many times. The game will end.`, components: [buttonRow] });
+          resolve('quit');
+        }
+        await channel.send({ content: `I'm sorry <@${userId}>-san, but you are out of time. You will stand by default.`, components: [buttonRow] });
+        return resolve(defaultAction);
+      }
+      //success
+      if (reason == 'done') {
+        const customId = i.customId;
+        await i.editReply({ content: `You have chosen to **${customId}** <@${userId}>-san.`, components: [buttonRow] });
+        return resolve(customId);
+      } else {
+        console.error(`The button interaction collector ended for an unknown reason - ${reason}. Guild ID: ${guildId}, User ID: ${userId}`);
+        throw new AigisError(`The button interaction collector ended for an unknown reason - ${reason}`);
+      }
+    });
+  });
+}
+
 /** Start a turn of blackjack. This means dealing the cards and moving to the player's turn */
 exports.startTurn = async (guildId, userDisplayName, userId, interaction) => {
   //deal 2 cards to player and dealer
   let game = games.get(userId);
+  game.channel = interaction.channel;
   if (!game || !game.guildId == guildId) {
     throw new AigisError('you do not have a blackjack game in progress.', 400);
   }
   //deal 2 cards to player
-  game.playerCards.push(game.cards[game.pointer++]);
-  game.playerCards.push(game.cards[game.pointer++]);
+  // game.playerCards.push(game.cards[game.pointer++]);
+  // game.playerCards.push(game.cards[game.pointer++]);
+
+  //split test
+  const card = 'swords-a';
+  game.playerCards.push(card);
+  game.playerCards.push(card);
 
   //deal 2 cards to dealer
   game.dealerCards.push(game.cards[game.pointer++]);
   game.dealerCards.push(game.cards[game.pointer++]);
+
   //reshuffle if necessary
   if (game.pointer >= game.cards.length - RESHUFFLE_AT) {
-    channel.send('Please wait while I reshuffle the deck.');
+    interaction.channel.send('Please wait while I reshuffle the deck.');
     game.pointer = 0;
     game.cards = shuffle(game.cards);
   }
 
   //calculate hand value
-  const handValue = calculateHandValue(game.playerCards);
+  let handValue = calculateHandValue(game.playerCards);
 
   //need to have separate draw tables so they are updated with new VT total
-  const dealerVal = calculateHandValue(game.dealerCards);
+  let dealerVal = calculateHandValue(game.dealerCards);
+
+  //generate table image 
+  let buffer = await drawTable(game, guildId, userId, userDisplayName);
+  const attachment = new AttachmentBuilder(buffer, { name: 'table.jpeg' });
+
+  //insurance
+  if (game.dealerCards[1].split('-')[1] === 'a') {
+    //offer insurance
+    const insurance = new ButtonBuilder()
+      .setCustomId('insure')
+      .setLabel('Insure')
+      .setStyle(ButtonStyle.Secondary);
+    const noInsurance = new ButtonBuilder()
+      .setCustomId('no-insure')
+      .setLabel('No Insurance')
+      .setStyle(ButtonStyle.Secondary);
+    const row = new ActionRowBuilder().addComponents(insurance, noInsurance);
+    const response = await interaction.followUp({ content: `<@${userId}>-san, the dealer's face up card is an Ace. Would you like to insure your bet?`, files: [attachment], components: [row] });
+    const action = await getCollectorResponse(response, game, userId, row, interaction.channel, 'no-insure');
+    if (action === 'insure') {
+      game.insurance = true;
+    }
+  }
   if (dealerVal === '21' && handValue === '21') {
     //blackjack push
-    return await sendOutcome(interaction, 'push');
+    return await sendOutcome(interaction, 21, [{ outcome: 'push', val: 21 }]);
   }
   else if (dealerVal === '21') {
     //only dealer has blackjack
-    return await sendOutcome(interaction, 'loss');
+    return await sendOutcome(interaction, 21, [{ outcome: 'loss', val: handValue }]);
   }
   else if (handValue === '21') {
-    return await sendOutcome(interaction, 'bj');
+    if (dealerVal.includes('/')) {
+      dealerVal = parseInt(dealerVal.split('/')[1].trim());
+    }
+    return await sendOutcome(interaction, dealerVal, [{ outcome: 'bj', val: 21 }]);
   }
-  //create the response buttons and attachment wait for player action
+  //create the response buttons and wait for player action
   const split = game.playerCards[0].split('-')[1] === game.playerCards[1].split('-')[1];
   const buttonRow = await createButtons(userId, guildId, game, true, split);
-  let buffer = await drawTable(game, guildId, userId, userDisplayName);
-  const attachment = new AttachmentBuilder(buffer, { name: 'table.jpeg' });
-  response = await interaction.followUp({
-    content: `Please select an action ${userDisplayName}-san. Your hand value is: **${handValue}**`,
+  const response = await interaction.followUp({
+    content: `Please select an action <@${userId}>-san.\nThe time limit is **${game.timeLimit}** seconds.\nYour hand value is: **${handValue}**.${game.insurance ? '\nYou have also lost your insurance bet.' : ''}`,
     files: [attachment],
     components: [buttonRow]
   });
-  const collectorFilter = i => i.user.id === userId;
-  try {
-    const collected = await interaction.channel.awaitMessageComponent({ filter: collectorFilter, time: game.timeLimit * 1000 });
-    game.timeouts = 0;
-    await collected.update({ content: `You have selected to ${collected.customId == 'double' ? 'double down' : collected.customId}.`, components: [] });
-    return await handleAction(collected.customId, interaction);
-  } catch (err) {
-    if (game.timeouts >= 3) {
-      await interaction.channel.send(`I'm sorry <@${userId}>-san, but you have timed out too many times. The game will end.`);
-      return 'quit';
-    }
-    //timeout
-    await interaction.channel.send(`I'm sorry <@${userId}>-san, but you are out of time. You will stand by default.`);
-    game.timeouts += 1;
-    return await handleAction('stand', interaction);
-  }
-}
+  const action = await getCollectorResponse(response, game, userId, buttonRow, interaction.channel);
 
-/** 
- * Calculate and process the payout. result is either "bj", "push", "win", or "loss" 
- * returns the payout
- * */
-async function payout(userId, game, result) {
-  const bet = game.doubledown ? game.bet * 2 : game.bet;
-  game.doubledown = false;
-  let vtChange = 0;
-  switch (result) {
-    case 'bj':
-      vtChange = bet * 2.5;
-      break;
-    case 'push':
-      return vtChange;
-    case 'win':
-      vtChange = bet * 2;
-    case 'loss':
-      vtChange = -1 * bet;
+  //handle the action
+  switch (action) {
+    case 'hit':
+      return await handleAction('hit', interaction);
+    case 'stand':
+      return await handleAction('stand', interaction);
+    case 'double':
+      return await handleAction('double', interaction);
+    case 'split':
+      return await handleAction('split', interaction);
+    case 'quit':
+      return exports.quit(userId);
     default:
-      throw new AigisError('an invalid hand result was processed. Result: ' + result);
+      throw new AigisError(`an invalid action of "${action}" was processed.`);
   }
-  let playerVT = await db.findOne(config.DB_NAME, "vt", { user_id: userId, guild_id: game.guildId });
-  let newVT = new BigNumber(playerVT.vt).plus(vtChange).toString();
-  let newGambleHistory = new BigNumber(playerVT.gamble_history).plus(vtChange).toString();
-  await db.updateOne(config.DB_NAME, 'vt', { user_id: userId, guild_id: game.guildId }, { $set: { vt: newVT, gamble_history: newGambleHistory } });
-  return Math.abs(vtChange);
 }
 
 /** Possible actions are hit, stand, double, split, insure */
 async function handleAction(action, interaction) {
   const guildId = interaction.guild.id;
-  const userId = interaction.user.ud;
+  const userId = interaction.user.id;
   let game = games.get(userId);
   if (!game || !game.guildId == guildId) {
     throw new AigisError('you do not have a blackjack game in progress.', 400);
@@ -246,8 +338,7 @@ async function handleAction(action, interaction) {
       game.playerCards.push(game.cards[game.pointer++]);
       let newVal = calculateHandValue(game.playerCards);
       const newValBlackJack = newVal.includes('/') ? parseInt(newVal.split('/')[1].trim()) == 21 : parseInt(newVal) == 21;
-      if (!newVal.includes('/') && parseInt(newVal) > 21) {
-        console.log(newVal.includes('/'), parseInt(newVal) > 21);
+      if ((!newVal.includes('/') && parseInt(newVal) > 21) || game.splitAces) {
         //busted - stand to make it dealer's turn
         return await handleAction('stand', interaction);
       } else if (newValBlackJack) {
@@ -257,36 +348,44 @@ async function handleAction(action, interaction) {
         await interaction.channel.send({ content: `It seems you have reached 21 <@${userId}>-san. Now it is my turn.`, files: [attachment] });
         return await handleAction('stand', interaction);
       }
+
       //send options for next turn 
       const buttonRow = await createButtons(userId, guildId, game, false, false);
       let buffer = await drawTable(game, guildId, userId, interaction.user.displayName);
       const attachment = new AttachmentBuilder(buffer, { name: 'table.jpeg' });
+
       //send response and wait for interaction
-      response = await interaction.followUp({
-        content: `Please select an action ${interaction.user.displayName}-san. Your hand value is **${newVal}**`,
+      const response = await interaction.followUp({
+        content: `Please select an action <@${userId}>-san.\nThe time limit is **${game.timeLimit}** seconds.\nYour hand value is: **${newVal}**.`,
         files: [attachment],
         components: [buttonRow]
       });
-      const collectorFilter = i => i.user.id === userId;
-      try {
-        console.log(game.timeLimit * 1000)
-        const collected = await interaction.channel.awaitMessageComponent({ filter: collectorFilter, time: game.timeLimit * 1000 });
-        await collected.update({ content: `You have selected to ${collected.customId == 'double' ? 'double down' : collected.customId}.`, components: [] });
-        return await handleAction(collected.customId, interaction);
-      } catch (err) {
-        //timeout
-        await interaction.channel.send(`I'm sorry <@${userId}>-san, but you are out of time. You will stand by default.`);
-        console.log('standing by default');
-        return await handleAction('stand', interaction);
+      //use collector to get chosen action
+      const action = await getCollectorResponse(response, game, userId, buttonRow, interaction.channel);
+
+      //handle the action. Cannot double or split here
+      switch (action) {
+        case 'hit':
+          return await handleAction('hit', interaction);
+        case 'stand':
+          return await handleAction('stand', interaction);
+        case 'quit':
+          return exports.quit(userId);
+        default:
+          throw new AigisError(`an invalid action of "${action}" was processed.`);
       }
     case 'stand':
-      console.log('i stood lol');
       //if player has split cards, switch to the other hand that hasnt been played
       if (game.splitCards.length == 1) {
-        await interaction.channel.send(`Alright <@${userId}>-san, now we will play your second hand.`);
+        let buffer = await drawTable(game, guildId, userId, interaction.user.displayName);
+        const attachment = new AttachmentBuilder(buffer, { name: 'table.jpeg' });
+        const firstTotal = calculateHandValue(game.playerCards);
+        await interaction.channel.send({ content: `Alright <@${userId}>-san, your first hand total is **${firstTotal}**. Now we will play your second hand.`, files: [attachment] });
+        //swap this hand with split cards hand (1 card that was split) and play new hand
         let temp = game.splitCards;
         game.splitCards = game.playerCards;
         game.playerCards = temp;
+        await setTimeout(3000); //wait 5 secs to let the user read the message
         return await handleAction('hit', interaction);
       }
       let val = calculateHandValue(game.playerCards);
@@ -308,7 +407,11 @@ async function handleAction(action, interaction) {
       return await handleAction('stand', interaction);
     case 'split':
       await interaction.channel.send(`Alright <@${userId}>-san, we will split your hand. Now we will play your first hand.`);
-      game.splitCards.push(game.playerCards.pop());
+      let card = game.playerCards.pop();
+      if (card.split('-')[1] === 'a') {
+        game.splitAces = true;
+      }
+      game.splitCards.push(card);
       //treat it like a hit on the first hand
       return await handleAction('hit', interaction);
   }
@@ -317,6 +420,7 @@ async function handleAction(action, interaction) {
 /** Called when its the dealers turn */
 async function dealersTurn(interaction, handValue) {
   let game = games.get(interaction.user.id);
+  let outcomes = [];
   let dealerVal = calculateHandValue(game.dealerCards);
   if (dealerVal.includes('/')) {
     const split = dealerVal.split('/')[1].trim();
@@ -324,7 +428,7 @@ async function dealersTurn(interaction, handValue) {
   }
   dealerVal = parseInt(dealerVal);
   //dealer must hit on 16 or less, stand on 17 or more (unless soft 17 in hard mode, taken care of above)
-  while (dealerVal < 17) {
+  while (dealerVal < 17 && handValue <= 21) {
     game.dealerCards.push(game.cards[game.pointer++]);
     dealerVal = calculateHandValue(game.dealerCards);
     if (dealerVal.includes('/')) {
@@ -334,72 +438,129 @@ async function dealersTurn(interaction, handValue) {
     dealerVal = parseInt(dealerVal);
   }
   //determine winner
-  let outcome1 = '';
   if (dealerVal > 21 || (dealerVal < handValue && handValue <= 21)) {
-    outcome1 = 'win';
+    outcomes.push({ outcome: 'win', val: handValue });
   } else if (dealerVal === handValue) {
-    outcome1 = 'push';
+    outcomes.push({ outcome: 'push', val: handValue });
   } else {
-    outcome1 = 'loss';
+    outcomes.push({ outcome: 'loss', val: handValue });
   }
   //dont forget in case player split
   if (game.splitCards.length != 0) {
-    let outcome2 = '';
     let val = calculateHandValue(game.splitCards);
     if (val.includes('/')) {
       val = val.split('/')[1].trim();
     }
     val = parseInt(val);
     if (dealerVal > 21 || (dealerVal < val && val <= 21)) {
-      outcome2 = 'win';
+      outcomes.push({ outcome: 'win', val: val });
     } else if (dealerVal === val) {
-      outcome2 = 'push';
+      outcomes.push({ outcome: 'push', val: val });
     } else {
-      outcome2 = 'loss';
+      outcomes.push({ outcome: 'loss', val: val });
     }
-    return await sendOutcome(interaction, outcome1, outcome2);
+    return await sendOutcome(interaction, dealerVal, outcomes);
   } else {
-    return await sendOutcome(interaction, outcome1);
+    return await sendOutcome(interaction, dealerVal, outcomes);
   }
 
 }
-
-async function sendOutcome(interaction, outcome1, outcome2 = null) {
-  let game = games.get(interaction.user.id);
-  let vtChange = await payout(interaction.user.id, game, outcome1);
+/**
+ * Shows the end outcome of the game to the user
+ * @param {*} interaction the interaction event that stores info about the user/server/game and channel
+ * @param {*} dealerVal The value of the dealer's cards
+ * @param {*} outcomes Array of outcomes for each of the user's hands. Each entry is an object of { outcome: 'win/loss/push/bj', val: hand value }
+ * @returns The final message with the game total
+ */
+async function sendOutcome(interaction, dealerVal, outcomes) {
+  const userId = interaction.user.id;
+  let game = games.get(userId);
+  //calcualte insurance bet and string
+  let insureStr = '';
+  let insureAmt = 0;
+  if (game.insurance && dealerVal == 21 && game.dealerCards.length == 2) {
+    insureStr += `You have won your separate insurance bet, **winning ${Math.floor(game.bet / 2)}**.\n\n`;
+    insureAmt = 2 * Math.floor(game.bet / 2);
+  } else if (game.insurance) {
+    insureStr += `You have lost your separate insurance bet, **losing ${Math.floor(game.bet / 2)}**.\n\n`;
+    insureAmt = -1 * Math.floor(game.bet / 2);
+  }
+  game.insurance = false;
+  //calculate change in VT exlcuding insurance
+  let vtChange = await payout(userId, game, outcomes[0].outcome, insureAmt);
   let str = '';
-  if (outcome2 && outcome2 != null) {
-    vtChange += await payout(interaction.user.id, game, outcome2);
-    str = `Between your split hands, you have ${outcome1 == 'loss' && outcome2 == 'loss' ? 'lost' : 'gained'} ${vtChange} VT.`;
+  if (outcomes.length == 2) {
+    const change2 = await payout(userId, game, outcomes[1].outcome);
+    vtChange = outcomes[1].outcome == 'loss' ? vtChange - change2 : vtChange + change2;
+    str = `<@${userId}>-san, between your split hands, **you have ${outcomes[0].outcome == 'loss' && outcomes[1].outcome == 'loss' ? 'lost' : 'gained'} ${numberToString(vtChange)} VT**.\n${insureStr}\n`;
+    //hands get switched during processing
+    str += `Your first hand total was **${outcomes[1].val}**\n`;
+    str += `Your second hand total was **${outcomes[0].val}**\n`;
+    str += `My hand total was **${dealerVal}**\n`;
   } else {
-    switch (outcome1) {
+    switch (outcomes[0].outcome) {
       case 'bj':
-        str = `Congratulations ${interaction.user.displayName}-san! You have won with a Blackjack! You have gained ${vtChange} VT.`;
+        str = `Congratulations <@${userId}>-san! You have won with a Blackjack! **You have gained ${numberToString(vtChange)} VT**.\n${insureStr}\n`;
         break;
       case 'push':
-        str = `It is a push. Your bet has been returned to you ${interaction.user.displayName}-san.`;
+        str = `It is a push. Your bet has been returned to you <@${userId}>-san.\n${insureStr}\n`;
         break;
       case 'win':
-        str = `Congratulations ${interaction.user.displayName}-san! You won! You have gained ${vtChange} VT.`;
+        str = `Congratulations <@${userId}>-san! You won! **You have gained ${numberToString(vtChange)} VT**.\n${insureStr}\n`;
         break;
       case 'loss':
-        str = `I won! Better luck next time ${interaction.user.displayName}-san. You have lost ${vtChange} VT.`;
+        str = `I won! Better luck next time <@${userId}>-san. **You have lost ${numberToString(vtChange)} VT**.\n${insureStr}\n`;
         break;
       default:
         throw new AigisError('an invalid outcome was processed.');
     }
+    str += `Your hand total was **${outcomes[0].val}**\n`;
+    str += `My hand total was **${dealerVal}**\n`;
   }
-  let buffer = await drawTable(game, interaction.guild.id, interaction.user.id, interaction.user.displayName, false);
+  let buffer = await drawTable(game, interaction.guild.id, userId, interaction.user.displayName, false);
   const attachment = new AttachmentBuilder(buffer, { name: 'table.jpeg' });
   game.splitCards = [];
-  game.userCards = [];
+  game.playerCards = [];
   game.dealerCards = [];
   return {
-    content: str + ' Would you like to play again? Please use the buttons below to make your choice within 60 seconds.',
+    content: str + '\nWould you like to play again? Please use the buttons below to make your choice within 60 seconds.',
     files: [attachment],
     components: [exports.createMenuButtons()]
   };
 }
+
+/** 
+ * Calculate and process the payout. result is either "bj", "push", "win", or "loss" 
+ * returns the payout
+ * */
+async function payout(userId, game, result, insuranceBet = 0) {
+  const bet = game.doubledown ? game.bet * 2 : game.bet;
+  game.doubledown = false;
+  let vtChange = 0;
+  switch (result) {
+    case 'bj':
+      vtChange = bet * 2.5;
+      break;
+    case 'push':
+      vtChange = 0;
+      break;
+    case 'win':
+      vtChange = bet * 2;
+      break;
+    case 'loss':
+      vtChange = -1 * bet;
+      break;
+    default:
+      throw new AigisError('an invalid hand result was processed. Result: ' + result);
+  }
+  let playerVT = await db.findOne(config.DB_NAME, "vt", { user_id: userId, guild_id: game.guildId });
+  let newVT = new BigNumber(playerVT.vt).plus(vtChange).plus(insuranceBet).toString();
+  let newGambleHistory = new BigNumber(playerVT.gamble_history).plus(vtChange).plus(insuranceBet).toString();
+  await db.updateOne(config.DB_NAME, 'vt', { user_id: userId, guild_id: game.guildId }, { $set: { vt: newVT, gamble_history: newGambleHistory } });
+  return Math.abs(vtChange);
+}
+
+/* ----------------- Button Creation ----------------- */
 
 /**
  * Create the buttons for the player to choose their action
@@ -410,7 +571,7 @@ async function sendOutcome(interaction, outcome1, outcome2 = null) {
  * @param {Boolean} insure wether the player can cast an insurance bet. Not implemented right now
  * @returns {Promise<ActionRowBuilder>} the row of buttons to be sent to the player
  */
-async function createButtons(userId, guildId, game, double, split, insure = false) {
+async function createButtons(userId, guildId, game, double, split) {
   const hit = new ButtonBuilder()
     .setCustomId('hit')
     .setLabel('Hit')
@@ -440,13 +601,6 @@ async function createButtons(userId, guildId, game, double, split, insure = fals
       .setStyle(ButtonStyle.Danger);
     row.addComponents(split);
   }
-  // if (insure) {
-  //   const insure = new ButtonBuilder()
-  //     .setCustomId('insure')
-  //     .setLabel('Insure')
-  //     .setStyle(ButtonStyle.Success);
-  //   row.addComponents(insure);
-  // }
   return row;
 }
 

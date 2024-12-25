@@ -29,6 +29,11 @@ To get information on what data Aigis stores, and how to remove your server's da
   - [Content Rating and 18+ Manga](#content-rating-and-18-manga)
   - [Supported Websites and Content Rating](#supported-websites-and-content-rating)
   - [Command Reference](#command-reference-2)
+- [Currency: Velvet Tokens](#currency-velvet-tokens)
+  - [Command Reference](#command-reference-3)
+- [Blackjack](#blackjack)
+  - [Logistics](#logistics)
+  - [Command Reference](#command-reference-4)
 
 
 ## Setup
@@ -205,3 +210,68 @@ The following menu can be brought up by Aigis, along with the explanation of the
 - `/manga unfollow <manga-id> <language>` - Unfollow a manga to stop getting pinged for new chapter releases.
 - `/manga random <tag-1> <tag-2> <tag-3>` - Get a random manga from Mangadex with at least one of the given tags.
 - `/manga stop` - Stop manga chapter release checks for all servers. Bot developer only. 
+
+## Currency: Velvet Tokens
+Aigis keeps track of a fake currency known as `Velvet Tokens` or VT. This currency cannot be actually exchanged for anything (as of now), but can be used to play games. Below is the list of games that use VT as a form of currency.
+- Blackjack
+- Slots (Coming soon...)
+
+There are 3 primary ways to earn Velvet Tokens:
+- Collect daily tokens with the `/claim` or `/vt daily` commands (they do the same thing).
+- Recieve tokens from another server member via them using the `/vt give` command.
+- Gambling.
+
+As of now, the daily token amount is 100. For every 7 consecutive days you claim your daily tokens you receive a bonus equal to `3 * <streak>`, where `streak` is the number of consecutive days you have claimed daily tokens. The check to see if you have claimed your daily tokens happens every night at 12:00 AM EST.
+  - When you claim daily tokens for the first time, you will get 1000 instead of 100, and you will get a bonus amount of tokens equal to the amount of days you have been in the server.
+
+### Command Reference
+A similar menu to the one below can be brought up with the `/vt info` command.
+
+- `/vt info` - Show information about Velvet Tokens, similar to what is talked about in this document.
+- `/vt balance` - Show how many Velvet Tokens you have. Also shows how many you have gained/lost from gambling games.
+- `/vt leaderboard` - Show the 10 server members with the highest amount of VT.
+- `/vt give <user> <amount>` - Give the specified amount of Velvet Tokens to another user. You cannot give Velvet Tokens to yourself, and you cannot steal Velvet Tokens from other members by using a negative amount.
+- `/vt daily` - Collect your daily tokens. Resets daily at 12:00 AM EST.
+- `/claim` - Alias for `/vt daily`
+
+
+## Blackjack
+With the addition of Velvet Tokens comes a method of gambling them away in Blackjack. If you are unfamiliar with Blackjack you can read the rules [here](https://bicyclecards.com/how-to-play/blackjack) or use Aigis' `/blackjack rules` command. For those familiar with Blackjack, here are a few notes about how this version differs from normal:
+- 8 decks of cards are used.
+- You can only split once in a turn.
+- The insurance bet is always half your original bet.
+- The dealer will stand on 17, but a hard mode exists allowing the dealer to hit on a soft 17. Hard mode does not pay more than normal mode.
+- The minimum bet is 5 VT and the maximum bet is 1 billion VT.
+  - If you have less than 5 VT you cannot play, but just wait until the next day and you can claim 100 free daily tokens.
+
+Because this is Aigis form Persona 3, I decided to use Persona themed cards instead of a standard deck. The suits are the minor arcana from Persona 3 and 4 (cups, swords, wands, and coins). Face cards and Aces have members of SEES on them.
+- I do plan to remake the Aces, but they will still feature Makoto
+- Even though Blackjack has no Joker cards, I still made one for fun
+
+<p align="center">
+<img src="images/cards/wands-j.png" alt="Jack of Wands with Yukari" width="150"/>
+<img src="images/cards/swords-q.png" alt="Queen of Swords with Mitsuru" width="150"/>
+<img src="images/cards/coins-k.png" alt="King of Coins with Akihiko" width="150"/>
+<img src="images/cards/cups-a.png" alt="Ace of Cups with Makoto" width="150"/>
+<img src="images/cards/joker.png" alt="Joker with Aigis" width="150"/>
+<img src="images/cards/back.png" alt="Back of a card" width="150"/>
+</p>
+
+### Logistics
+Multiple Blackjack games can be started per server, but a user can only be in one Blackjack game at a time, even across servers. A game is only the player vs. the dealer, so there is no "table" where multiple people are playing the dealer like in a real casino (I tried doing that, it got way too complicated).
+
+Obivously, you can still use Aigis' other commands while a game of Blackjack is happening, even if you are actively playing a game of Blackjack. 
+
+To alleviate the spam that comes with playing a game of Blackjack, it might be a good idea to have dedicated channels or threads for games. I decided to not make the messages private since you are not playing against anybody, and it can be fun to have other server members spectate.
+
+If Aigis crashes, has to restart, or has to shut down while you are playing a game, the game will immediately end and your bet will be returned to you.
+
+If you time out on a turn you will automatically stand the round. Then you will be prompted if you want to continue playing at the end of the round. If you time out of that prompt then Aigis will end the game. If you time out and auto-stand 3 rounds in a row then Aigis will also end the game, but you would have to try to do this since you would first time out of the "continue playing" prompt.
+
+There is an option after each round to change your bet. If you select this option, just type a valid integer between the min and max bet values in chat (the same channel Aigis prompted you in) and she will accept your new bet. Don't worry, only you can set your bet. By default your bet is the minimum.
+
+### Command Reference
+- `/blackjack help` - A short description of the Blackjack command with similar information as this document.
+- `/blackjack rules` - An explanation of the rules of Blackjack.
+- `/blackjack start <hard-mode> <time-limit>` - Start a new Blackjack game. Hard mode is false by default and will allow the dealer to hit on a soft 17. By default the time limit is 30 seconds and can be set to anything between 10 and 60 seconds.
+- 
