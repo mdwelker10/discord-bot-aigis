@@ -6,6 +6,7 @@ const { purgeAll } = require('./purge');
 const { resetDaily } = require('./daily');
 const { getGuildConfig } = require('../utils/utils');
 const db = require('../database/db');
+const AigisError = require('../utils/AigisError');
 
 //All cronjob objects
 let sotdJob;
@@ -30,7 +31,11 @@ exports.startSotd = (client) => {
             await channel.send({ files: [arr[1]] });
           }
         } catch (err) {
-          console.error(`Could not get song of the day for guild ${d.guild_id}. Error: ${err}`);
+          if (err instanceof AigisError && err.status === 400) {
+            continue; //no playlists to select from - ignore this error it's not important
+          } else {
+            console.error(`Could not get song of the day for guild ${d.guild_id}. Error: ${err}`);
+          }
         }
       }
     },

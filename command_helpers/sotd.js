@@ -93,7 +93,7 @@ exports.removePlaylist = async (playlist_id, guildId, playlists = null, force = 
 exports.selectSong = async (guildId) => {
   let playlists = await getPlaylistBuffer(guildId);
   if (playlists.length === 0) {
-    throw new AigisError('there are no playlists to select a song from.');
+    throw new AigisError('there are no playlists to select a song from.', 400);
   }
   let token = await exports.checkToken();
   let searching = true; // still searching for new song
