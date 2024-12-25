@@ -29,8 +29,8 @@ exports.claim = async (guildMember) => {
     //calc new tokens and weekly bonus if applicable
     ret.tokens = new BigNumber(data.vt).plus(config.DAILY_TOKEN_AMOUNT);
     if (ret.daily_streak % 7 == 0) {
-      //weekly bonus: 3 * daily streak
-      const bonus = 3 * config.daily_streak + 1;
+      //weekly bonus: 2 * daily streak
+      const bonus = 2 * config.daily_streak + 1;
       ret.tokens = ret.tokens.plus(bonus);
       ret.bonus = bonus;
     }

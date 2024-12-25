@@ -49,7 +49,7 @@ module.exports = {
       if (subcommand === 'info') {
         let str = `Velvet Tokens (VT) are a currency that I keep track of for you to use in the server ${user}-san. As such, they do not have a conversion rate to Yen, USD or other currency. `;
         str += `You can earn VT by claiming your daily tokens with the \`/vt daily\` or \`/claim\` commands. You can earn bonus VT by collecting daily tokens on consecutive days and building a streak. `;
-        str += `Every 7 consecutive days you collect your daily VT, you will receive a bonus equal to 3 times the number of consecutive days your streak is at.\n\n`;
+        str += `Every 7 consecutive days you collect your daily VT, you will receive a bonus equal to twice the number of consecutive days your streak is at.\n\n`;
         str += `You can use this VT to play various games, such as Blackjack, and possibly earn more by doing so. At the moment, there is no actual use for VT other than this. `;
         str += `Although, I do keep track of all VT that you have gained or lost via gambling means, and you can see this information with the \`/vt balance\` command. `;
         str += `Below are the commands you can use with regards to Velvet Tokens, not including the games you can play with them:\n\n`;

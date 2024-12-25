@@ -221,7 +221,7 @@ There are 3 primary ways to earn Velvet Tokens:
 - Recieve tokens from another server member via them using the `/vt give` command.
 - Gambling.
 
-As of now, the daily token amount is 100. For every 7 consecutive days you claim your daily tokens you receive a bonus equal to `3 * <streak>`, where `streak` is the number of consecutive days you have claimed daily tokens. The check to see if you have claimed your daily tokens happens every night at 12:00 AM EST.
+As of now, the daily token amount is 100. For every 7 consecutive days you claim your daily tokens you receive a bonus equal to `2 * <streak>`, where `streak` is the number of consecutive days you have claimed daily tokens. The check to see if you have claimed your daily tokens happens every night at 12:00 AM EST.
   - When you claim daily tokens for the first time, you will get 1000 instead of 100, and you will get a bonus amount of tokens equal to the amount of days you have been in the server.
 
 ### Command Reference
