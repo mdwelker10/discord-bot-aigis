@@ -420,7 +420,7 @@ async function handleAction(action, interaction) {
 /** Called when its the dealers turn */
 async function dealersTurn(interaction, handValue) {
   let game = games.get(interaction.user.id);
-  let splitBusted = false;
+  let splitBusted = true; //default true means it wont impact dealer check if no split occured
   if (game.splitCards.length != 0) {
     const splitVal = calculateHandValue(game.splitCards);
     //determine if split hand busted
@@ -436,7 +436,7 @@ async function dealersTurn(interaction, handValue) {
   }
   dealerVal = parseInt(dealerVal);
   //dealer must hit on 16 or less, stand on 17 or more (unless soft 17 in hard mode, taken care of above)
-  while (dealerVal < 17 && (handValue <= 21 || !splitBusted)) {
+  while (dealerVal < 17 && !(handValue > 21 && splitBusted)) {
     game.dealerCards.push(game.cards[game.pointer++]);
     dealerVal = calculateHandValue(game.dealerCards);
     if (dealerVal.includes('/')) {
