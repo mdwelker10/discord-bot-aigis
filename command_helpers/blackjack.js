@@ -436,7 +436,7 @@ async function dealersTurn(interaction, handValue) {
   }
   dealerVal = parseInt(dealerVal);
   //dealer must hit on 16 or less, stand on 17 or more (unless soft 17 in hard mode, taken care of above)
-  while (dealerVal < 17 && (handValue <= 21 || !splitBusted) {
+  while (dealerVal < 17 && (handValue <= 21 || !splitBusted)) {
     game.dealerCards.push(game.cards[game.pointer++]);
     dealerVal = calculateHandValue(game.dealerCards);
     if (dealerVal.includes('/')) {
