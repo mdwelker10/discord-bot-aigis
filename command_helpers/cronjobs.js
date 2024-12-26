@@ -76,7 +76,7 @@ exports.startPurgeChecks = (client) => {
       for (const guildId of guilds) {
         try {
           const cfg = await getGuildConfig(guildId);
-          if (cfg.purge_date && cfg.purge_date < new Date()) {
+          if (cfg && cfg.purge_date && cfg.purge_date < new Date()) {
             console.info(`Purging data for guild ${guildId}`);
             await purgeAll(guildId);
           }
