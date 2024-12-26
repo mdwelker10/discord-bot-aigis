@@ -489,8 +489,8 @@ async function sendOutcome(interaction, dealerVal, outcomes) {
   let insureStr = '';
   let insureAmt = 0;
   if (game.insurance && dealerVal == 21 && game.dealerCards.length == 2) {
-    insureStr += `You have won your separate insurance bet, **winning ${bet}**.\n\n`;
-    insureAmt = bet;
+    insureStr += `You have won your separate insurance bet, **winning ${game.bet}**.\n\n`;
+    insureAmt = game.bet;
   } else if (game.insurance) {
     insureStr += `You have lost your separate insurance bet, **losing ${Math.floor(game.bet / 2)}**.\n\n`;
     insureAmt = -1 * Math.floor(game.bet / 2);
