@@ -419,13 +419,13 @@ async function handleAction(action, interaction) {
 
 /** Called when its the dealers turn */
 async function dealersTurn(interaction, handValue) {
+  let game = games.get(interaction.user.id);
   let splitBusted = false;
   if (game.splitCards.length != 0) {
     const splitVal = calculateHandValue(game.splitCards);
     //determine if split hand busted
     splitBusted = splitVal > 21;
   }
-  let game = games.get(interaction.user.id);
   let outcomes = [];
   let dealerVal = calculateHandValue(game.dealerCards);
   if (dealerVal.includes('/')) {
