@@ -146,7 +146,7 @@ module.exports = {
       }
       else if (interaction.options.getSubcommand() === 'stop') { //stop song of the day selection
         if (isDeveloper(interaction.user.id)) {
-          await interaction.editReply(`I'm sorry ${username}-san, but only developers can stop the Song of the Day.`);
+          await interaction.editReply(`I'm sorry ${interaction.user.displayName}-san, but only developers can stop the Song of the Day.`);
           return;
         } else {
           stopSotdCronJob();
