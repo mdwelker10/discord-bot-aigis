@@ -419,6 +419,12 @@ async function handleAction(action, interaction) {
 
 /** Called when its the dealers turn */
 async function dealersTurn(interaction, handValue) {
+  let splitBusted = false;
+  if (game.splitCards.length != 0) {
+    const splitVal = calculateHandValue(game.splitCards);
+    //determine if split hand busted
+    splitBusted = splitVal > 21;
+  }
   let game = games.get(interaction.user.id);
   let outcomes = [];
   let dealerVal = calculateHandValue(game.dealerCards);
@@ -430,7 +436,7 @@ async function dealersTurn(interaction, handValue) {
   }
   dealerVal = parseInt(dealerVal);
   //dealer must hit on 16 or less, stand on 17 or more (unless soft 17 in hard mode, taken care of above)
-  while (dealerVal < 17 && handValue <= 21) {
+  while (dealerVal < 17 && (handValue <= 21 || !splitBusted) {
     game.dealerCards.push(game.cards[game.pointer++]);
     dealerVal = calculateHandValue(game.dealerCards);
     if (dealerVal.includes('/')) {
@@ -483,8 +489,8 @@ async function sendOutcome(interaction, dealerVal, outcomes) {
   let insureStr = '';
   let insureAmt = 0;
   if (game.insurance && dealerVal == 21 && game.dealerCards.length == 2) {
-    insureStr += `You have won your separate insurance bet, **winning ${Math.floor(game.bet / 2)}**.\n\n`;
-    insureAmt = 2 * Math.floor(game.bet / 2);
+    insureStr += `You have won your separate insurance bet, **winning ${bet}**.\n\n`;
+    insureAmt = bet;
   } else if (game.insurance) {
     insureStr += `You have lost your separate insurance bet, **losing ${Math.floor(game.bet / 2)}**.\n\n`;
     insureAmt = -1 * Math.floor(game.bet / 2);
