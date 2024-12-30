@@ -20,13 +20,12 @@ exports.connect = createConnection;
 async function createConnection(dbName) {
   try {
     if (!client) {
-      client = new MongoClient(url)
+      client = new MongoClient(url);
       await client.connect();
     }
     return client.db(dbName);
   } catch (err) {
     console.error(err);
-    await client.close();
     throw new AigisError('Something went wrong with opening the database connection. Trashpanda-san will not like this.');
   }
 }
