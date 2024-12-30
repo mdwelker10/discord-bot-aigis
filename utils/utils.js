@@ -79,32 +79,37 @@ exports.isDeveloper = (userId) => {
 }
 
 /**
- * Check if the user can execute a privileged command by seeing if they have the appropriate role.
+ * Check if the user can execute a privileged command by seeing if they have the appropriate role for the command.
  * Throws an AigisError if the role no longer exists or an error occurs while checking.
+ * Will look at the given field name in the guild config to see if the user has the role in that field
  * @param {*} guildMember A GuildMember object representing the user as a member of the guild in question. This can be obtained via interaction.member
  * @param {*} guildConfig The guild config object for the guild in question
+ * @param {*} field_name The name of the field to check for in the guild config object
  * @returns {Promise<boolean>} A promise that resolves to true if the user has the appropriate role, or false if they do not
  */
-exports.checkPermission = async (guildMember, guildConfig) => {
-  const roleId = guildConfig['permission_role_id'];
-  if (roleId == 'everyone') {
+exports.checkPermission = async (guildMember, guildConfig, field_name) => {
+  const roleId = guildConfig[field_name];
+  if (roleId == guildConfig.guild_id) {
     return true;
   }
   //ensure role still exists
   try {
     let exists = await guildMember.guild.roles.fetch(roleId);
     if (!exists) {
-      console.warn(`Privileged role ${roleId} no longer exists in guild ${guildMember.guild.id}`);
-      throw new AigisError('the privileged role no longer exists in this server. Please run /setup again.');
+      console.warn(`Privileged role ${roleId} no longer exists in guild ${guildMember.guild.id}. Checking field ${field_name}.`);
+      throw new AigisError('the necessary role no longer exists in this server.');
     }
-    return guildMember.roles.cache.has(roleId);
+    return guildMember.roles.cache.some(r => r.id == roleId);
   } catch (err) {
     console.error(`Error checking user ${guildMember.id} for privileged permissions in guild ${guildMember.guild.id}:\n ${err}`);
+    if (err instanceof AigisError) {
+      throw err;
+    }
     throw new AigisError('an error occurred while checking your permissions. Ask for help from one of my developers if this continues.');
   }
 }
 
 /** Convert a number to a string with commans. Works with BigNumber objects */
 exports.numberToString = (num) => {
-  return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); //<-- copilot magic idk what this is 
+  return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); //copilot magic idk what this is but it works
 }

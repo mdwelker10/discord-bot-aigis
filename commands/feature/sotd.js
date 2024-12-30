@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { SlashCommandBuilder, EmbedBuilder, bold, hyperlink, } = require("discord.js");
+const { SlashCommandBuilder, EmbedBuilder, bold, hyperlink, PermissionsBitField } = require("discord.js");
 const axios = require('axios');
 const db = require("../../database/db");
 const AigisError = require('../../utils/AigisError');
@@ -42,6 +42,15 @@ module.exports = {
         .setDescription('Get help on how to use the Song of The Day command')
     )
     .addSubcommand(subcmd =>
+      subcmd.setName('permissions')
+        .setDescription('Set the permissions for adding and removing playlists from the Song of the Day')
+        .addRoleOption(option =>
+          option.setName('role')
+            .setDescription('The role to set permissions for.')
+            .setRequired(true)
+        )
+    )
+    .addSubcommand(subcmd =>
       subcmd.setName('stop')
         .setDescription('Stop the Song of the Day from running. Developer only.')
     ),
@@ -61,7 +70,8 @@ module.exports = {
             { name: '/sotd add-playlist <playlist-id>', value: 'Add a playlist to the list of playlists to select from for Song of the Day. Playlist must have at least 50 songs.' },
             { name: '/sotd remove-playlist <playlist-id>', value: 'Remove a playlist from the list of playlists to select from for Song of the Day.' },
             { name: '/sotd list-playlists', value: 'List all the playlists that are currently in the list of playlists to select from for Song of the Day.' },
-            { name: '/sotd select', value: `Manually select a song for Song of the Day, this is only for testing ${interaction.user.displayName}-san.` }
+            { name: '/sotd select', value: `Manually select a song for Song of the Day, this is only for testing ${interaction.user.displayName}-san.` },
+            { name: '/sotd permissions <role>', value: 'Set the permissions for modifying the Song of the Day rotation. Anyone with the given role will be allowed to add/remove playlists. Use the server ID to give this permission to everyone.' }
           )
           .setTimestamp();
         await interaction.editReply({ embeds: [embed] });
@@ -69,7 +79,7 @@ module.exports = {
       else if (interaction.options.getSubcommand() === 'list-playlists') { //list playlists
         const cfg = await getGuildConfig(interaction.guildId);
         if (!cfg) {
-          await interaction.editReply(`I'm sorry ${username}-san, I was unable to retrieve the configuration for this server. Please have somone with the "manage server" permission execute the \`/setup\` command`);
+          await interaction.editReply(`I'm sorry ${interaction.user.displayName}-san, I was unable to retrieve the configuration for this server. Please have somone with the "manage server" permission execute the \`/setup\` command`);
           return;
         }
         let embed = await listPlaylists(interaction.guildId);
@@ -78,7 +88,7 @@ module.exports = {
       else if (interaction.options.getSubcommand() === 'select') { //select a song
         const cfg = await getGuildConfig(interaction.guildId);
         if (!cfg) {
-          await interaction.editReply(`I'm sorry ${username}-san, I was unable to retrieve the configuration for this server. Please have somone with the "manage server" permission execute the \`/setup\` command`);
+          await interaction.editReply(`I'm sorry ${interaction.user.displayName}-san, I was unable to retrieve the configuration for this server. Please have somone with the "manage server" permission execute the \`/setup\` command`);
           return;
         }
         if (process.env.DEV != 1) {
@@ -113,36 +123,57 @@ module.exports = {
       else if (interaction.options.getSubcommand() === 'add-playlist') { //add playlist
         const cfg = await getGuildConfig(interaction.guildId);
         if (!cfg) {
-          await interaction.editReply(`I'm sorry ${username}-san, I was unable to retrieve the configuration for this server. Please have somone with the "manage server" permission execute the \`/setup\` command`);
+          await interaction.editReply(`I'm sorry ${interaction.user.displayName}-san, I was unable to retrieve the configuration for this server. Please have somone with the "manage server" permission execute the \`/setup\` command`);
           return;
         }
         //check for permission
-        if (!checkPermission(interaction.member, cfg)) {
+        let p = await checkPermission(interaction.member, cfg, 'sotd_role_id');
+        if (!p) {
           return await interaction.editReply(`I'm sorry ${interaction.user.displayName}-san, but you do not have the permission for that.`);
         }
         let pid = interaction.options.getString('playlist-id');
         let name = await addPlaylist(pid, interaction.user.displayName, interaction.guildId);
-        console.log(`${interaction.user.id} added SOTD playlist ${name}`);
+        console.log(`${interaction.user.id} added SOTD playlist ${name} in guild ${interaction.guildId}`);
         await interaction.editReply(`I have added the playlist "${name}" to the list of Song of the Day playlists ${interaction.user.displayName}-san.`);
       }
       else if (interaction.options.getSubcommand() === 'remove-playlist') { //remove playlist
         const cfg = await getGuildConfig(interaction.guildId);
         if (!cfg) {
-          await interaction.editReply(`I'm sorry ${username}-san, I was unable to retrieve the configuration for this server. Please have somone with the "manage server" permission execute the \`/setup\` command`);
+          await interaction.editReply(`I'm sorry ${interaction.user.displayName}-san, I was unable to retrieve the configuration for this server. Please have somone with the "manage server" permission execute the \`/setup\` command.`);
           return;
         }
         //check for permission
-        if (!checkPermission(interaction.member, cfg)) {
+        let p = await checkPermission(interaction.member, cfg, 'sotd_role_id');
+        if (!p) {
           return await interaction.editReply(`I'm sorry ${interaction.user.displayName}-san, but you do not have the permission for that.`);
         }
         let pid = interaction.options.getString('playlist-id');
         let result = await removePlaylist(pid, interaction.guildId);
         if (result) {
-          console.log(`${interaction.user.id} removed playlist with ID ${pid}`);
+          console.log(`${interaction.user.id} removed playlist with ID ${pid} in guild ${interaction.guildId}`);
           await interaction.editReply(`Alright ${interaction.user.displayName}-san, I have removed the playlist.`);
         } else {
           await interaction.editReply(`I'm sorry ${interaction.user.displayName}-san, but that playlist does not seem to be in the Song of the Day playlists.`);
         }
+      }
+      else if (interaction.options.getSubcommand() === 'permissions') { //set add/remove playlist persmissions
+        if (!interaction.memberPermissions.has(PermissionsBitField.Flags.ManageGuild)) {
+          return await interaction.editReply(`I'm sorry ${interaction.user.displayName}-san, but you do not have the permissions to do that.`);
+        }
+        const cfg = await getGuildConfig(interaction.guildId);
+        if (!cfg) {
+          return await interaction.editReply(`I'm sorry ${interaction.user.displayName}-san, I was unable to retrieve the configuration for this server. Please have somone with the "manage server" permission execute the \`/setup\` command.`);
+        }
+        const role = interaction.options.getRole('role');
+        let exists = await interaction.guild.roles.fetch(role.id);
+        if (!exists) {
+          throw new AigisError(`the role ID of ${role.id} that you have given me does not exist.`);
+        }
+        let ret = await db.updateOne(config.DB_NAME, 'config', { guild_id: interaction.guildId }, { $set: { sotd_role_id: role.id } });
+        if (ret === 0) {
+          throw new AigisError('I was unable to update the role ID in the database.');
+        }
+        return await interaction.editReply(`Alright ${interaction.user.displayName}-san, I have set the role ${role.name} to have permissions to add and remove playlists from the Song of the Day.`);
       }
       else if (interaction.options.getSubcommand() === 'stop') { //stop song of the day selection
         if (isDeveloper(interaction.user.id)) {

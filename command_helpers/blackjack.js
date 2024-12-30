@@ -235,6 +235,13 @@ exports.startTurn = async (guildId, userDisplayName, userId, interaction) => {
   if (!game || !game.guildId == guildId) {
     throw new AigisError('you do not have a blackjack game in progress.', 400);
   }
+  //check if player can cover their bet
+  let playerVT = await db.findOne(config.DB_NAME, 'vt', { user_id: userId, guild_id: guildId });
+  if (playerVT.vt < game.bet) {
+    interaction.channel.send(`I'm sorry <@${userId}>-san, but you do not have enough VT to cover your bet. The game will end.`);
+    return 'quit';
+  }
+
   //deal 2 cards to player
   game.playerCards.push(game.cards[game.pointer++]);
   game.playerCards.push(game.cards[game.pointer++]);

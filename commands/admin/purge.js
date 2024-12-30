@@ -30,7 +30,6 @@ module.exports = {
     //help command
     if (subcommand === 'help') {
       let desc = `Here is some guidance on deleting data I have stored for your server ${username}-san. `;
-      desc += `Also, if nobody in your server has run the \`/setup\` command yet, there is no data to delete so the command will not work. `;
       desc += `Manage server permissions are needed to use this command as this is quite the sensitive operation, but it is recommended to run this command if you want to remove me from your server. `;
       desc += `If that is the case, then I am sorry that I could not properly fulfill my duties and will strive to improve.\n\n`;
       desc += `Also ${username}-san, your data will not be deleted immediately. There is a 7 day delay before the data is deleted in case you change your mind. `;
@@ -55,7 +54,7 @@ module.exports = {
       //get the guild config -- no data to delete if no config
       const cfg = await getGuildConfig(guildId);
       if (!cfg) {
-        return await interaction.editReply(`I was unable to retrieve the configuration for this server ${username}-san, There is no data to delete.`);
+        return await interaction.editReply(`I was unable to retrieve the configuration for this server ${username}-san. A server configuration is needed to activate a purge. Please have someone with the "manage server" permission run the \`/setup\` command.`);
       }
       const ping = cfg.permission_role_id == 'everyone' ? `<@${interaction.guild.ownerId}` : `<@&${cfg.permission_role_id}>`
       if (subcommand == 'revert') { //revert command

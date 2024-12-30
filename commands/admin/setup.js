@@ -26,12 +26,12 @@ module.exports = {
       .setCustomId('setup')
       .setTitle('Aigis Setup');
     //add inputs for each configuration option
-    const roleIdInput = new TextInputBuilder()
-      .setCustomId('roleID')
-      .setPlaceholder('Enter a role ID')
-      .setLabel('Role ID for privileged commands')
-      .setStyle(TextInputStyle.Short)
-      .setRequired(true);
+    // const roleIdInput = new TextInputBuilder()
+    //   .setCustomId('roleID')
+    //   .setPlaceholder('Enter a role ID')
+    //   .setLabel('Role ID for privileged commands')
+    //   .setStyle(TextInputStyle.Short)
+    //   .setRequired(true);
 
     const defaultChannelInput = new TextInputBuilder()
       .setCustomId('defaultChannel')
@@ -48,10 +48,10 @@ module.exports = {
       .setRequired(false);
 
     //NOTE: Can only have 5 the above builders, will need a setup 2 command or restructure if adding more
-    const ar1 = new ActionRowBuilder().addComponents(roleIdInput);
+    // const ar1 = new ActionRowBuilder().addComponents(roleIdInput);
     const ar2 = new ActionRowBuilder().addComponents(defaultChannelInput);
     const ar3 = new ActionRowBuilder().addComponents(specialChannels);
-    modal.addComponents(ar1, ar2, ar3);
+    modal.addComponents(ar2, ar3);
     await interaction.showModal(modal);
 
     //handle modal submission
@@ -64,19 +64,19 @@ module.exports = {
 
     if (submitted) {
       const guild = interaction.guild;
-      const roleId = submitted.fields.getTextInputValue('roleID');
+      //const roleId = submitted.fields.getTextInputValue('roleID');
       const defaultChannel = submitted.fields.getTextInputValue('defaultChannel');
       //check if the role ID and default channel ID are valid IDs. If identifier is invalid a DiscordAPI error is thrown, so 2 checks needed 
-      try {
-        if (roleId.trim().toLowerCase() != 'everyone') {
-          let role = await guild.roles.fetch(roleId);
-          if (role == null) {
-            return await submitted.reply({ content: `${username}-san! The role ID "${roleId}" is not valid. Please try the setup again.`, ephemeral: true });
-          }
-        }
-      } catch (error) {
-        return await submitted.reply({ content: `${username}-san! The role ID "${roleId}" is not valid. Please try the setup again.`, ephemeral: true });
-      }
+      // try {
+      //   if (roleId.trim().toLowerCase() != 'everyone') {
+      //     let role = await guild.roles.fetch(roleId);
+      //     if (role == null) {
+      //       return await submitted.reply({ content: `${username}-san! The role ID "${roleId}" is not valid. Please try the setup again.`, ephemeral: true });
+      //     }
+      //   }
+      // } catch (error) {
+      //   return await submitted.reply({ content: `${username}-san! The role ID "${roleId}" is not valid. Please try the setup again.`, ephemeral: true });
+      // }
       //since channel id check also happens later, get all channels in one go
       let channels = null
       try {
@@ -122,7 +122,6 @@ module.exports = {
           await submitted.reply({ content: `${username}-san, you really messed up big time. There was an error sending the error message. Please try again.`, ephemeral: true });
         }
       }
-      map.set('permission_role_id', roleId);
       map.set('channel_default', defaultChannel);
       map.set('guild_id', guild.id);
       const force = interaction.options.getBoolean('force') ?? false;
@@ -130,6 +129,7 @@ module.exports = {
       const guildConfig = await getGuildConfig(guild.id);
       const disabledCommands = guildConfig ? guildConfig.disabled_commands : [];
       map.set('disabled_commands', disabledCommands);
+      map.set('sotd_role_id', guildConfig ? guildConfig.sotd_role_id : guild.id);
       if (!guildConfig || force) {
         //if no config document exists or force enabled then replace/upsert config document
         await db.replace(config.DB_NAME, 'config', { guild_id: guild.id }, map, true);
@@ -138,7 +138,7 @@ module.exports = {
         return await submitted.reply({ content: `${username}-san, the configuration for this server already exists. Please use the force option to override.`, ephemeral: true });
       }
       //send success message
-      await submitted.reply({ content: `The configuration has been set up successfully.`, ephemeral: true });
+      return await submitted.reply({ content: `The configuration has been set up successfully.`, ephemeral: true });
     }
   }
 };

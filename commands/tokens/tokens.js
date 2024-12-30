@@ -82,7 +82,6 @@ module.exports = {
         const conn = await db.connect(config.DB_NAME);
         const collection = conn.collection('vt');
         const data = await collection.find().sort({ vt: -1 }).collation({ locale: "en_US", numericOrdering: true }).limit(10).toArray();
-        await db.disconnect();
         str = data.length === 0 ? 'No users have any Velvet Tokens yet.' : '';
         for (let i = 0; i < data.length; i++) {
           let name = null;

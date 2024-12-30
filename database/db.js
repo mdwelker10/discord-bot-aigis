@@ -1,48 +1,40 @@
 const { MongoClient } = require('mongodb');
 const url = process.env.MONGO_URL;
-const client = new MongoClient(url);
 const AigisError = require('../utils/AigisError');
 
-let database;
+process.on('SIGINT', async () => {
+  await closeConnection();
+  process.exit();
+});
 
-/** For opening a connection for manual use. try to avoid */
+process.on('SIGTERM', async () => {
+  await closeConnection();
+  process.exit();
+});
+
+let client;
+
+/** For getting the connection for manual use. try to avoid */
 exports.connect = createConnection;
-/** For closing a manually opened collection. Always use when using connect() */
-exports.disconnect = closeConnection;
 
 async function createConnection(dbName) {
-  if (!database) {
-    try {
+  try {
+    if (!client) {
+      client = new MongoClient(url)
       await client.connect();
-      database = client.db(dbName);
-    } catch (err) {
-      console.error(err);
-      await client.close();
-      throw new AigisError('Something went wrong with opening the database connection. Trashpanda-san will not like this.');
     }
+    return client.db(dbName);
+  } catch (err) {
+    console.error(err);
+    await client.close();
+    throw new AigisError('Something went wrong with opening the database connection. Trashpanda-san will not like this.');
   }
-  return database;
 }
 
 async function closeConnection() {
-  if (database) {
+  if (client) {
     await client.close();
-    database = null;
-  }
-}
-
-exports.init = async function init(dbName, collectionNames) {
-  try {
-    await client.connect();
-    const database = client.db(dbName);
-    for (let collectionName of collectionNames) {
-      database.collection(collectionName, (err, result) => { if (err) throw err; });
-    }
-  } catch (err) {
-    console.error(err);
-    throw new AigisError('Something went wrong with the database, please report this.');
-  } finally {
-    await client.close();
+    client = null;
   }
 }
 
@@ -55,11 +47,10 @@ exports.addIndex = async function addIndex(dbName, collectionName, index) {
     const db = await createConnection(dbName);
     const collection = db.collection(collectionName);
     const result = await collection.createIndex(index);
+    return result;
   } catch (err) {
     console.error(err);
     throw new AigisError('Something went wrong with the database, please report this.');
-  } finally {
-    await closeConnection();
   }
 }
 /** 
@@ -80,8 +71,6 @@ exports.insert = async function insert(databaseName, collectionName, data) {
   } catch (err) {
     console.error(err);
     throw new AigisError('Something went wrong with the database, please report this.');
-  } finally {
-    await closeConnection();
   }
 }
 
@@ -98,8 +87,6 @@ exports.findOne = async function findOne(databaseName, collectionName, query) {
   } catch (err) {
     console.error(err);
     throw new AigisError('Something went wrong with the database, please report this.');
-  } finally {
-    await closeConnection();
   }
 }
 
@@ -116,8 +103,6 @@ exports.find = async function find(databaseName, collectionName, query) {
   } catch (err) {
     console.error(err);
     throw new AigisError('Something went wrong with the database, please report this.');
-  } finally {
-    await closeConnection();
   }
 }
 
@@ -134,8 +119,6 @@ exports.updateOne = async function updateOne(databaseName, collectionName, filte
   } catch (err) {
     console.error(err);
     throw new AigisError('Something went wrong with the database, please report this.');
-  } finally {
-    await closeConnection();
   }
 }
 
@@ -152,8 +135,6 @@ exports.updateMany = async function updateMany(databaseName, collectionName, fil
   } catch (err) {
     console.error(err);
     throw new AigisError('Something went wrong with the database, please report this.');
-  } finally {
-    await closeConnection();
   }
 }
 
@@ -170,8 +151,6 @@ exports.replace = async function replaceOne(databaseName, collectionName, filter
   } catch (err) {
     console.error(err);
     throw new AigisError('Something went wrong with the database, please report this.');
-  } finally {
-    await closeConnection();
   }
 }
 
@@ -188,8 +167,6 @@ exports.deleteOne = async function deleteOne(databaseName, collectionName, query
   } catch (err) {
     console.error(err);
     throw new AigisError('Something went wrong with the database, please report this.');
-  } finally {
-    await closeConnection();
   }
 }
 
@@ -206,9 +183,5 @@ exports.deleteMany = async function deleteMany(databaseName, collectionName, que
   } catch (err) {
     console.error(err);
     throw new AigisError('Something went wrong with the database, please report this.');
-  } finally {
-    await closeConnection();
   }
 }
-
-

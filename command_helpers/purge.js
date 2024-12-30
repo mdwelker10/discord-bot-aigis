@@ -5,6 +5,7 @@ exports.purgeAll = async (guildId) => {
   await db.deleteOne(config.DB_NAME, 'config', { guild_id: guildId });
   await purgeSotd(guildId);
   await purgeManga(guildId);
+  await purgeVT(guildId);
 }
 
 async function purgeSotd(guildId) {
@@ -20,4 +21,8 @@ async function purgeManga(guildId) {
   if (modified != 0) {
     await db.deleteMany(config.DB_NAME, 'manga', { ping_list: {} });
   }
+}
+
+async function purgeVT(guildId) {
+  await db.deleteMany(config.DB_NAME, 'vt', { guild_id: { guildId } });
 }

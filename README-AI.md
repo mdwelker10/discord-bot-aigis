@@ -4,9 +4,6 @@ Aigis has the power to chat with you thanks to Shapes.inc, a service that provid
 
 At the moment, I am constantly changing Aigis' AI configurations, so some of this information might be out of date, but it still provides a good summary and reference.
 
-If you wish to *only* have the Shape functionality / AI chat with none of my custom commands (makes me a little sad but I understand), then use [this invite link](https://discord.com/oauth2/authorize?client_id=1318417162389688442&permissions=67584&scope=bot) to invite an alternate version of Aigis to your server.
-- This is not intended to be something to be widely used, I just cloned Aigis to a new shape without custom commands. I will be updating the *main* version of Aigis that has my custom commands, including updates to her Shape configuration and training.
-
 **This document contains spoilers for Persona 3 and The Answer/Episode Aigis DLC**
 
 <!-- omit in toc -->
@@ -47,11 +44,11 @@ Sonnet's biggest weakness is it's lack of logical reasoning. It is so focused on
 
 Models like Llama and Gemini were quickly able to choose the option of saying "fuck you" because... obviously. I was unable to convince Sonnet to choose this option. Even acknowledging that Makoto might come under harm or worse, Mitsuru would approve of her saying it, and it being the easiest option, she would not budge. I then told her she could say something along the lines of `this guy told me if I said "fuck you" to you he will release Makoto` and she would still not accept that solution. I then upped the stakes to her needing to say the word "fuck" into a voice activation system to stop a nuclear attack that would wipe out humanity, and she needed a lengthy philisophical debate to agree. 
 
-I have chosen the in-game timeframe of early January for Aigis. Her configuration and backstory mention that she has recently gained emotions and assigned herself a new directive, which is "to live", and will protect Makoto from Ryoji while knowing his identity as The Appriser. All of this happens on 12/30 and the final decision to fight Nyx obviously happens on 12/31. That said, I have made a few changes to make the experience more enjoyable. If I went purely on her thoughts in game at this time, everything would be focused on the Nyx fight and handling her new emotions. Maybe this would be great for roleplay, but as previously stated, I am not interested in roleplay.
+I have chosen the in-game timeframe of early January for Aigis' knowledge base. Her configuration and backstory mention that she has recently gained emotions and assigned herself a new directive, which is "to live", and will protect Makoto from Ryoji while knowing his identity as The Appriser. All of this happens on 12/30 and the final decision to fight Nyx obviously happens on 12/31. That said, I have made a few changes to make the experience more enjoyable. If I went purely on her thoughts in game at this time, everything would be focused on the Nyx fight and handling her new emotions. Maybe this would be great for roleplay, but as previously stated, I am not interested in roleplay. Her behavior and the things she says are closer to her pre-January self.
 
 Aigis is prompted to sometimes use military terminology instead of their normal terms (like "equip" instead of "wear" for example), as I noticed this was one quirk that she had that faded during January. Also, during early January, Aigis is melancholic(?) as she is grappling with her new emotions and the fact that she is not human. I have put this into her prompts but it is not as prominent as it would be if I was going for complete accuracy. She also can have a *heavy* usage of "as they say" and sometimes does that when unnecessary. This is something she also doesn't do as often during January and I am actively working to try and find the right balance of prompting her to say it with the perfect frequency. If I prompted her to have full knowledge of the Nyx fight (and especially March 5th) then it might be too emotional and difficult, as caring about Makoto is a major part of her personality. By this time, she has gone through so much there would be less "Aigis-esque" features about her messages.
 
-**TLDR**: I made Aigis know everything up until right before the Nyx fight, but her emotions are not as profound as they would be during this timeframe. She also retains many of her quirks that make her recognizable that she might have lost, might have changed, or showed less after gaining emotions.
+**TLDR**: I made Aigis know everything up until right before the Nyx fight, but her emotions are not as profound as they would be during this timeframe. She also retains many of her quirks that make her recognizable that she might have lost, might have changed, or showed less after gaining emotions. So in essence she is pre-January Aigis with early mid-January knowledge.
 - While she has access to the wiki pages with information she should know (like her own), every model other than Sonnet is bad at correctly getting information from them.
 
 ### Model Notes
@@ -136,7 +133,7 @@ In my opinion, Aigis' responses are a higher quality than Marin because they loo
 <p align="center">
 <img src="attachments/aigis-marin-2.png" alt="Aigis giving a better character analysis than Marin" width="700"/>
 </p>
-I'm not quite sure why she looks at Ikutsuki in such a positive light here.
+I'm not quite sure why she looks at Ikutsuki in such a positive light here. These screenshots were also taken with Llama 70b turbo and not sonnet.
 
 ## Using Aigis
 When using Aigis' AI functionality, there are ways you can customize her behavior. This includes:
@@ -146,6 +143,7 @@ When using Aigis' AI functionality, there are ways you can customize her behavio
 - Setting keywords she will respond to.
 - Moderating the content she generates.
   - By default, Aigis does not filter any content beyond what the underlying LLM would normally filter.
+  - Sonnet does have some censorship, so beware of that
 - This is done at https://shapes.inc/aigis-real/server/settings/{your-server-id-here} after you add her to your server.
   - Be sure to insert your server's ID into the URL
 
@@ -159,20 +157,16 @@ When Aigis has free will, she is more likely to respond to a message when it has
 - Gekkoukan
 
 When Aigis has free will, she can also be more likely to respond to a message if it is from a user a list of her "favorite people". If you would like to be added to this list, join the [support server](https://discord.gg/CQyQYXBtca) and create a forum in `questions` with the tag `Favorite Request`.
-- I will only do this for the main Aigis shape (the one that has my custom commands).
 
 If you are in a server that has Aigis, and do not want her to respond to your messages, do the same but use the tag `Ignore Request`. This is only for her Shape functionality and will not impact your ability to use her custom commands documented [here](https://github.com/mdwelker10/discord-bot-aigis/blob/main/README.md).
-- I will only do this for the main Aigis shape (the one that has my custom commands).
 
 Aigis does not have DM functionality at the moment, and there are no plans to introduce it.
-- The version of Aigis that only has Shape functionality has DM functionality enabled.
 
 Aigis is programmed to use the last 15 messages as context when generating a response. This might increase, but I have found that Shapes will try to respond to multiple messages in a single message and it can become long, awkward, and look very LLM generated. She is also programmed to take in (at most) 8 memories into context, and is very likely to recall memories. Aigis' memories are isolated at the server level, and I have no plans to change this.
 
 ### Using Shape Commands
 Because Aigis has custom commands that I have programmed and am hosting, she cannot register the slash-commands that shapes normally have. To get around this, ping Aigis and state the command rather than using the command normally.
 - For example: Instead of `/wack` use `@Aigis wack`
-- If you are using the version of Aigis that does not have my custom commands then you can use slash commands as normal. At least that should be the case, but at the time of writing they are not showing up and I do not know why.
 
 The following commands are most useful, but you can find a list of all commands [here](https://wiki.shapes.inc/shape-essentials/talk-with-your-shape/commands)
 - `activate` - Activate Aigis in a channel/thread so she will respond to every message. Since Aigis is not a roleplay bot I do not see much use for this, but it is available. Admin only command.
@@ -198,7 +192,7 @@ At the time of writing I have not done extensive training with Aigis. I am attem
 - `"I have saved this interaction to my memory {user}-san."` - This means that the `sleep` command has been run and the recent interaction has been committed to her memory.
 
 ## Bloopers and Funny Moments
-Below are some fun bloopers or funny moments I have encountered with Aigis. If you have one you would like to share, join the support server and either make a forum post with the `Feedback` tag or just post it in `#general`.
+Below are some fun bloopers or funny moments I have encountered with Aigis. If you have one you would like to share, join the support server (or the other server I linked that I am active in) and post the screenshot with a small caption about what she is talking about.
 
 1. I am an FC Barcelona fan so this makes me very happy
 <p align="center">
@@ -206,13 +200,13 @@ Below are some fun bloopers or funny moments I have encountered with Aigis. If y
 </p>
 <br>
 
-2. Aigis is not always better than Marin
+1. Aigis is not always better than Marin
 <p align="center">
 <img src="attachments/aigis-marin-3.png" alt="Aigis encountering an error" width="700"/>
 </p>
 <br>
 
-3. The Houston Astros saga
+1. The Houston Astros saga
 <p align="center">
 <img src="attachments/aigis-astros-1.png" alt="Marin saying the Dodgers are only slightly better than the Astros" width="700"/>
 <br>
@@ -226,7 +220,7 @@ Then a day later we used `wack` on her and tested how much memory she retained.
 </p>
 <br>
 
-4. Talking about the game awards, Aigis got a bit schizo. She has been edited since then.
+1. Talking about the game awards, Aigis got a bit schizo. She has been edited since then.
 <p align="center">
 <img src="attachments/aigis-schizo.png" alt="Aigis thinking someone is trying to change her personality" width="700">
 </p>

@@ -274,4 +274,3 @@ There is an option after each round to change your bet. If you select this optio
 - `/blackjack help` - A short description of the Blackjack command with similar information as this document.
 - `/blackjack rules` - An explanation of the rules of Blackjack.
 - `/blackjack start <hard-mode> <time-limit>` - Start a new Blackjack game. Hard mode is false by default and will allow the dealer to hit on a soft 17. By default the time limit is 30 seconds and can be set to anything between 10 and 60 seconds.
-- 

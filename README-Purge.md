@@ -10,6 +10,7 @@
   - [Server Configuration](#server-configuration)
   - [Song of the Day](#song-of-the-day)
   - [Manga](#manga)
+  - [Velvet Tokens and Gambling](#velvet-tokens-and-gambling)
 
 
 ## Purge Command
@@ -18,6 +19,8 @@ The purge command is used to delete all data Aigis has stored about your server.
 - Configuration on commands that are enabled/disabled
 - Song of the Day data, including playlist rotation
 - Manga data, including manga that members of the server follow
+- VT totals for all server members
+  - If you have VT in 2 or more servers with Aigis, your other server's VT will not be impacted
 
 The deletion does not happen right away, but 7 days from when the command is used. Data is marked for deletion but still used, so users will still receive manga pings, the Song of the Day will still be chosen, etc. This is implemented mianly for two reasons
 - In case you want to reverse the decision to delete data.
@@ -26,7 +29,10 @@ The deletion does not happen right away, but 7 days from when the command is use
 After the deletion, it will be like Aigis has joined your server for the first time with one exception, **reminders are not deleted**. This is due to the fact that reminders are stored in a queue using [bull](https://github.com/OptimalBits/bull#readme), and deleting a particular entry from that queue is more trouble than it's worth (for me since I am a bad programmer). This also means that the `/setup` command will need to be rerun, assuming you want to configure Aigis again.
 
 A few more notes on the purge command:
-- When a data deletion is scheduled, Aigis will ping the privileged role ID set via the `/setup` command. If it was set to everyone, Aigis will ping the server owner. This is to ensure that others know a data deletion is occuring.
+- The `/setup` command needs to be run before activating a purge. This is for 2 reasons:
+  - Most data that gets deleted requires `/setup` to be run in order for the data to be stored in the first place.
+  - When a purge is run, a field is placed in the server's configuration document that lets Aigis know that the server's data is marked for deletion. Without a configuration document this is not possible. 
+- When a data deletion is scheduled, Aigis will ping the server owner.
   - The same occurs if the deletion is reverted.
 - The deletion is not *exactly* 7 days from the time the command was run. A cronjob is scheduled once a day at midnight EST to check if the date to delete (7 days from when the command was run) has passed. So the real time is a few hours longer than 7 days.
 - Once 7 days have passed and the data has been deleted **it cannot be recovered**
@@ -36,6 +42,7 @@ A few more notes on the purge command:
 ### When to Purge
 This is not an operation to be taken lightly, as it essentially resets Aigis to when she first joins your server. Here are some situations when you can, or should, run a data purge:
 - When you no longer want Aigis in your server, *you should run this command before kicking her*.
+  - This might not apply if you have not run the `/setup` command
 - If you want to disable all commands after having Aigis in the server for a while.
 - If you want to stop Song of the Day and Manga pings for all users in your server
 - If someone has messed up your data and typing the commands to fix it is too tedious, like if they added hundreds of playlists to the Song of the Day rotation for example.
@@ -152,3 +159,23 @@ Manga are also separated by website meaning the same series could have duplicate
 - In the above example, if a purge was activated on the server with ID "1309659688593522698", then only that entry would be removed.
 - The `cover_art` field will default to [a link to a picture of Aigis reading](https://i.imgur.com/usdIJxN.png) if the manga has a pronographic rating or if the cover art could not be retrieved. 
   - Be warned, on some websites it might not be possible to determine the rating of a manga programatically.
+
+### Velvet Tokens and Gambling
+Each server member's VT information is stored in a separate collection. If someone is in multiple servers with Aigis, they will have a separate entry for each server they are in. 
+
+Aigis does not save individual game results from games like Blackjack, but the total VT won/lost via gambling is saved in this collection.
+
+```json
+{
+  "user_id": "365986896733536278",
+  "guild_id": "1309659688593522698",
+  "vt": "1137",
+  "daily_claimed": true,
+  "daily_streak": 3,
+  "bet": 50,
+  "gamble_history": "5"
+}
+```
+- The `daily_claimed` and `daily_streak` fields help keep track of if a user has claimed their daily tokens, and for how many consecutive days they have done so.
+- The `bet` field is used as the amount the user will bet for gambling games. This is shared across all games.
+- `gamble_history` is the total winnings/losings from gambling. If the number is positive then the user has won more from gambling than lost.
