@@ -578,7 +578,7 @@ async function payout(userId, game, result, insuranceBet = 0) {
   let vtChange = 0;
   switch (result) {
     case 'bj':
-      vtChange = bet * 1.5;
+      vtChange = Math.floor(bet * 1.5);
       break;
     case 'push':
       vtChange = 0;
