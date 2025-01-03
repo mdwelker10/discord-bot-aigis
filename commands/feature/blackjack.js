@@ -186,6 +186,7 @@ async function playGame(interaction, play = true, obj = null) {
       }
       //button was clicked, resolve with action
       if (reason == 'done') {
+        interaction = i; //refresh interaction, maybe?
         const customId = i.customId;
         let content = options.content;
         if (play == false) {
