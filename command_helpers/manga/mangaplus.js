@@ -1,7 +1,6 @@
 const axios = require('axios');
 const AigisError = require('../../utils/AigisError');
 const path = require('path');
-const cheerio = require('cheerio');
 const playwright = require('playwright');
 const { downloadImage } = require('../../utils/utils');
 const { insertManga, mangaChannelNSFW } = require('./manga-general');
@@ -38,6 +37,7 @@ exports.getIdHelpString = () => {
  * @returns {Promise<String>} Manga title
  */
 exports.followManga = async (manga_id, user_id, guild, lang = 'en') => {
+  throw new AigisError('Following manga on MangaPlus is not supported at the moment. Please join the support server for more information.');
   const guild_id = guild.id;
   manga = {
     title: 'default title',
