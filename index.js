@@ -51,7 +51,7 @@ client.once(Events.ClientReady, readyClient => {
 
 client.on(Events.MessageCreate, async (message) => {
   if (message.author.bot) return;
-  if (message.content.toLowerCase().includes('debug manga') && isDeveloper(message.author.id)) { //For manually testing manga cronjob
+  if (message.content.toLowerCase().includes('debug manga') && isDeveloper(message.author.id) && process.env.DEV == 1) { //For manually testing manga cronjob
     console.log('Debugging manga...');
     await mangaCheck(client);
     return message.reply('I have checked for manga updates');

@@ -7,6 +7,7 @@ module.exports = {
       env: {
         DEV: 1,
         NODE_ENV: 'development',
+        NODE_EXTRA_CA_CERTS: "/Users/matthew/Development/discord-aigis/mangaplus.pem"
       },
       ignore_watch: [
         './node_modules',

@@ -9,3 +9,4 @@ ai/venv/
 ai/venv_win/
 ztest.js
 deploy.sh
+*.pem

@@ -17,6 +17,7 @@ const websites = {
   mangapill: require('./mangapill'),
   mangakakalot: require('./mangakakalot'),
   manganato: require('./manganato'),
+  mangaplus: require('./mangaplus')
 }
 
 exports.mangaCheck = async (client) => {
@@ -123,6 +124,7 @@ exports.listManga = async (guild_id, user_id) => {
         str += `- ${m.nsfw ? `${m.title}` : hyperlink(`${m.title}`, `<${link}>`)} on ${websites[m.website].NAME} ${m.nsfw ? `${emote}` : ''}\n`;
       }
     } catch (err) {
+      console.error(err);
       console.error(`Could not generate link for ${m.title} on ${m.website} in ${m.lang}.`);
       continue;
     }

@@ -187,9 +187,10 @@ For the purpose of this command, age restricted manga is defined as a manga feat
 ### Supported Websites and Content Rating
 Here is a full list of the supported websites and whether their content rating can be programatically determined.
 - [Mangadex](https://mangadex.org/) - Content rating can be determined
-- [Mangapill](https://mangapill.com/) - Content rating cannot be determined, but does not host manga that would need to be age restricted.
+- [Mangapill](https://mangapill.com/) - Does not host age restricted manga.
 - [Mangakakalot](https://mangakakalot.com/) - Content rating cannot be determined. All manga marked as age restricted.
 - [Manganato](https://manganato.com/) - Content rating cannot be determined. All manga marked as age restricted.
+- [Mangaplus](https://mangaplus.shueisha.co.jp/updates) - Does not host age restricted manga.
 
 ### Command Reference
 The following menu can be brought up by Aigis, along with the explanation of the command basics and language codes, via the `/manga help` command.
