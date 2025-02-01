@@ -74,7 +74,7 @@ exports.followManga = async (manga_id, user_id, guild, lang = 'en') => {
     }
   } catch (err) {
     console.error(err);
-    throw new AigisError(`I could get the information for the manga with ID ${manga_id} on Mangaplus. Please make sure the manga ID is correct.`);
+    throw new AigisError(`I could not get the information for the manga with ID ${manga_id} on Mangaplus. Please make sure the manga ID is correct.`);
   }
 
   await insertManga(manga, guild_id, user_id);
