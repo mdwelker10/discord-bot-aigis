@@ -37,7 +37,7 @@ exports.getIdHelpString = () => {
  * @returns {Promise<String>} Manga title
  */
 exports.followManga = async (manga_id, user_id, guild, lang = 'en') => {
-  throw new AigisError('Following manga on MangaPlus is not supported at the moment. Please join the support server for more information.');
+  throw new AigisError('following manga on MangaPlus is not supported at the moment. Please join the support server for more information.');
   const guild_id = guild.id;
   manga = {
     title: 'default title',
