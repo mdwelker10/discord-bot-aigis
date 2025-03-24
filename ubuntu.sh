@@ -1,4 +1,5 @@
 #!/bin/bash
+
 # Script to deploy to Ubuntu (or rather just listed steps)
 sudo apt-get update
 sudo apt-get install -y gnupg curl git ttf-mscorefonts-installer fontconfig jq nano redis-server
