@@ -7,7 +7,7 @@ module.exports = {
       env: {
         DEV: 0,
         NODE_ENV: "production",
-        NODE_EXTRA_CA_CERTS: "/home/ec2-user/aigis/main.pem"
+        NODE_EXTRA_CA_CERTS: "/home/ubuntu/aigis/main.pem"
       },
       out_file: "./logs/out.log",
       error_file: "./logs/error.log",
