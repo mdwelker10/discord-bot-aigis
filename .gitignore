@@ -7,5 +7,4 @@
 ztest.js
 deploy.sh
 *.pem
-ubuntu.sh
 prod/
