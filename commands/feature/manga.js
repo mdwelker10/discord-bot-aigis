@@ -361,11 +361,11 @@ function parseID(id) {
     return 'mangapill';
   }
   //mangakakalot
-  if (id.includes('kakalot') && id.split('-').length === 2) {
+  if (id.includes('kakalot') && id.split('kakalot-').length === 2) {
     return 'mangakakalot';
   }
   //manganato
-  if (id.includes('nato') && id.split('-').length === 2) {
+  if (id.includes('nato') && id.split('nato-').length === 2) {
     return 'manganato';
   }
   //mangaplus

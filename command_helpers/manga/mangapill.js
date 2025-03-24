@@ -39,6 +39,9 @@ exports.followManga = async (manga_id, user_id, guild, lang = 'en') => {
   const guild_id = guild.id;
   const ret = await axios.get(`https://mangapill.com/manga/${manga_id}`);
   if (ret.status !== 200) {
+    if (ret.status >= 500) {
+      throw new AigisError(`Mangapill seems to be experiencing issues, please try again later.`);
+    }
     throw new AigisError(`I could not find manga with ID ${manga_id} on Mangapill.`);
   }
   const $ = cheerio.load(ret.data);
@@ -98,6 +101,14 @@ async function getCoverArt($) {
  */
 exports.checkForUpdates = async (manga) => {
   const ret = await axios.get(`https://mangapill.com/manga/${manga.manga_id}`);
+  if (ret.status !== 200) {
+    if (ret.status >= 500) {
+      console.error(`Mangapill seems to be experiencing issues.`);
+    } else {
+      console.error(`Could not find manga with ID ${manga.manga_id} on Mangapill. Skipping chapter check...`);
+    }
+    return null;
+  }
   const $ = cheerio.load(ret.data);
   const chapter = $('#chapters').find('a').first();
   const latest_chapter = chapter.attr('href').split('/chapters/')[1] ?? 0;
