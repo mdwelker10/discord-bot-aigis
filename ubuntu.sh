@@ -1,7 +1,7 @@
 #!/bin/bash
 # Script to deploy to Ubuntu (or rather just listed steps)
 sudo apt-get update
-sudo apt-get install -y gnupg curl git ttf-mscorefonts-installer fontconfig jq nano
+sudo apt-get install -y gnupg curl git ttf-mscorefonts-installer fontconfig jq nano redis-server
 
 # Install Arial font
 sudo fc-cache -f
