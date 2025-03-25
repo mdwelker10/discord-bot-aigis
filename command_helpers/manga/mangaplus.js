@@ -53,7 +53,7 @@ exports.followManga = async (manga_id, user_id, guild, lang = 'en') => {
   try {
     //open browser instance and launch the page
     const browser = await playwright.firefox.launch();
-    const context = await browser.newContext({ ignoreHTTPSErrors: true, timeout: 15000 });
+    const context = await browser.newContext({ ignoreHTTPSErrors: true, timeout: 15000, userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:109.0) Gecko/20100101 Firefox/109.0' });
     const page = await context.newPage({ referer: 'https://mangaplus.shueisha.co.jp' });
     await page.goto(`https://mangaplus.shueisha.co.jp/titles/${manga_id}`, { waitUntil: 'domcontentloaded' });
     //get the title and cover art, fail fast if the title is not there, meaning ID is invalid
@@ -111,7 +111,7 @@ async function getCoverArt(page, manga_id) {
  */
 exports.checkForUpdates = async (manga) => {
   const browser = await playwright.firefox.launch();
-  const context = await browser.newContext({ ignoreHTTPSErrors: true, timeout: 15000 });
+  const context = await browser.newContext({ ignoreHTTPSErrors: true, timeout: 15000, userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:109.0) Gecko/20100101 Firefox/109.0' });
   const page = await context.newPage({ referer: 'https://mangaplus.shueisha.co.jp' });
   await page.goto(`https://mangaplus.shueisha.co.jp/titles/${manga.manga_id}`, { waitUntil: 'domcontentloaded' });
 

@@ -83,7 +83,6 @@ exports.mangaCheck = async (client) => {
           await channel.send(msg);
           continue;
         }
-        console.log('ping actually sending');
         //generate ping for chapter release
         const manga_link = websites[manga.website].generateMangaLink(manga.manga_id);
         ping += `A new chapter of ${hyperlink(manga.title, manga_link)} on ${websites[manga.website].NAME} in ${exports.getLanguage(manga.lang)} has been released! You can read it ${hyperlink('here', `<${link}>`)}.`;

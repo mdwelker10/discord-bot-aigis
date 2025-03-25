@@ -29,6 +29,8 @@ cd aigis
 mkdir temp
 npm install
 npm install -g pm2
+npx playwright install-deps
+npx playwright install
 
 # Transfer files from prod directory to aigis directory (run locally from prod directory or whatever directory has these files)
 # scp -i ~/.ssh/aigis-key.pem post-receive ubuntu@44.203.173.177:~/bare.git/hooks/post-receive

@@ -24,7 +24,6 @@ const client = new Client({
     GatewayIntentBits.MessageContent,
     GatewayIntentBits.GuildMembers]
 });
-
 //attach .commands property to client to allow access to commands in other files
 client.commands = new Collection();
 const foldersPath = path.join(__dirname, 'commands');
