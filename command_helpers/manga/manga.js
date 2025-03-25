@@ -17,13 +17,11 @@ const websites = {
   mangapill: require('./mangapill'),
   mangakakalot: require('./mangakakalot'),
   manganato: require('./manganato'),
-  mangaplus: require('./mangaplus')
 }
 
 exports.mangaCheck = async (client) => {
   let data = await db.find(config.DB_NAME, exports.COLLECTION_NAME, {});
   for (let manga of data) {
-    console.info(`New chapter for ${manga.title} on ${manga.website} in ${exports.getLanguage(manga.lang)} has been released. Sending ping.`);
     //ensure the website functions can be dynamically called
     if (websites[manga.website] == null) {
       console.warn(`Website ${manga.website} is not supported for manga updates.`);
@@ -36,6 +34,7 @@ exports.mangaCheck = async (client) => {
         //no new chapter
         continue;
       }
+      console.info(`New chapter for ${manga.title} on ${manga.website} in ${exports.getLanguage(manga.lang)} has been released. Sending ping.`);
       // if a new cover art is found then remove the old one
       if (manga.cover_art !== chapter.cover_art) {
         fs.unlink(path.join(__dirname, '..', '..', 'images', manga.cover_art), () => console.info(`Removed old cover art for ${manga.title}`));

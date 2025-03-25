@@ -9,6 +9,8 @@ const cheerio = require('cheerio');
 /** The display name of the website */
 exports.NAME = 'Mangakakalot';
 
+const SITE_URL = 'https://mangakakalot.gg';
+
 /** 
  * True if the followManga method can determine the age rating of a manga. False if not. Some cases:
  * - True if the website has the data available via an API like Mangadex
@@ -40,8 +42,8 @@ exports.getIdHelpString = () => {
 exports.followManga = async (manga_id, user_id, guild, lang = 'en') => {
   const guild_id = guild.id;
   const id = manga_id.split('kakalot-')[1];
-  const ret = await axios.get(`https://mangakakalot.gg/manga/${id}`);
-  if (res.status != 200) {
+  const ret = await axios.get(`${SITE_URL}/manga/${id}`);
+  if (ret.status != 200) {
     if (ret.status >= 500) {
       throw new AigisError(`Mangakakalot seems to be experiencing issues, please try again later.`);
     }
@@ -80,9 +82,9 @@ async function getCoverArt(html) {
     const img = $('.manga-info-pic').find('img').first();
     const src = img.attr('src');
     const img_name = `mangakakalot-${src.split('/').pop()}`;
-    await downloadImage(src, path.join(__dirname, '..', '..', 'images', img_name));
+    await downloadImage(src, path.join(__dirname, '..', '..', 'images', img_name),);
     return img_name;
-  } catch {
+  } catch (err) {
     console.error(err);
     return config.DEFAULT_MANGA_IMAGE;
   }
@@ -100,7 +102,8 @@ async function getCoverArt(html) {
  * @returns {*} A manga object with fields for the latest chapter ID, latest chapter number, and latest cover art if there is a new chapter, otherwise null
  */
 exports.checkForUpdates = async (manga) => {
-  const ret = await axios.get(`https://mangakakalot.com/manga/${manga.manga_id.split('kakalot-')[1]}`);
+  const id = manga.manga_id.split('kakalot-')[1];
+  const ret = await axios.get(`${SITE_URL}/manga/${id}`);
   const $ = cheerio.load(ret.data);
   const chapterInfo = getChapterInfo($);
   if (parseFloat(chapterInfo[0]) > parseFloat(manga.latest_chapter_num)) {
@@ -126,7 +129,7 @@ exports.checkForUpdates = async (manga) => {
  * @returns {String} Link to the manga
  */
 exports.generateChapterLink = (chapter_id) => {
-  return `https://mangakakalot.gg/manga/${chapter_id}`;
+  return `${SITE_URL}/manga/${chapter_id}`;
 }
 
 /**
@@ -135,7 +138,7 @@ exports.generateChapterLink = (chapter_id) => {
  * @returns {String} Link to the manga
  */
 exports.generateMangaLink = (manga_id) => {
-  return `https://mangakakalot.gg/manga/${manga_id.split('kakalot-')[1]}`;
+  return `${SITE_URL}/manga/${manga_id.split('kakalot-')[1]}`;
 }
 
 /** Returns array that is [chapter number, chapter link] */

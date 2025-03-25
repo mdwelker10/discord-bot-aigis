@@ -39,19 +39,19 @@ exports.getIdHelpString = () => {
  */
 exports.followManga = async (manga_id, user_id, guild, lang = 'en') => {
   const guild_id = guild.id;
-  const res = await axios.get(`${SITE_URL}/manga-${manga_id.split('kakalot-')[1]}`);
+  const res = await axios.get(`${SITE_URL}/manga/${manga_id.split('nato-')[1]}`);
   const $ = cheerio.load(res.data);
   if (res.status != 200) {
-    if (ret.status >= 500) {
+    if (res.status >= 500) {
       throw new AigisError(`Manganato seems to be experiencing issues, please try again later.`);
     }
     throw new AigisError(`I could not find manga with ID ${manga_id} on Manganato.`);
   }
   if ($('.chapter-list').length == 0) {
-    throw new AigisError(`I could not find manga with ID ${manga_id} on Mangakakalot.`);
+    throw new AigisError(`I could not find manga with ID ${manga_id} on Manganato.`);
   }
   const chapterInfo = getChapterInfo($);
-  const art = await getCoverArt(ret.data);
+  const art = await getCoverArt(res.data);
   const title = $('.manga-info-text').find('h1').first().text();
   let manga = {
     title: title,
@@ -73,23 +73,14 @@ exports.followManga = async (manga_id, user_id, guild, lang = 'en') => {
  * @returns {Promise<String>} The filename of the cover art. Not the whole path, just the filename.
  */
 async function getCoverArt($) {
-  // try {
-  //   const img = $('.info-image').find('img').first();
-  //   const src = img.attr('src');
-  //   const img_name = `nato-${img.attr('src').split('/').pop()}`;
-  //   await downloadImage(src, path.join(__dirname, '..', '..', 'images', img_name));
-  //   return img_name;
-  // } catch (err) {
-  //   return config.DEFAULT_MANGA_IMAGE;
-  // }
   try {
     const $ = cheerio.load(html);
     const img = $('.manga-info-pic').find('img').first();
     const src = img.attr('src');
     const img_name = `nato-${src.split('/').pop()}`;
-    await downloadImage(src, path.join(__dirname, '..', '..', 'images', img_name));
+    await downloadImage(src, path.join(__dirname, '..', '..', 'images', img_name), SITE_URL);
     return img_name;
-  } catch {
+  } catch (err) {
     console.error(err);
     return config.DEFAULT_MANGA_IMAGE;
   }
@@ -107,24 +98,7 @@ async function getCoverArt($) {
  * @returns {*} A manga object with fields for the latest chapter ID, latest chapter number, and latest cover art if there is a new chapter, otherwise null
  */
 exports.checkForUpdates = async (manga) => {
-  const res = await axios.get(`${SITE_URL}/manga-${manga.manga_id.split('-')[1]}`);
-  // const $ = cheerio.load(res.data);
-  // const chapterInfo = getChapterInfo($);
-  // if (parseFloat(chapterInfo[0]) > parseFloat(manga.latest_chapter_num)) {
-  //   //update cover art
-  //   let cover = await getCoverArt($);
-  //   if (cover == config.DEFAULT_MANGA_IMAGE) {
-  //     console.error(`Could not retrieve cover art for ${manga.title} on Manganato.`);
-  //     cover = manga.cover_art;
-  //   }
-  //   return {
-  //     latest_chapter: chapterInfo[1],
-  //     latest_chapter_num: chapterInfo[0],
-  //     cover_art: cover,
-  //   }
-  // } else {
-  //   return null;
-  // }
+  const ret = await axios.get(`${SITE_URL}/manga/${manga.manga_id.split('nato-')[1]}`);
   const $ = cheerio.load(ret.data);
   const chapterInfo = getChapterInfo($);
   if (parseFloat(chapterInfo[0]) > parseFloat(manga.latest_chapter_num)) {
@@ -164,16 +138,6 @@ exports.generateMangaLink = (manga_id) => {
 
 /** Returns array that is [chapter number, chapter link] */
 function getChapterInfo($) {
-  // const chapters = $('ul.row-content-chapter');
-  // //defaults if there are no chapters
-  // let latest_chapter_num = -1;
-  // let latest_chapter = '0';
-  // if (chapters.length != 0) {
-  //   //at least 1 chapter
-  //   latest_chapter = chapters.find('a').first().attr('href').split('/manga/')[1];
-  //   latest_chapter_num = latest_chapter.split('-')[1];
-  // }
-  // return [latest_chapter_num, latest_chapter];
   const chapterList = $('.chapter-list'); //list of all a tags for chapters
   const latestChapter = chapterList.find('a').first();
   const arr = latestChapter.text().split(' ');
