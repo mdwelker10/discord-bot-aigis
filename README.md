@@ -6,9 +6,6 @@ A multi-purpose Discord bot I made for fun because I like programming and I like
 You can join [the "official" Aigis Discord support server](https://discord.gg/CQyQYXBtca) for questions or feature requests. If you want to hang out and have more casual chats you can join [a different discord server](https://discord.com/invite/hpyeSZ4XCU) I am more active in. That is where I use Aigis' functionality.
 <br>
 <br>
-Aigis is a [shape](https://wiki.shapes.inc/), and thus has AI functionality. To get more information about shapes, join the [Shapes.inc Discord server](https://discord.gg/shapes). To get more information about Aigis' specific AI configurations, check out the documentation for it [here](https://github.com/mdwelker10/discord-bot-aigis/blob/main/README-AI.md).
-<br>
-<br>
 To get information on what data Aigis stores, and how to remove your server's data from her database, check out the documentation for the [purge command](https://github.com/mdwelker10/discord-bot-aigis/blob/main/README-Purge.md).
 
 <!-- omit in toc -->
@@ -62,7 +59,7 @@ These settings can all be changed later by running `/setup` again with the `forc
 </p>
 
 ## Enabling and Disabling Commands
-Aigis comes with the ability to customize which commands are enabled and disabled on your server. This was added due to the fact that Aigis is a [shape](https://wiki.shapes.inc/), and some people might only want her for that functionality. Others might only want the manga functionality, etc.
+Aigis comes with the ability to customize which commands are enabled and disabled on your server. 
 - This functionality is locked behind "manage server" permissions. 
 - This command also requires that `/setup` has been run successfully.
 - Administrative commands (this command, setup, purge) cannot be disabled.
