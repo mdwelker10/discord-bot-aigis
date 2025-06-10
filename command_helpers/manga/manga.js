@@ -22,7 +22,6 @@ const websites = {
 exports.mangaCheck = async (client) => {
   let data = await db.find(config.DB_NAME, exports.COLLECTION_NAME, {});
   for (let manga of data) {
-    console.info(`New chapter for ${manga.title} on ${manga.website} in ${exports.getLanguage(manga.lang)} has been released. Sending ping.`);
     //ensure the website functions can be dynamically called
     if (websites[manga.website] == null) {
       console.warn(`Website ${manga.website} is not supported for manga updates.`);
@@ -35,6 +34,7 @@ exports.mangaCheck = async (client) => {
         //no new chapter
         continue;
       }
+      console.info(`New chapter for ${manga.title} on ${manga.website} in ${exports.getLanguage(manga.lang)} has been released. Sending ping.`);
       // if a new cover art is found then remove the old one
       if (manga.cover_art !== chapter.cover_art) {
         fs.unlink(path.join(__dirname, '..', '..', 'images', manga.cover_art), () => console.info(`Removed old cover art for ${manga.title}`));
@@ -82,7 +82,6 @@ exports.mangaCheck = async (client) => {
           await channel.send(msg);
           continue;
         }
-        console.log('ping actually sending');
         //generate ping for chapter release
         const manga_link = websites[manga.website].generateMangaLink(manga.manga_id);
         ping += `A new chapter of ${hyperlink(manga.title, manga_link)} on ${websites[manga.website].NAME} in ${exports.getLanguage(manga.lang)} has been released! You can read it ${hyperlink('here', `<${link}>`)}.`;
@@ -123,6 +122,7 @@ exports.listManga = async (guild_id, user_id) => {
         str += `- ${m.nsfw ? `${m.title}` : hyperlink(`${m.title}`, `<${link}>`)} on ${websites[m.website].NAME} ${m.nsfw ? `${emote}` : ''}\n`;
       }
     } catch (err) {
+      console.error(err);
       console.error(`Could not generate link for ${m.title} on ${m.website} in ${m.lang}.`);
       continue;
     }

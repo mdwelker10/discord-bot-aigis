@@ -21,6 +21,7 @@ const websites = {
   mangapill: require('../../command_helpers/manga/mangapill'),
   mangakakalot: require('../../command_helpers/manga/mangakakalot'),
   manganato: require('../../command_helpers/manga/manganato'),
+  mangaplus: require('../../command_helpers/manga/mangaplus')
 }
 
 /** Array of websites that takes an ISO language to determine the language of the manga  */
@@ -149,7 +150,8 @@ module.exports = {
             { name: 'Mangadex', value: websites['mangadex'].getIdHelpString() },
             { name: 'Mangapill', value: websites['mangapill'].getIdHelpString() },
             { name: 'Mangakakalot', value: websites['mangakakalot'].getIdHelpString() },
-            { name: 'Manganato', value: websites['manganato'].getIdHelpString() }
+            { name: 'Manganato', value: websites['manganato'].getIdHelpString() },
+            { name: 'Mangaplus', value: websites['mangaplus'].getIdHelpString() }
           )
           .setTimestamp();
         await interaction.editReply({ embeds: [embed] });
@@ -176,7 +178,8 @@ module.exports = {
             { name: 'Mangadex', value: "Content rating can be determined." },
             { name: 'Mangapill', value: "Does not have 18+ Manga." },
             { name: 'Mangakakalot', value: "Content rating cannot be determined." },
-            { name: 'Manganato', value: "Content rating cannot be determined." }
+            { name: 'Manganato', value: "Content rating cannot be determined." },
+            { name: 'Mangaplus', value: "Does not have 18+ Manga." }
           )
           .setTimestamp();
         await interaction.editReply({ embeds: [embed] });
@@ -358,12 +361,16 @@ function parseID(id) {
     return 'mangapill';
   }
   //mangakakalot
-  if (id.includes('kakalot') && id.split('-').length === 2) {
+  if (id.includes('kakalot') && id.split('kakalot-').length === 2) {
     return 'mangakakalot';
   }
   //manganato
-  if (id.includes('nato') && id.split('-').length === 2) {
+  if (id.includes('nato') && id.split('nato-').length === 2) {
     return 'manganato';
+  }
+  //mangaplus
+  if (id.length === 6 && !isNaN(id)) {
+    return 'mangaplus';
   }
   return null;
 }

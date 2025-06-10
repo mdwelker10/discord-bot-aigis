@@ -57,7 +57,6 @@ This is not an operation to be taken lightly, as it essentially resets Aigis to 
 Here is a brief overview of what data is being stored by Aigis. This documentation also servers as an overview of the database layout. Aigis uses [MongoDB](https://www.mongodb.com/).
 - Note that Discord internally uses the word "guild" to represent servers
 - Reminders are not stored in Mongo but are managed by [bull](https://github.com/OptimalBits/bull#readme) which uses Redis. They will not be documented in detail here, but a reminder consists of 3 things: The channel ID to send the reminder to, the actual reminder message, and the Discord ID of the user that set the reminder.
-- For data that is collected and stored by Aigis' AI functionality, see the [Shapes.inc privacy policy](https://wiki.shapes.inc/shape-essentials/guidelines-and-privacy/privacy-policy). This data is not accessed by me (the developer) or the code that I write for Aigis.
 
 **The data below is the only data stored and accessed by Aigis. It is not sold or shared. Apart from your Discord ID and what servers you are in with Aigis, no identifying infromation is stored. Only developers have direct access to this data, and right now I am the only developer. At the moment, this data is stored on AWS along with the code that runs Aigis.**
 

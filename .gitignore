@@ -4,8 +4,7 @@
 .DS_*
 **/temp/
 **/logs
-ai/__pycache__/
-ai/venv/
-ai/venv_win/
 ztest.js
 deploy.sh
+*.pem
+prod/

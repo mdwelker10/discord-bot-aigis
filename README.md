@@ -6,9 +6,6 @@ A multi-purpose Discord bot I made for fun because I like programming and I like
 You can join [the "official" Aigis Discord support server](https://discord.gg/CQyQYXBtca) for questions or feature requests. If you want to hang out and have more casual chats you can join [a different discord server](https://discord.com/invite/hpyeSZ4XCU) I am more active in. That is where I use Aigis' functionality.
 <br>
 <br>
-Aigis is a [shape](https://wiki.shapes.inc/), and thus has AI functionality. To get more information about shapes, join the [Shapes.inc Discord server](https://discord.gg/shapes). To get more information about Aigis' specific AI configurations, check out the documentation for it [here](https://github.com/mdwelker10/discord-bot-aigis/blob/main/README-AI.md).
-<br>
-<br>
 To get information on what data Aigis stores, and how to remove your server's data from her database, check out the documentation for the [purge command](https://github.com/mdwelker10/discord-bot-aigis/blob/main/README-Purge.md).
 
 <!-- omit in toc -->
@@ -44,15 +41,10 @@ The first thing to do when Aigis joins would be to run the `/setup` command. Thi
 
 To properly execute `/setup`, the person doing it should have [developer mode enabled to get channel and role IDs](https://support.discord.com/hc/en-us/articles/206346498-Where-can-I-find-my-User-Server-Message-ID)
 
-The setup screen will have 3 input boxes.
-1. **A role ID to allow a user to run privileged bot commands. There are not many of these at the moment.**
-   - Being the server owner does not mean you are exempt from needing the role. The server owner should also have this role.
-   - This does not include administrative commands like `setup` and `purge`. For those, the user needs "manage server" permissions. This role is used for Aigis' feature configuration.
-   - To allow everyone in the server to run privileged bot commands, put "everyone" for the role ID.
-   - This might be removed if it is decided that only separating "manage server" permissions from everyone else makes more sense.
-2. **A default channel ID for Aigis to send messages in**
+The setup screen will have 2 input boxes.
+1. **A default channel ID for Aigis to send messages in**
    - This does not force her to send all messages in this channel, but messages that are not responses to commands will automatically go there. This could be your dedicated bot channel other bots use.
-3. **A list of commands with channel IDs for them to use**
+2. **A list of commands with channel IDs for them to use**
    - Core features of Aigis might want to have their own dedicated channels, since they can be announcement-esque features. Think of this as being an override for the default channel ID for this specific command.
    - The format should be `<command>:<Channel ID>` with one per line.
    - This works for the `manga` and `sotd` (Song of the Day) commands.
@@ -67,7 +59,7 @@ These settings can all be changed later by running `/setup` again with the `forc
 </p>
 
 ## Enabling and Disabling Commands
-Aigis comes with the ability to customize which commands are enabled and disabled on your server. This was added due to the fact that Aigis is a [shape](https://wiki.shapes.inc/), and some people might only want her for that functionality. Others might only want the manga functionality, etc.
+Aigis comes with the ability to customize which commands are enabled and disabled on your server. 
 - This functionality is locked behind "manage server" permissions. 
 - This command also requires that `/setup` has been run successfully.
 - Administrative commands (this command, setup, purge) cannot be disabled.
@@ -89,6 +81,7 @@ To see all Aigis commands, and whether they are enabled or disabled on your serv
 - `/command list <datastore>` - Get a list of all non-admin Aigis commands. Optionally, set `datastore` to true to only list commands that store data.
 - `/command enable <command-name>` - Enable an Aigis command on the server. Use command name "all" to enable all non-admin commands.
 - `/command disable <command-name>` - Disable an Aigis command on the server. Use command name "all" to disable all non-admin commands.
+- `/sotd permissions <role>` - Make it so only people with the given role can add/remove playlists from the Song of the Day rotation. Use @everyone or the guild ID to give this permission to everyone (this is the default). This subcommand requires manage server permissions.
 
 ## Basic Commands
 
@@ -120,9 +113,6 @@ There are a few restrictions on what playlists can be chosen:
 2. The playlist must be public.
 3. The playlist must have at least 35 songs. This is to promote diversity in what songs are chosen. Aigis will not check for duplicate song entries though. If a playlist has 35 songs, is added, and then songs are removed to make it less than 35 songs, the playlist will be removed from rotation. 
 
-**NOTE:** Adding and removing a playlist from the Song of the Day list are currently **privileged commands**. That is, only users with the role ID set in `/setup` can execute them. This is to prevent random people in the server from tampering with the rotation.
-- These are currently the only privileged commands Aigis has
-
 ### Playlist IDs
 To identify playlists, Spotify has an internal ID system. That is how playlists need to be referred to when using them in commands. To get a playlist's ID, copy the link as if you were going to share it. The link should be something like:
 
@@ -145,8 +135,6 @@ Aigis can also interact with various manga websites to retrive information about
 - Click [here](#supported-websites-and-content-rating) a list of supported Manga websites.
 
 The announcement for manga chapter releases will happen in the channel set using `manga:<channel ID>` in the `/setup` command, or the default bot channel if one is not specified.
-
-Since the manga command is implemented on a user basis instead of a server basis like Song of the Day, there are no privileged subcommands.
 
 ### Manga IDs
 Similar to how Spotify uses playlist IDs to identify playlists, manga websites use manga IDs to identify manga. Getting the ID of a manga is different depending on the website, and some websites do not use IDs unique enough to differentiate them from other websites based on ID alone.
@@ -196,9 +184,10 @@ For the purpose of this command, age restricted manga is defined as a manga feat
 ### Supported Websites and Content Rating
 Here is a full list of the supported websites and whether their content rating can be programatically determined.
 - [Mangadex](https://mangadex.org/) - Content rating can be determined
-- [Mangapill](https://mangapill.com/) - Content rating cannot be determined, but does not host manga that would need to be age restricted.
-- [Mangakakalot](https://mangakakalot.com/) - Content rating cannot be determined. All manga marked as age restricted.
-- [Manganato](https://manganato.com/) - Content rating cannot be determined. All manga marked as age restricted.
+- [Mangapill](https://mangapill.com/) - Does not host age restricted manga.
+- [Mangakakalot](https://mangakakalot.gg/) - Content rating cannot be determined. All manga marked as age restricted.
+- [Manganato](https://manganato.gg/) - Content rating cannot be determined. All manga marked as age restricted.
+- [Mangaplus](https://mangaplus.shueisha.co.jp/updates) - Does not host age restricted manga.
 
 ### Command Reference
 The following menu can be brought up by Aigis, along with the explanation of the command basics and language codes, via the `/manga help` command.
@@ -245,7 +234,7 @@ With the addition of Velvet Tokens comes a method of gambling them away in Black
   - If you have less than 5 VT you cannot play, but just wait until the next day and you can claim 100 free daily tokens.
 
 Because this is Aigis form Persona 3, I decided to use Persona themed cards instead of a standard deck. The suits are the minor arcana from Persona 3 and 4 (cups, swords, wands, and coins). Face cards and Aces have members of SEES on them.
-- I do plan to remake the Aces, but they will still feature Makoto
+- I might remake the Aces, but they will still feature Makoto
 - Even though Blackjack has no Joker cards, I still made one for fun
 
 <p align="center">

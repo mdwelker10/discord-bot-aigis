@@ -220,8 +220,11 @@ exports.checkForUpdates = async (manga) => {
       return null;
     }
   } catch (err) {
-    if (err.response && err.response.status === 400) {
+    if (err.response && err.response.status === 400 || err.response.status === 404) {
       console.error(`Mangadex error with ${manga.title} in ${exports.getLanguage(manga.lang)}. Details below:\n${JSON.stringify(err.response.data.errors[0])}`);
+      return null;
+    } else if (err.response && err.response.status >= 500) {
+      console.error(`Mangadex API error with code ${err.response.status}. Message:\n${JSON.stringify(err.response.statusText)}`);
       return null;
     } else {
       throw err;

@@ -120,8 +120,11 @@ module.exports = {
           return await interaction.editReply(`You cannot give less than 1 Velvet Token ${targetUser.displayName}-san.`);
         }
         const sender = await db.findOne(config.DB_NAME, 'vt', { user_id: interaction.user.id, guild_id: interaction.guild.id });
+        if (!sender) {
+          return await interaction.editReply(`There was an error processing your request. Please report this.`);
+        }
         let senderVT = new BigNumber(sender.vt);
-        if (!sender || senderVT.lt(vt)) {
+        if (senderVT.lt(vt)) {
           return await interaction.editReply(`You do not have enough Velvet Tokens to give ${vt} VT to ${targetUser.displayName}-san.`);
         }
         const receiver = await db.findOne(config.DB_NAME, 'vt', { user_id: targetUser.id, guild_id: interaction.guild.id });

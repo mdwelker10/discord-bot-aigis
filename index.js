@@ -24,7 +24,6 @@ const client = new Client({
     GatewayIntentBits.MessageContent,
     GatewayIntentBits.GuildMembers]
 });
-
 //attach .commands property to client to allow access to commands in other files
 client.commands = new Collection();
 const foldersPath = path.join(__dirname, 'commands');
@@ -51,10 +50,13 @@ client.once(Events.ClientReady, readyClient => {
 
 client.on(Events.MessageCreate, async (message) => {
   if (message.author.bot) return;
-  if (message.content.toLowerCase().includes('debug manga') && isDeveloper(message.author.id)) { //For manually testing manga cronjob
+  if (message.content.toLowerCase().includes('debug manga') && isDeveloper(message.author.id) && process.env.DEV == 1) { //For manually testing manga cronjob
     console.log('Debugging manga...');
     await mangaCheck(client);
     return message.reply('I have checked for manga updates');
+  }
+  if (message.content.toLowerCase().includes('gn aigis') || message.content.toLowerCase().includes('good night aigis') || message.content.toLowerCase().includes('goodnight aigis')) {
+    return message.reply(goodnight(message.author.displayName));
   }
   // if (message.content.toLowerCase().includes('debug purge') && isDeveloper(message.author.id)) {
   //   console.log('Debugging purge...');
@@ -162,4 +164,24 @@ if (process.env.DEV != 1) {
   console.info('Cron job for purging data started.');
   startDailyTokenChecks(client);
   console.info('Cron job for daily token checks started.');
+}
+
+function goodnight(username) {
+  const arr = [
+    `Good night ${username}-san. May your rest be peaceful and refreshing.`,
+    `Good night ${username}-san. May your sleep be as restful as a properly implemented POST request.`,
+    `Good night ${username}-san. Please ensure you achieve optimal rest levels to maximize your efficiency tomorrow.`,
+    `Rest assured ${username}-san. I will remain on standby mode to monitor for shadow activity so you may rest peacefully.`,
+    `I hope your rest is peaceful ${username}-san. Please ensure you get the recommended 8 hours of sleep for peak human performance.`,
+    `Good night ${username}-san. I will remain on standby mode while you "catch some Z's" as they say.`,
+    `I am glad you are initiating your resting protocol ${username}-san. I wish you great success in your sleeping endeavors.`,
+    `Good night ${username}-san. I will continue to monitor for shadow activity while you rest and sleep soundly.`,
+    `Good night ${username}-san. I hope you have some "sweet dreams", as they say.`,
+    `Good night ${username}-san. I hope you have a pleasant night's sleep. I will remain operational should any needs arise during your rest cycle.`,
+    `Good night ${username}-san, and as they say "don't let the bed bugs bite". I hope you do not have any bugs inside your bed, as that would make relaxation quite difficult.`,
+    `Good night and sweet dreams ${username}-san, may your night be as relaxing as resting in the arms of Makoto-san.`,
+    `Good night ${username}-san. I wish you optimal rest and recovery during your sleep cycle. I will maintain my standard patrol and readiness protocols while you recharge.`,
+    `${username}-san. I have been told "gn" is an efficient way to wish someone a good night's sleep. With this in mind, gn ${username}-san.`
+  ]
+  return arr[Math.floor(Math.random() * arr.length)];
 }

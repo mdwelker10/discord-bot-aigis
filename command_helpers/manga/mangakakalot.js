@@ -9,6 +9,8 @@ const cheerio = require('cheerio');
 /** The display name of the website */
 exports.NAME = 'Mangakakalot';
 
+const SITE_URL = 'https://mangakakalot.gg';
+
 /** 
  * True if the followManga method can determine the age rating of a manga. False if not. Some cases:
  * - True if the website has the data available via an API like Mangadex
@@ -23,9 +25,9 @@ exports.CAN_CHECK_RATING = false;
  * @returns {String} A string with the help message for how to get the Manga ID for a manga on this website
  */
 exports.getIdHelpString = () => {
-  let str = 'Navigate to the overview page of the manga you wish to follow. **If the URL changes to `chapmanganato.to` or `manganato.com` then follow the instructions for manganato**. ';
-  str += 'The URL will look something like https://mangakakalot.com/manga/ve928185. The ID in this case is "ve928185", but to differentiate from other websites, ';
-  str += 'you should enter `kakalot-ve928185` as the ID in commands.';
+  let str = 'Navigate to the overview page of the manga you wish to follow. **If the URL changes to `manganato.gg` then follow the instructions for manganato**. ';
+  str += 'The URL will look something like https://mangakakalot.gg/manga/oomuro-ke. The ID in this case is "oomuro-ke", but to differentiate from other websites, ';
+  str += 'you should enter `kakalot-oomuro-ke` as the ID in commands.';
   return str;
 }
 
@@ -39,9 +41,14 @@ exports.getIdHelpString = () => {
  */
 exports.followManga = async (manga_id, user_id, guild, lang = 'en') => {
   const guild_id = guild.id;
-  const id = manga_id.split('-')[1];
-  console.log(id);
-  const ret = await axios.get(`https://mangakakalot.com/manga/${id}`);
+  const id = manga_id.split('kakalot-')[1];
+  const ret = await axios.get(`${SITE_URL}/manga/${id}`);
+  if (ret.status != 200) {
+    if (ret.status >= 500) {
+      throw new AigisError(`Mangakakalot seems to be experiencing issues, please try again later.`);
+    }
+    throw new AigisError(`I could not find manga with ID ${manga_id} on Manganato.`);
+  }
   const $ = cheerio.load(ret.data);
   //assuming no chapters means manga doesnt exist
   if ($('.chapter-list').length == 0) {
@@ -70,18 +77,17 @@ exports.followManga = async (manga_id, user_id, guild, lang = 'en') => {
  * @returns {Promise<String>} The filename of the cover art. Not the whole path, just the filename.
  */
 async function getCoverArt(html) {
-  return config.DEFAULT_MANGA_IMAGE;
-  // try {
-  //   const $ = cheerio.load(html);
-  //   const img = $('.manga-info-pic').find('img').first();
-  //   const src = img.attr('src');
-  //   const img_name = `mangakakalot-${src.split('/').pop()}`;
-  //   await downloadImage(src, path.join(__dirname, '..', '..', 'images', img_name));
-  //   return img_name;
-  // } catch {
-  //   console.error(err);
-  //   return config.DEFAULT_MANGA_IMAGE;
-  // }
+  try {
+    const $ = cheerio.load(html);
+    const img = $('.manga-info-pic').find('img').first();
+    const src = img.attr('src');
+    const img_name = `mangakakalot-${src.split('/').pop()}`;
+    await downloadImage(src, path.join(__dirname, '..', '..', 'images', img_name),);
+    return img_name;
+  } catch (err) {
+    console.error(err);
+    return config.DEFAULT_MANGA_IMAGE;
+  }
 }
 
 /**
@@ -96,7 +102,8 @@ async function getCoverArt(html) {
  * @returns {*} A manga object with fields for the latest chapter ID, latest chapter number, and latest cover art if there is a new chapter, otherwise null
  */
 exports.checkForUpdates = async (manga) => {
-  const ret = await axios.get(`https://mangakakalot.com/manga/${manga.manga_id.split('-')[1]}`);
+  const id = manga.manga_id.split('kakalot-')[1];
+  const ret = await axios.get(`${SITE_URL}/manga/${id}`);
   const $ = cheerio.load(ret.data);
   const chapterInfo = getChapterInfo($);
   if (parseFloat(chapterInfo[0]) > parseFloat(manga.latest_chapter_num)) {
@@ -122,7 +129,7 @@ exports.checkForUpdates = async (manga) => {
  * @returns {String} Link to the manga
  */
 exports.generateChapterLink = (chapter_id) => {
-  return `https://mangakakalot.com/chapter/${chapter_id}`;
+  return `${SITE_URL}/manga/${chapter_id}`;
 }
 
 /**
@@ -131,7 +138,7 @@ exports.generateChapterLink = (chapter_id) => {
  * @returns {String} Link to the manga
  */
 exports.generateMangaLink = (manga_id) => {
-  return `https://mangakakalot.com/manga/${manga_id.split('-')[1]}`;
+  return `${SITE_URL}/manga/${manga_id.split('kakalot-')[1]}`;
 }
 
 /** Returns array that is [chapter number, chapter link] */
@@ -146,5 +153,5 @@ function getChapterInfo($) {
   } else {
     chapterNum = arr[chapterNum + 1];
   }
-  return [chapterNum, latestChapter.attr('href').split('/chapter/')[1] ?? 0];
+  return [chapterNum, latestChapter.attr('href').split('/manga/')[1] ?? 0];
 }
