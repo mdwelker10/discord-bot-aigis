@@ -102,7 +102,7 @@ exports.mangaCheck = async (client) => {
         }
       }
     } catch (err) {
-      console.error(`Could not check for updates for ${manga.title} on ${manga.website} in ${manga.lang}.`);
+      console.error(`Could not properly check for updates or send update ping for ${manga.title} on ${manga.website} in ${manga.lang}.`);
       console.error(err);
       continue;
     }
