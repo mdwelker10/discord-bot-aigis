@@ -143,8 +143,8 @@ client.login(token).then(token => {
   } else {
     client.user.setPresence({
       activities: [{
-        name: 'The 1s and 0s of AWS',
-        type: ActivityType.Watching
+        name: 'Persona 3 Reload',
+        type: ActivityType.Playing
       }],
       status: PresenceUpdateStatus.Online
     });
