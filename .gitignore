@@ -9,3 +9,4 @@ deploy.sh
 *.pem
 prod/
 downloads/
+images/*.*
