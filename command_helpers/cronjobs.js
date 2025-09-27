@@ -7,6 +7,8 @@ const { resetDaily } = require('./daily');
 const { getGuildConfig } = require('../utils/utils');
 const db = require('../database/db');
 const AigisError = require('../utils/AigisError');
+const fs = require('fs');
+const path = require('path');
 
 //All cronjob objects
 let sotdJob;
@@ -49,12 +51,13 @@ exports.stopSotd = () => {
   sotdJob.stop();
 }
 
-/* --------------- Manga --------------- */
+/* --------------- Manga and Disk Space Check --------------- */
 exports.startMangaChecks = async (client) => {
   mangaJob = new CronJob(
     '0 0 * * * *',
     async () => {
       await mangaCheck(client);
+      //TODO check disk space and wipe downloads + temp files if needed
     },
     null,
     true,
@@ -96,12 +99,17 @@ exports.stopPurgeChecks = () => {
   purgeJob.stop();
 }
 
-/* --------------- Tokens --------------- */
+/* --------------- Tokens and Downloads --------------- */
 exports.startDailyTokenChecks = (client) => {
   tokenJob = new CronJob(
     '0 0 0 * * *',
     async () => {
       await resetDaily();
+      //remove files from downloads folder every day - temporary until storage increase  
+      const downloadsPath = path.join(__dirname, '..', 'downloads');
+      for (const file of fs.readdirSync(downloadsPath)) {
+        fs.unlinkSync(path.join(downloadsPath, file));
+      }
     },
     null,
     true,
@@ -112,4 +120,3 @@ exports.startDailyTokenChecks = (client) => {
 exports.stopDailyTokenChecks = () => {
   tokenJob.stop();
 }
-

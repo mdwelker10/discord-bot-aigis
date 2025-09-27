@@ -16,6 +16,7 @@ exports.AIGIS_DANCING_IMAGE = 'https://i.imgur.com/ozS5bjO.png';
 exports.AIGIS_COOLDOWN_IMAGE = 'https://i.imgur.com/j0ilNtL.png';
 exports.AIGIS_VELVET_IMAGE = 'https://i.imgur.com/17cEVi8.jpeg';
 exports.AIGIS_ORGIA_ICON_IMAGE = 'https://i.imgur.com/YwbmlVg.png';
+exports.AIGIS_EPISODE_AIGIS_IMAGE = 'https://i.imgur.com/n89HV7m.jpeg';
 //Mangadex stuff
 exports.MANGADEX_ISO6391 = {
   'en': 'English',

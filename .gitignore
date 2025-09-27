@@ -8,3 +8,4 @@ ztest.js
 deploy.sh
 *.pem
 prod/
+downloads/

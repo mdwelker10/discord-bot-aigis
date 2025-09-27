@@ -6,7 +6,9 @@ const { startSotd, startMangaChecks, startPurgeChecks, startDailyTokenChecks } =
 const { mangaCheck } = require('./command_helpers/manga/manga');
 const { initQueue } = require('./command_helpers/reminder');
 const { getGuildConfig, isDeveloper } = require('./utils/utils');
-const { purgeAll } = require('./command_helpers/purge');
+//const { purgeAll } = require('./command_helpers/purge');
+const { startServer } = require('./server/server');
+
 //list of commands that require deferred replies (longer than 3 seconds)
 long_commands = ['ping', 'sotd', 'manga', 'command', 'purge', 'blackjack', 'vt', 'claim', 'download'];
 //list of commands that need the server configuration to work. All of these should also be in the long_commands list
@@ -151,10 +153,12 @@ client.login(token).then(token => {
   }
 });
 
+//initialize reminder queue
 initQueue(client).then(() => {
   console.info('Reminder queue initialized and ready.');
 });
 
+//initialize cron jobs
 if (process.env.DEV != 1) {
   startSotd(client);
   console.info('Cron job for Song of the Day started.');
@@ -165,6 +169,12 @@ if (process.env.DEV != 1) {
   startDailyTokenChecks(client);
   console.info('Cron job for daily token checks started.');
 }
+
+//start server
+(async function () {
+  await startServer();
+})();
+
 
 function goodnight(username) {
   const arr = [

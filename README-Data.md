@@ -11,6 +11,7 @@
   - [Song of the Day](#song-of-the-day)
   - [Manga](#manga)
   - [Velvet Tokens and Gambling](#velvet-tokens-and-gambling)
+- [Discord OAuth2 Connection](#discord-oauth2-connection)
 
 
 ## Purge Command
@@ -36,6 +37,7 @@ A few more notes on the purge command:
   - The same occurs if the deletion is reverted.
 - The deletion is not *exactly* 7 days from the time the command was run. A cronjob is scheduled once a day at midnight EST to check if the date to delete (7 days from when the command was run) has passed. So the real time is a few hours longer than 7 days.
 - Once 7 days have passed and the data has been deleted **it cannot be recovered**
+- This does not include logs
 
 ***Be careful when using this command***
 
@@ -178,3 +180,18 @@ Aigis does not save individual game results from games like Blackjack, but the t
 - The `daily_claimed` and `daily_streak` fields help keep track of if a user has claimed their daily tokens, and for how many consecutive days they have done so.
 - The `bet` field is used as the amount the user will bet for gambling games. This is shared across all games.
 - `gamble_history` is the total winnings/losings from gambling. If the number is positive then the user has won more from gambling than lost.
+
+
+## Discord OAuth2 Connection
+To download files, Aigis requires authenticating with [OAuth2](https://oauth.net/2/). This is to hopefully prevent a ton of spam requests to download files from coming into Aigis and other malicious intents. She only uses the `identify` scope, which allows for her to view basic information about your account including:
+- User ID
+- Username
+- Display Name
+- Avatar
+- Chosen Language
+
+Note that it **does not** provide your email
+
+You can read more about Discord OAuth2 and view the specifics of the `identify` scope [here](https://discord.com/developers/docs/topics/oauth2). All Aigis does with this information is log your username when you hit certain API endpoints on her exposed web server (Which is needed for downloading files). But Aigis already had access to your username anyway from using basic commands.
+
+None of the data from the OAuth2 connection is persisted in Mongo.
