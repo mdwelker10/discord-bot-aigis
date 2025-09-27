@@ -79,7 +79,8 @@ exports.followManga = async (manga_id, user_id, guild, lang = 'en') => {
 async function getCoverArt($) {
   try {
     const img = $('img').first().attr('data-src'); //image link
-    const img_name = `mangapill-${img.split('/').pop()}`;
+    let img_name_init = `mangapill-${img.split('/').pop()}`;
+    const img_name = img_name_init.split('?')[0];
     await downloadImage(img, path.join(__dirname, '..', '..', 'images', img_name), 'https://mangapill.com');
     return img_name;
   } catch (err) {

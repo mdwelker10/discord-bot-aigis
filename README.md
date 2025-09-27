@@ -6,7 +6,7 @@ A multi-purpose Discord bot I made for fun because I like programming and I like
 You can join [the "official" Aigis Discord support server](https://discord.gg/CQyQYXBtca) for questions or feature requests. If you want to hang out and have more casual chats you can join [a different discord server](https://discord.com/invite/hpyeSZ4XCU) I am more active in. That is where I use Aigis' functionality.
 <br>
 <br>
-To get information on what data Aigis stores, and how to remove your server's data from her database, check out the documentation for the [purge command](https://github.com/mdwelker10/discord-bot-aigis/blob/main/README-Purge.md).
+To get information on what data Aigis stores, and how to remove your server's data from her database, check out the documentation for the [purge command](https://github.com/mdwelker10/discord-bot-aigis/blob/main/README-Data.md).
 
 <!-- omit in toc -->
 ## Quick Links
@@ -31,6 +31,8 @@ To get information on what data Aigis stores, and how to remove your server's da
 - [Blackjack](#blackjack)
   - [Logistics](#logistics)
   - [Command Reference](#command-reference-4)
+- [Download](#download)
+  - [Supported Extensions and Command Reference](#supported-extensions-and-command-reference)
 
 
 ## Setup
@@ -70,7 +72,7 @@ To disable a command, run `/command disable <command-name>`, and to enable it ag
 - The command name is what you would put after the forward slash when typing a command. Valid names include `manga`, `echo`, and `sotd` for example.
 - If you would like to stop scheduled pings, you have 3 options:
   - Ask users to run commands such as `/sotd playlist remove` or `/manga unfollow` to get rid of any pings that would happen.
-  - Start a data purge, which will stop all pings in 7 days and remove all data Aigis has saved about your server. This cannot be done with specific commands (cannot purge only manga information for example). After 7 days all data will be removed and the `/setup` command will need to be run again. For more information see the [purge command documentation](https://github.com/mdwelker10/discord-bot-aigis/blob/main/README-Purge.md).
+  - Start a data purge, which will stop all pings in 7 days and remove all data Aigis has saved about your server. This cannot be done with specific commands (cannot purge only manga information for example). After 7 days all data will be removed and the `/setup` command will need to be run again. For more information see the [purge command documentation](https://github.com/mdwelker10/discord-bot-aigis/blob/main/README-Data.md).
   - Make a forum post on the support server with the `Data Deletion` tag describing why the two options above will not work, and I will manually remove the data. If this happens enough I will look into implementing command-based data deletion.
 
 To see all Aigis commands, and whether they are enabled or disabled on your server, run `/command list`. This functionality and `/command help`, are not locked behind manage server permissions.
@@ -263,3 +265,24 @@ There is an option after each round to change your bet. If you select this optio
 - `/blackjack help` - A short description of the Blackjack command with similar information as this document.
 - `/blackjack rules` - An explanation of the rules of Blackjack.
 - `/blackjack start <hard-mode> <time-limit>` - Start a new Blackjack game. Hard mode is false by default and will allow the dealer to hit on a soft 17. By default the time limit is 30 seconds and can be set to anything between 10 and 60 seconds.
+
+## Download
+Aigis uses [yt-dlp](https://github.com/yt-dlp/yt-dlp) via the `download` command to download videos and audio. To see a list of supported websites see [yt-dlp's list of supported sites](https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md), but I mainly use it for Twitter (or X, The Everything App!), Instagram, and Youtube. Aigis is limited to only video and audio files at the moment because that's my main use case and I didn't feel like programming all the possible options of yt-dlp that I will likely never use. I can add support for a certain extension or file type in the future if needed though (assuming yt-dlp supports it).
+
+At the time being all downloaded files are removed at the next `12:00 AM EST` after the download, this is due to limited space on the raspberry pi I have Aigis deployed on. When she upgrades her storage, this will be changed to a storage size based approach. Due to the limited file size on the pi, file downloads are temporarily capped at 500 MB per file. Once I have upgraded the SD card, this will change to become larger.
+
+### Supported Extensions and Command Reference
+Aigis supported the following extensions:
+- For video: `mp4` (default), `mov`, `mkv`, `webm`, `flv`
+- For audio: `mp3` (default), `m4a`, `ogg`, `opus`
+
+Aigis can also extract audio from a video, so she can get an mp3 of the audio from an mp4 online for example. Below is a quick command reference with some examples:
+
+- `/download help` -  A short description of the Download command with similar information as this document.
+- `/download video <url> <extension> <audio-only>` - The syntax of the command, where the `url` is the url to download the video from, `extension` is the extension to save the videos as (defaults to mp4) and `audio-only` is an optional boolean to only extract audio from the video. 
+  - If `audio-only` is set to `true` then an audio extension is required to be given
+  - Because of the way the command works, setting `audio-only` as `true` and providing an audio extension allows you to download audio files, or the audio from video files. Even though the word "video" is in the command, audio files are still extracted this way.
+- **Example:** `download video https://www.youtube.com/watch?v=4py4V5xwXWE` - Download a youtube video as an mp4
+- **Example:** `download video https://x.com/OtakuSpirited/status/1956776244835393986 mov` - Download a Twitter video as an mov
+- **Example:** `download video https://x.com/kaikuzen0/status/1969447325710881243 mp3 true` - Download the audio from the videos (there are 2) in a Twitter post, both an mp3
+- **Example:** `download video https://player.fm/series/imagine-this/bonus-black-holes-in-the-imaginarium ogg true` - Download a podcast as an ogg
