@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder, PermissionsBitField } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, PermissionsBitField, MessageFlags } = require('discord.js');
 const { getGuildConfig } = require('../../utils/utils');
 const db = require('../../database/db');
 const AigisError = require('../../utils/AigisError');
@@ -25,7 +25,7 @@ module.exports = {
     const username = interaction.user.displayName;
     //check for permission to enable/disable commands (anyone with manage server permission)
     if (!interaction.memberPermissions.has(PermissionsBitField.Flags.ManageGuild)) {
-      return await interaction.editReply({ content: `${username}-san, you do not have permission to do that!`, ephemeral: true });
+      return await interaction.editReply({ content: `${username}-san, you do not have permission to do that!`, flags: MessageFlags.Ephemeral });
     }
     //help command
     if (subcommand === 'help') {

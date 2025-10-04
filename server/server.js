@@ -73,7 +73,7 @@ exports.startServer = async () => {
     res.status(404).sendFile(path.join(__dirname, 'static', 'templates', '404.html'));
   });
 
-  app.listen(port, () => {
+  app.listen(port, "0.0.0.0", () => {
     console.info(`Express server listening on port ${port}`);
   });
 };

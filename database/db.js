@@ -1,5 +1,5 @@
 const { MongoClient } = require('mongodb');
-const url = process.env.MONGO_URL;
+const url = process.env.MONGO_URI;
 const AigisError = require('../utils/AigisError');
 
 process.on('SIGINT', async () => {

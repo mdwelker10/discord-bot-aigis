@@ -1,0 +1,32 @@
+# Git
+.git
+.gitignore
+LICENSE
+*.md
+attachments/
+
+# Node
+**/node_modules/
+npm-debug.log*
+
+# Mac OS
+*/.DS_*
+.DS_*
+
+# Scripts
+*.sh
+
+# Docker
+dockerfile*
+compose*.yml
+.dockerignore
+
+# Not needed in container
+**/temp/
+z*.js
+images/*.*
+data/
+downloads/
+logs/
+.env
+.env.sample

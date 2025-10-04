@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { SlashCommandBuilder, EmbedBuilder, bold, hyperlink, PermissionsBitField } = require("discord.js");
+const { SlashCommandBuilder, EmbedBuilder, bold, hyperlink, PermissionsBitField, MessageFlags } = require("discord.js");
 const axios = require('axios');
 const db = require("../../database/db");
 const AigisError = require('../../utils/AigisError');
@@ -181,7 +181,7 @@ module.exports = {
           return;
         } else {
           stopSotdCronJob();
-          await interaction.editReply(`I have stopped the Song of the Day.`, { ephemeral: true });
+          await interaction.editReply(`I have stopped the Song of the Day.`, { flags: MessageFlags.Ephemeral });
         }
       }
       else {

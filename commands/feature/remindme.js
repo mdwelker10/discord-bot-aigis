@@ -33,7 +33,7 @@ module.exports = {
       const hours = timeMatch[2] ? parseInt(timeMatch[2]) : 0; //matches second group which is hours
       const minutes = timeMatch[3] ? parseInt(timeMatch[3]) : 0; //matches third group which is minutes
       const delay = ((days * 24 * 60 * 60) + (hours * 60 * 60) + (minutes * 60)) * 1000;
-      addItem(
+      await addItem(
         {
           channel: interaction.channelId,
           message: message,

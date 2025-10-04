@@ -18,5 +18,5 @@ exports.initQueue = async (client) => {
 }
 
 exports.addItem = async (data, options) => {
-  reminderQueue.add(data, options);
+  return await reminderQueue.add(data, options);
 }

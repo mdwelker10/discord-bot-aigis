@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder, PermissionsBitField } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, PermissionsBitField, MessageFlags } = require('discord.js');
 const path = require('path');
 const fs = require('fs');
 const config = require('../../config');
@@ -101,7 +101,7 @@ module.exports = {
     }
     //check for permission to enable/disable commands (anyone with manage server permission)
     if (!interaction.memberPermissions.has(PermissionsBitField.Flags.ManageGuild)) {
-      return await interaction.reply({ content: `${username}-san, you do not have permission to do that!`, ephemeral: true });
+      return await interaction.reply({ content: `${username}-san, you do not have permission to do that!`, flags: MessageFlags.Ephemeral });
     }
     const commandPath = interaction.options.getString('command');
     const command = commandPath == 'all' ? 'all' : commandPath.split('/')[1];

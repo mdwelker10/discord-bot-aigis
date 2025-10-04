@@ -1,4 +1,4 @@
-const { SlashCommandBuilder } = require("discord.js");
+const { SlashCommandBuilder, MessageFlags } = require("discord.js");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -10,7 +10,7 @@ module.exports = {
     const input = interaction.options.getString('input');
     const ephemeral = interaction.options.getBoolean('ephemeral') ?? false; //return false if option not provided (more useful for non-required strings)
     if (ephemeral) {
-      await interaction.reply({ content: `${input}, as they say.`, ephemeral: true });
+      await interaction.reply({ content: `${input}, as they say.`, flags: MessageFlags.Ephemeral });
     } else {
       await interaction.reply(`${input}, as they say.`);
     }

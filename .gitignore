@@ -1,12 +1,12 @@
-.env
+.env*
 **/node_modules/
 */.DS_*
 .DS_*
 **/temp/
 **/logs
-ztest.js
+z*.js
 deploy.sh
 *.pem
-prod/
 downloads/
 images/*.*
+data/

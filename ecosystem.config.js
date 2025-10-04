@@ -7,7 +7,7 @@ module.exports = {
       env: {
         DEV: 0,
         NODE_ENV: "production",
-        NODE_EXTRA_CA_CERTS: "/home/matthew/aigis/main.pem",
+        NODE_EXTRA_CA_CERTS: "/app/main.pem",
         TZ: "America/New_York"
       },
       out_file: "./logs/out.log",

@@ -1,7 +1,7 @@
 require('dotenv').config();
 const fs = require('node:fs');
 const path = require('node:path');
-const { Client, Events, GatewayIntentBits, Collection, ActivityType, PresenceUpdateStatus } = require('discord.js');
+const { Client, Events, GatewayIntentBits, Collection, ActivityType, PresenceUpdateStatus, MessageFlags } = require('discord.js');
 const { startSotd, startMangaChecks, startPurgeChecks, startDailyTokenChecks } = require('./command_helpers/cronjobs');
 const { mangaCheck } = require('./command_helpers/manga/manga');
 const { initQueue } = require('./command_helpers/reminder');
@@ -78,7 +78,7 @@ client.on(Events.InteractionCreate, async interaction => {
       //get guild config to check if command is disabled
       const server = await getGuildConfig(interaction.guildId);
       if (server && server.disabled_commands && server.disabled_commands.includes(interaction.commandName)) {
-        return await interaction.reply({ content: `I'm sorry ${interaction.user.displayName}-san, but the command ${interaction.commandName} has been disabled for this server.`, ephemeral: true });
+        return await interaction.reply({ content: `I'm sorry ${interaction.user.displayName}-san, but the command ${interaction.commandName} has been disabled for this server.`, flags: MessageFlags.Ephemeral });
       }
       //log command execution
       let subcommand = interaction.options.getSubcommand(false);
@@ -100,9 +100,9 @@ client.on(Events.InteractionCreate, async interaction => {
     } catch (error) {
       console.error(error);
       if (interaction.replied || interaction.deferred) {
-        await interaction.followUp({ content: "There was an error executing this command. This is no fault of my own, please blame a developer.", ephemeral: true });
+        await interaction.followUp({ content: "There was an error executing this command. This is no fault of my own, please blame a developer.", flags: MessageFlags.Ephemeral });
       } else {
-        await interaction.reply({ content: 'There was an error executing this command. This is no fault of my own, please blame a developer.', ephemeral: true });
+        await interaction.reply({ content: 'There was an error executing this command. This is no fault of my own, please blame a developer.', flags: MessageFlags.Ephemeral });
       }
     }
   } else if (interaction.isAutocomplete()) { //interaction is an autocomplete query
@@ -123,9 +123,9 @@ client.on(Events.InteractionCreate, async interaction => {
     } catch (error) {
       console.error(error);
       if (interaction.replied || interaction.deferred) {
-        await interaction.followUp({ content: "There was an error executing this command. This is no fault of my own, please blame a developer.", ephemeral: true });
+        await interaction.followUp({ content: "There was an error executing this command. This is no fault of my own, please blame a developer.", flags: MessageFlags.Ephemeral });
       } else {
-        await interaction.reply({ content: "There was an error executing this command. This is no fault of my own, please blame a developer.", ephemeral: true });
+        await interaction.reply({ content: "There was an error executing this command. This is no fault of my own, please blame a developer.", flags: MessageFlags.Ephemeral });
       }
     }
   }

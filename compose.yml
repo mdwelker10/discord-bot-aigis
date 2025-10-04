@@ -1,0 +1,42 @@
+name: aigis
+services:
+  app:
+    container_name: aigis
+    build:
+      context: .
+      dockerfile: dockerfile
+    restart: unless-stopped
+    volumes:
+      - ./downloads:/app/downloads
+      - ./logs:/app/logs
+    ports:
+      - 3000:3000
+    env_file:
+      - .env
+    depends_on:
+      mongo:
+        condition: service_started
+      redis:
+        condition: service_started
+
+  mongo:
+    container_name: mongo
+    image: arm64v8/mongo:4.2.18
+    restart: unless-stopped
+    volumes:
+      - ./data/mongo:/data/db
+    ports:
+      - 27017:27017
+    env_file:
+      - .env
+
+  redis:
+    container_name: redis
+    image: arm64v8/redis:8.0-alpine
+    restart: unless-stopped
+    volumes:
+      - ./data/redis:/data/redis
+    ports:
+      - 6379:6379
+    env_file:
+      - .env

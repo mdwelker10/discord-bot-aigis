@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, PermissionsBitField, ActionRowBuilder,
-  ModalBuilder, TextInputBuilder, TextInputStyle } = require('discord.js');
+  ModalBuilder, TextInputBuilder, TextInputStyle, MessageFlags } = require('discord.js');
 const config = require('../../config');
 
 const db = require('../../database/db');
@@ -19,7 +19,7 @@ module.exports = {
     const username = interaction.user.displayName;
     //check for permission to set up the bot (anyone with manage server permission)
     if (!interaction.memberPermissions.has(PermissionsBitField.Flags.ManageGuild)) {
-      return await interaction.reply({ content: `${username}-san, you do not have permission to do that!`, ephemeral: true });
+      return await interaction.reply({ content: `${username}-san, you do not have permission to do that!`, flags: MessageFlags.Ephemeral });
     }
     //build modal
     const modal = new ModalBuilder()
@@ -71,21 +71,21 @@ module.exports = {
       //   if (roleId.trim().toLowerCase() != 'everyone') {
       //     let role = await guild.roles.fetch(roleId);
       //     if (role == null) {
-      //       return await submitted.reply({ content: `${username}-san! The role ID "${roleId}" is not valid. Please try the setup again.`, ephemeral: true });
+      //       return await submitted.reply({ content: `${username}-san! The role ID "${roleId}" is not valid. Please try the setup again.`, flags: MessageFlags.Ephemeral });
       //     }
       //   }
       // } catch (error) {
-      //   return await submitted.reply({ content: `${username}-san! The role ID "${roleId}" is not valid. Please try the setup again.`, ephemeral: true });
+      //   return await submitted.reply({ content: `${username}-san! The role ID "${roleId}" is not valid. Please try the setup again.`, flags: MessageFlags.Ephemeral });
       // }
       //since channel id check also happens later, get all channels in one go
       let channels = null
       try {
         channels = await guild.channels.fetch();
         if (channels.find(c => c.id === defaultChannel) == null) {
-          return await submitted.reply({ content: `${username}-san! The default channel ID ${defaultChannel} is not valid. Please try the setup again.`, ephemeral: true });
+          return await submitted.reply({ content: `${username}-san! The default channel ID ${defaultChannel} is not valid. Please try the setup again.`, flags: MessageFlags.Ephemeral });
         }
       } catch (error) {
-        return await submitted.reply({ content: `${username}-san! The default channel ID ${defaultChannel} is not valid. Please try the setup again.`, ephemeral: true });
+        return await submitted.reply({ content: `${username}-san! The default channel ID ${defaultChannel} is not valid. Please try the setup again.`, flags: MessageFlags.Ephemeral });
       }
       //special channels can be empty so errors will be shown to user but transaction will still go through
       const specialChannels = submitted.fields.getTextInputValue('specialChannels');
@@ -113,13 +113,13 @@ module.exports = {
       if (errMsg != '') {
         try {
           await submitted.reply({
-            content: `${username}-san, there were errors in your input. If a command's announcement channel could not be set then the default channel will be used by default. The errors are:\n${errMsg}`, ephemeral: true
+            content: `${username}-san, there were errors in your input. If a command's announcement channel could not be set then the default channel will be used by default. The errors are:\n${errMsg}`, flags: MessageFlags.Ephemeral
           });
           return;
         } catch (error) {
           //if there is an error sending the error message, log it and send a generic error message. Could happen if too many errors in input
           console.error(error);
-          await submitted.reply({ content: `${username}-san, you really messed up big time. There was an error sending the error message. Please try again.`, ephemeral: true });
+          await submitted.reply({ content: `${username}-san, you really messed up big time. There was an error sending the error message. Please try again.`, flags: MessageFlags.Ephemeral });
         }
       }
       map.set('channel_default', defaultChannel);
@@ -135,10 +135,10 @@ module.exports = {
         await db.replace(config.DB_NAME, 'config', { guild_id: guild.id }, map, true);
       } else {
         //if config document exists and force not enabled then return error
-        return await submitted.reply({ content: `${username}-san, the configuration for this server already exists. Please use the force option to override.`, ephemeral: true });
+        return await submitted.reply({ content: `${username}-san, the configuration for this server already exists. Please use the force option to override.`, flags: MessageFlags.Ephemeral });
       }
       //send success message
-      return await submitted.reply({ content: `The configuration has been set up successfully.`, ephemeral: true });
+      return await submitted.reply({ content: `The configuration has been set up successfully.`, flags: MessageFlags.Ephemeral });
     }
   }
 };

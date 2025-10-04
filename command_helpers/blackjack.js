@@ -684,7 +684,7 @@ async function drawTable(game, guildId, userId, username, hideDealerFirst = true
   }
 
   //player name and bet
-  ctx.font = '40px Arial';
+  ctx.font = "40px 'Liberation Sans'";
   ctx.fillStyle = '#ffffff';
   ctx.fillText(`Player - ${username}`, 20, 40);
   ctx.fillText(`Balance: ${numberToString(balance.vt)} VT`, 20, 100);

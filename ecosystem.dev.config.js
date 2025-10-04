@@ -7,7 +7,7 @@ module.exports = {
       env: {
         DEV: 1,
         NODE_ENV: 'development',
-        NODE_EXTRA_CA_CERTS: "/Users/matthew/Development/discord-aigis/main.pem",
+        NODE_EXTRA_CA_CERTS: "/app/main.pem",
         TZ: "America/New_York"
       },
       ignore_watch: [
