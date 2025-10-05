@@ -205,7 +205,6 @@ The following menu can be brought up by Aigis, along with the explanation of the
 ## Currency: Velvet Tokens
 Aigis keeps track of a fake currency known as `Velvet Tokens` or VT. This currency cannot be actually exchanged for anything (as of now), but can be used to play games. Below is the list of games that use VT as a form of currency.
 - Blackjack
-- Slots (Coming soon...)
 
 There are 3 primary ways to earn Velvet Tokens:
 - Collect daily tokens with the `/claim` or `/vt daily` commands (they do the same thing).
