@@ -10,3 +10,4 @@ deploy.sh
 downloads/
 images/*.*
 data/
+dump/
