@@ -4,7 +4,8 @@
   "description": "discord bot testing",
   "main": "index.js",
   "scripts": {
-    "start": "pm2 start ecosystem.config.js",
+    "start": "pm2-runtime start ecosystem.config.js",
+    "start-daemon": "pm2 start ecosystem.config.js",
     "stop": "pm2 stop aigis",
     "dev": "pm2 start ecosystem.dev.config.js",
     "restart": "pm2 restart aigis --update-env",
