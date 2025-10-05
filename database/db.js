@@ -20,7 +20,7 @@ exports.connect = createConnection;
 async function createConnection(dbName) {
   try {
     if (!client) {
-      client = new MongoClient(url);
+      client = new MongoClient(url, { useUnifiedTopology: true });
       await client.connect();
     }
     return client.db(dbName);

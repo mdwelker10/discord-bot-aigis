@@ -3,6 +3,8 @@ const express = require('express');
 const routes = require('./endpoints');
 const path = require('node:path');
 const session = require('express-session');
+const { createClient } = require('redis');
+const { RedisStore } = require('connect-redis');
 
 exports.startServer = async () => {
 
@@ -10,9 +12,33 @@ exports.startServer = async () => {
   const app = express();
   const port = process.env.WEB_SERVER_PORT;
 
+  // Create Redis client for sessions
+  const redisClient = createClient({
+    url: process.env.REDIS_URL
+  });
+
+  redisClient.on('error', (err) => {
+    console.error('Redis Client Error:', err);
+  });
+
+  await redisClient.connect();
+  console.info('Redis client connected for session storage');
+
   app.use(express.static(process.env.DOWNLOAD_PATH));
   app.use(express.static(path.join(__dirname, 'static')));
-  app.use(session({ secret: process.env.SESSION_SECRET, resave: false, saveUninitialized: true }));
+
+  // Configure session with Redis store
+  app.use(session({
+    store: new RedisStore({ client: redisClient }),
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: process.env.DEV == 1 ? false : true,
+      httpOnly: true,
+      maxAge: 1000 * 60 * 60 * 24 // 1 day
+    }
+  }));
 
   //set up ngrok
   // const listener = await ngrok.forward({

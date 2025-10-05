@@ -13,13 +13,19 @@ window.onload = async () => {
     if (!res.ok) {
       document.getElementById("login").style.display = "block";
       document.getElementById("info").innerText = "You are not logged in.";
+      return;
     }
     const user = await res.json();
-
     if (user.username) {
       document.getElementById("info").innerText = `Hello ${user.username}!`;
+      document.getElementById("login").style.display = "none";
+    } else {
+      document.getElementById("login").style.display = "block";
+      document.getElementById("info").innerText = "You are not logged in.";
     }
   } catch (err) {
+    console.error('Auth check failed:', err);
     document.getElementById("login").style.display = "block";
+    document.getElementById("info").innerText = "You are not logged in.";
   }
 };

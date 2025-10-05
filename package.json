@@ -24,6 +24,7 @@
     "bull": "^4.16.5",
     "canvas": "^3.0.0",
     "cheerio": "^1.0.0",
+    "connect-redis": "^9.0.0",
     "cron": "^4.1.0",
     "discord.js": "^14.18.0",
     "dotenv": "^17.2.3",
@@ -33,7 +34,7 @@
     "luxon": "^3.7.2",
     "mongodb": "3.6",
     "playwright": "^1.50.1",
-    "redis": "^5.5.6",
+    "redis": "^5.8.3",
     "sanitize-filename": "^1.6.3"
   }
 }

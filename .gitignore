@@ -1,4 +1,6 @@
-.env*
+.env
+.env-dev
+.env-prod
 **/node_modules/
 */.DS_*
 .DS_*
