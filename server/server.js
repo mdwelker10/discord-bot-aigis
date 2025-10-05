@@ -40,14 +40,6 @@ exports.startServer = async () => {
     }
   }));
 
-  //set up ngrok
-  // const listener = await ngrok.forward({
-  //   addr: port,
-  //   authtoken: process.env.NGROK_AUTHTOKEN,
-  //   domain: process.env.NGROK_DOMAIN,
-  // });
-  // console.log(`Ngrok server listening at ${listener.url()}`);
-
   //set up discord oauth
   app.get("/callback", async (req, res) => {
     const code = req.query.code;
