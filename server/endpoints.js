@@ -15,7 +15,9 @@ function requireAuth(req, res, next) {
 
 //router.use(requireAuth);
 router.get('/login', (req, res) => {
-  res.redirect(process.env.LOGIN_URI);
+  const returnTo = req.session.returnTo || '/';
+  const loginUri = `${process.env.LOGIN_URI}&state=${encodeURIComponent(returnTo)}`;
+  res.redirect(loginUri);
 });
 
 router.get('/', (req, res) => {
