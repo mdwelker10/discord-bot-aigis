@@ -4,9 +4,12 @@ WORKDIR /app
 RUN mkdir temp
 COPY package*.json ./
 
-RUN apt-get update && apt-get install -y curl nano ffmpeg python3 python3-pip \
+RUN apt-get update && apt-get install -y curl nano ffmpeg \
     fonts-liberation build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev \
     && rm -rf /var/lib/apt/lists/*
+
+RUN curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp
+RUN chmod +x /usr/local/bin/yt-dlp
 
 RUN npm install
 RUN npm install pm2 -g
