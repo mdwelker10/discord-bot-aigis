@@ -1,6 +1,4 @@
-.env
-.env-dev
-.env-prod
+*.env
 **/node_modules/
 */.DS_*
 .DS_*
@@ -13,3 +11,4 @@ downloads/
 images/*.*
 data/
 dump/
+scripts/
