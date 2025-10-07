@@ -2,7 +2,7 @@ const { SlashCommandBuilder, EmbedBuilder, PermissionsBitField, MessageFlags } =
 const { getGuildConfig } = require('../../utils/utils');
 const db = require('../../database/db');
 const AigisError = require('../../utils/AigisError');
-const config = require('../../config');
+const config = require('../../utils/config');
 
 module.exports = {
   data: new SlashCommandBuilder()

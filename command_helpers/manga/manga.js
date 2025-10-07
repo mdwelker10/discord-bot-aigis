@@ -5,7 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const { AttachmentBuilder, EmbedBuilder, hyperlink } = require('discord.js');
 const db = require('../../database/db');
-const config = require('../../config');
+const config = require('../../utils/config');
 const { getGuildConfig } = require('../../utils/utils');
 
 exports.COLLECTION_NAME = 'manga';

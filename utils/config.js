@@ -8,6 +8,7 @@ exports.TEMP_PATH = path.join(__dirname, 'temp');
 exports.USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:133.0) Gecko/20100101 Chrome/110 Firefox/133.0';
 exports.MIN_BET = 5;
 exports.MAX_BET = 1_000_000_000; //1 billion
+exports.DOWNLOADS_MAX_SIZE = 5 * 1024 * 1024 * 1024; //5 GiB
 //Aigis images
 exports.DEFAULT_MANGA_IMAGE = 'https://i.imgur.com/usdIJxN.png';
 exports.AIGIS_BUSTUP_IMAGE = 'https://i.imgur.com/rqiiY75.png';

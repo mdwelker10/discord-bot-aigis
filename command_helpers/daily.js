@@ -1,4 +1,4 @@
-const config = require('../config');
+const config = require('../utils/config');
 const db = require('../database/db');
 const AigisError = require('../utils/AigisError');
 const BigNumber = require('bignumber.js');

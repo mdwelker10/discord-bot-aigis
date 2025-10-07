@@ -1,4 +1,5 @@
-const config = require('../config.js');
+require('dotenv').config();
+const config = require('./config.js');
 const fs = require('fs');
 const path = require('path');
 const db = require('../database/db.js');
@@ -11,6 +12,18 @@ exports.cleanTemp = () => {
   if (len >= config.TEMP_MAX_LENGTH) {
     for (const file of fs.readdirSync(config.TEMP_PATH)) {
       fs.unlinkSync(path.join(config.TEMP_PATH, file));
+    }
+  }
+}
+
+/** Will clean the downloads directory if it takes up more storage space than config.DOWNLOADS_MAX_SIZE */
+exports.cleanDownloads = () => {
+  const dirSize = fs.readdirSync(process.env.DOWNLOAD_PATH).reduce((acc, file) => {
+    return acc + fs.statSync(path.join(process.env.DOWNLOAD_PATH, file)).size;
+  }, 0);
+  if (dirSize >= config.DOWNLOADS_MAX_SIZE) {
+    for (const file of fs.readdirSync(process.env.DOWNLOAD_PATH)) {
+      fs.unlinkSync(path.join(process.env.DOWNLOAD_PATH, file));
     }
   }
 }

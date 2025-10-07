@@ -3,7 +3,7 @@
  * @description This file manages the Blackjack game for each user
  */
 const AigisError = require("../utils/AigisError");
-const config = require("../config");
+const config = require("../utils/config");
 const { AttachmentBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder, ComponentType } = require("discord.js");
 const db = require("../database/db")
 const BigNumber = require('bignumber.js');

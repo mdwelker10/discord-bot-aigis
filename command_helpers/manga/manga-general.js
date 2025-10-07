@@ -4,7 +4,7 @@
  */
 const AigisError = require('../../utils/AigisError');
 const db = require('../../database/db');
-const config = require('../../config');
+const config = require('../../utils/config');
 const { getGuildConfig } = require('../../utils/utils');
 
 COLLECTION_NAME = 'manga';

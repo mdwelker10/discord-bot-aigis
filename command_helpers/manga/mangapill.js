@@ -3,7 +3,7 @@ const path = require('path');
 const { downloadImage } = require('../../utils/utils');
 const cheerio = require('cheerio');
 const { insertManga } = require('./manga-general');
-const config = require('../../config');
+const config = require('../../utils/config');
 const AigisError = require('../../utils/AigisError');
 
 /** The display name of the website */

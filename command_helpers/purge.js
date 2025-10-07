@@ -1,5 +1,5 @@
 const db = require('../database/db');
-const config = require('../config');
+const config = require('../utils/config');
 
 exports.purgeAll = async (guildId) => {
   await db.deleteOne(config.DB_NAME, 'config', { guild_id: guildId });

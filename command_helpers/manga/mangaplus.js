@@ -4,7 +4,7 @@ const path = require('path');
 const playwright = require('playwright');
 const { downloadImage } = require('../../utils/utils');
 const { insertManga, mangaChannelNSFW } = require('./manga-general');
-const config = require('../../config');
+const config = require('../../utils/config');
 
 /** The display name of the website */
 exports.NAME = 'Mangaplus';

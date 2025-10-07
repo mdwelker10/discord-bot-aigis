@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const config = require('../../config');
+const config = require('../../utils/config');
 const db = require('../../database/db');
 const AigisError = require('../../utils/AigisError');
 const { claim } = require('../../command_helpers/daily');

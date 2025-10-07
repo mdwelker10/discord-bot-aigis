@@ -1,7 +1,7 @@
 const { SlashCommandBuilder, EmbedBuilder, PermissionsBitField, MessageFlags } = require('discord.js');
 const path = require('path');
 const fs = require('fs');
-const config = require('../../config');
+const config = require('../../utils/config');
 const db = require('../../database/db');
 const { getCommandNames } = require('../../utils/utils');
 

@@ -3,7 +3,8 @@ const { exec } = require("child_process");
 const { SlashCommandBuilder, EmbedBuilder, hyperlink, time, TimestampStyles } = require("discord.js");
 const { promisify } = require("util");
 const AigisError = require("../../utils/AigisError");
-const config = require("../../config");
+const config = require("../../utils/config");
+const { cleanDownloads } = require("../../utils/utils");
 const crypto = require("crypto");
 const { DateTime } = require("luxon");
 
@@ -124,11 +125,12 @@ async function downloadFiles(url, audioOnly, ext) {
   try {
     const execPromise = promisify(exec);
     const filename = crypto.randomBytes(16).toString('hex');
+    cleanDownloads();
     let command = '';
     if (audioOnly) {
-      command = `yt-dlp -x --audio-format ${ext} -o "${process.env.DOWNLOAD_PATH}/${filename}_%(autonumber)s_audio.%(ext)s" --print after_move:filename --max-filesize 500M "${url}"`
+      command = `yt-dlp -x --audio-format ${ext} -o "${process.env.DOWNLOAD_PATH}/${filename}_%(autonumber)s_audio.%(ext)s" --print after_move:filename --max-filesize 2G "${url}"`
     } else {
-      command = `yt-dlp --merge-output-format ${ext} -o "${process.env.DOWNLOAD_PATH}/${filename}%(autonumber)s_video.%(ext)s" --print after_move:filename --max-filesize 500M "${url}"`
+      command = `yt-dlp --merge-output-format ${ext} -o "${process.env.DOWNLOAD_PATH}/${filename}%(autonumber)s_video.%(ext)s" --print after_move:filename --max-filesize 2G "${url}"`
     }
     const { stdout } = await execPromise(command);
     let files = stdout.trim().split("\n");

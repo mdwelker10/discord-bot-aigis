@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, ComponentType, EmbedBuilder } = require('discord.js');
-const config = require('../../config');
+const config = require('../../utils/config');
 const AigisError = require('../../utils/AigisError');
 const { startGame, startTurn, quit, placeBet, createMenuButtons } = require('../../command_helpers/blackjack');
 const { numberToString } = require('../../utils/utils');

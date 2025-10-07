@@ -5,7 +5,7 @@ const db = require("../../database/db");
 const AigisError = require('../../utils/AigisError');
 const { insertPlaylist, removePlaylist, checkToken, selectSong, stopSotdCronJob } = require('../../command_helpers/sotd');
 const { PLAYLISTS_COLL_NAME, MIN_LENGTH } = require('../../command_helpers/sotd');
-const config = require('../../config');
+const config = require('../../utils/config');
 const { getGuildConfig, isDeveloper, checkPermission } = require('../../utils/utils');
 
 module.exports = {

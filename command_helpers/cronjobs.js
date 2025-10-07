@@ -1,5 +1,5 @@
 const { CronJob } = require('cron');
-const config = require('../config.js');
+const config = require('../utils/config.js');
 const { selectSong } = require('./sotd');
 const { mangaCheck } = require('./manga/manga');
 const { purgeAll } = require('./purge');
@@ -51,13 +51,12 @@ exports.stopSotd = () => {
   sotdJob.stop();
 }
 
-/* --------------- Manga and Disk Space Check --------------- */
+/* --------------- Manga --------------- */
 exports.startMangaChecks = async (client) => {
   mangaJob = new CronJob(
     '0 0 * * * *',
     async () => {
       await mangaCheck(client);
-      //TODO check disk space and wipe downloads + temp files if needed
     },
     null,
     true,
@@ -99,17 +98,12 @@ exports.stopPurgeChecks = () => {
   purgeJob.stop();
 }
 
-/* --------------- Tokens and Downloads --------------- */
+/* --------------- Tokens --------------- */
 exports.startDailyTokenChecks = (client) => {
   tokenJob = new CronJob(
     '0 0 0 * * *',
     async () => {
       await resetDaily();
-      //remove files from downloads folder every day - temporary until storage increase  
-      const downloadsPath = path.join(__dirname, '..', 'downloads');
-      for (const file of fs.readdirSync(downloadsPath)) {
-        fs.unlinkSync(path.join(downloadsPath, file));
-      }
     },
     null,
     true,

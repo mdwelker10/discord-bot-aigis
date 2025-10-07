@@ -9,7 +9,7 @@
 const { SlashCommandBuilder, EmbedBuilder, hyperlink } = require("discord.js");
 const axios = require('axios');
 const AigisError = require('../../utils/AigisError');
-const config = require('../../config');
+const config = require('../../utils/config');
 const ISO6391 = require('iso-639-1');
 const { listManga, unfollowManga, getLanguage } = require('../../command_helpers/manga/manga');
 const { stopMangaCronJob } = require('../../command_helpers/cronjobs');
