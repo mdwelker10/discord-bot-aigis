@@ -58,10 +58,10 @@ module.exports = {
         desc += `Something important to note is that since this command exposes files stored on my system directly to the internet, I have taken some security precautions. The main one being requiring Discord authentication to access the files. `;
         desc += `The permissions I ask for are minimal and include basic information like your username, display name, profile picture, and other similar surface level information for identification. This is for logging purposes to combat spam and unauthorized access to my file system. `;
         desc += `You can always review my source code on ${hyperlink("GitHub", 'https://github.com/mdwelker10/discord-bot-aigis')} if you want to see how I work and manage your data.\n\n`;
-        desc += `The command syntax is \`/download video <url> <ext> <audio-only>\`. Only \`download video\` is available at the moment, but it should work on audio-only files too. The fields for the command are explained below, and do note that all downloaded files are deleted from my system every day at ${time(Math.floor(estMidnight.toSeconds()), 't')} in your timezone.`;
+        desc += `The command syntax is \`/download video <url> <ext> <audio-only>\`. Only \`download video\` is available at the moment, but it should work on audio-only files too. The fields for the command are explained below:`;
         const embed = new EmbedBuilder()
           .setColor(config.get('EMBED_COLOR'))
-          .setTitle('Donwload Help')
+          .setTitle('Download Help')
           .setDescription(desc)
           .setThumbnail(config.get('AIGIS_EPISODE_AIGIS_IMAGE'))
           .addFields(
