@@ -20,7 +20,7 @@ const websites = {
 }
 
 exports.mangaCheck = async (client) => {
-  let data = await db.find(config.DB_NAME, exports.COLLECTION_NAME, {});
+  let data = await db.find(config.get('DB_NAME'), exports.COLLECTION_NAME, {});
   for (let manga of data) {
     //ensure the website functions can be dynamically called
     if (websites[manga.website] == null) {
@@ -40,7 +40,7 @@ exports.mangaCheck = async (client) => {
         fs.unlink(path.join(__dirname, '..', '..', 'images', manga.cover_art), () => console.info(`Removed old cover art for ${manga.title}`));
       }
       //update database with new chapter
-      let res = await db.updateOne(config.DB_NAME, exports.COLLECTION_NAME, { manga_id: manga.manga_id, lang: manga.lang },
+      let res = await db.updateOne(config.get('DB_NAME'), exports.COLLECTION_NAME, { manga_id: manga.manga_id, lang: manga.lang },
         { $set: { latest_chapter: chapter.latest_chapter, latest_chapter_num: chapter.latest_chapter_num, cover_art: chapter.cover_art } });
       if (res === 0) {
         console.error(`Could not update database with new chapter for ${manga.title} from ${manga.website} with language ${manga.lang}.`);
@@ -86,15 +86,15 @@ exports.mangaCheck = async (client) => {
         const manga_link = websites[manga.website].generateMangaLink(manga.manga_id);
         ping += `A new chapter of ${hyperlink(manga.title, manga_link)} on ${websites[manga.website].NAME} in ${exports.getLanguage(manga.lang)} has been released! You can read it ${hyperlink('here', `<${link}>`)}.`;
         const cover = path.join(__dirname, '..', '..', 'images', chapter.cover_art);
-        const image = chapter.cover_art === config.DEFAULT_MANGA_IMAGE ? config.DEFAULT_MANGA_IMAGE : `attachment://${chapter.cover_art}`;
+        const image = chapter.cover_art === config.get('DEFAULT_MANGA_IMAGE') ? config.get('DEFAULT_MANGA_IMAGE') : `attachment://${chapter.cover_art}`;
         const embed = new EmbedBuilder()
-          .setColor(config.EMBED_COLOR)
+          .setColor(config.get('EMBED_COLOR'))
           .setTitle(`${manga.title} - Chapter ${chapter.latest_chapter_num}`)
           .addFields({ name: 'Language', value: exports.getLanguage(manga.lang) })
           .setFooter({ text: `via ${manga.website}` })
           .setImage(image)
           .setTimestamp();
-        if (manga.cover_art === config.DEFAULT_MANGA_IMAGE) {
+        if (manga.cover_art === config.get('DEFAULT_MANGA_IMAGE')) {
           await channel.send({ content: ping, embeds: [embed] });
         } else {
           const file = new AttachmentBuilder(path.resolve(cover));
@@ -110,7 +110,7 @@ exports.mangaCheck = async (client) => {
 }
 
 exports.listManga = async (guild_id, user_id) => {
-  let data = await db.find(config.DB_NAME, exports.COLLECTION_NAME, { [`ping_list.${guild_id}`]: user_id });
+  let data = await db.find(config.get('DB_NAME'), exports.COLLECTION_NAME, { [`ping_list.${guild_id}`]: user_id });
   let str = '';
   const emote = String.fromCodePoint(0x1F51E);
   for (const m of data) {
@@ -131,7 +131,7 @@ exports.listManga = async (guild_id, user_id) => {
     str = 'You are not following any manga.';
   }
   let embed = new EmbedBuilder()
-    .setColor(config.EMBED_COLOR)
+    .setColor(config.get('EMBED_COLOR'))
     .setTitle('Manga You Are Following')
     .setDescription(str)
     .setTimestamp();
@@ -140,12 +140,12 @@ exports.listManga = async (guild_id, user_id) => {
 
 /** Unfollows a manga from any website, based solely on the manga id provided. language is optional, default is en */
 exports.unfollowManga = async (guild_id, manga_id, user_id, lang = 'en') => {
-  let data = await db.findOne(config.DB_NAME, exports.COLLECTION_NAME, { manga_id: manga_id, lang: lang });
+  let data = await db.findOne(config.get('DB_NAME'), exports.COLLECTION_NAME, { manga_id: manga_id, lang: lang });
   if (!data) {
     return false;
   }
   if (Object.keys(data.ping_list).length === 1 && data.ping_list[guild_id].length === 1) {
-    await db.deleteOne(config.DB_NAME, exports.COLLECTION_NAME, { manga_id: manga_id, lang: lang });
+    await db.deleteOne(config.get('DB_NAME'), exports.COLLECTION_NAME, { manga_id: manga_id, lang: lang });
     const fp = path.join(__dirname, '..', '..', 'images', data.cover_art);
     if (fs.existsSync(fp)) {
       fs.unlinkSync(fp);
@@ -158,8 +158,8 @@ exports.unfollowManga = async (guild_id, manga_id, user_id, lang = 'en') => {
 }
 
 exports.getLanguage = (lang) => {
-  if (config.MANGADEX_ISO6391[lang]) {
-    return config.MANGADEX_ISO6391[lang];
+  if (config.getMangadxLanguages()[lang]) {
+    return config.getMangadxLanguages()[lang];
   } else {
     return ISO6391.getName(lang);
   }

@@ -1,7 +1,7 @@
-require('dotenv').config();
 const fs = require('node:fs');
 const path = require('node:path');
 const { Client, Events, GatewayIntentBits, Collection, ActivityType, PresenceUpdateStatus, MessageFlags } = require('discord.js');
+const config = require('./utils/config');
 const { startSotd, startMangaChecks, startPurgeChecks, startDailyTokenChecks } = require('./command_helpers/cronjobs');
 const { mangaCheck } = require('./command_helpers/manga/manga');
 const { initQueue } = require('./command_helpers/reminder');
@@ -15,7 +15,7 @@ long_commands = ['ping', 'sotd', 'manga', 'command', 'purge', 'blackjack', 'vt',
 setup_required = ['command'];
 
 // BOT token
-const token = process.env.TOKEN;
+const token = config.get('TOKEN');
 
 //create client
 const client = new Client({
@@ -52,7 +52,7 @@ client.once(Events.ClientReady, readyClient => {
 
 client.on(Events.MessageCreate, async (message) => {
   if (message.author.bot) return;
-  if (message.content.toLowerCase().includes('debug manga') && isDeveloper(message.author.id) && process.env.DEV == 1) { //For manually testing manga cronjob
+  if (message.content.toLowerCase().includes('debug manga') && isDeveloper(message.author.id) && config.get('DEV') == 1) { //For manually testing manga cronjob
     console.log('Debugging manga...');
     await mangaCheck(client);
     return message.reply('I have checked for manga updates');
@@ -133,12 +133,12 @@ client.on(Events.InteractionCreate, async interaction => {
 
 //login with client token
 client.login(token).then(token => {
-  if (process.env.DEV == 1) {
+  if (config.get('DEV') == 1) {
     console.info('Bot is running in development mode.');
     client.user.setPresence({
       activities: [{
-        name: 'The error messages rolling in',
-        type: ActivityType.Watching
+        name: 'The error messages roll in',
+        type: ActivityType.Custom
       }],
       status: PresenceUpdateStatus.Online
     });
@@ -159,7 +159,7 @@ initQueue(client).then(() => {
 });
 
 //initialize cron jobs
-if (process.env.DEV != 1) {
+if (config.get('DEV') != 1) {
   startSotd(client);
   console.info('Cron job for Song of the Day started.');
   startMangaChecks(client);

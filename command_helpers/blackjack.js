@@ -11,6 +11,7 @@ const path = require('path');
 const { createCanvas, loadImage } = require('canvas');
 const { numberToString } = require("../utils/utils");
 const { setTimeout } = require('node:timers/promises');
+const config = require('../utils/config');
 
 let games = new Map(); //map of game objects, key is player's user id
 
@@ -45,8 +46,8 @@ async function shutdown() {
   for (let [userId, game] of games) {
     try {
       //give bet back to user
-      let playerVT = await db.findOne(config.DB_NAME, 'vt', { user_id: userId, guild_id: game.guildId });
-      await db.updateOne(config.DB_NAME, 'vt', { user_id: userId, guild_id: game.guildId }, { $set: { vt: new BigNumber(playerVT.vt).plus(game.bet).toString() } });
+      let playerVT = await db.findOne(config.get('DB_NAME'), 'vt', { user_id: userId, guild_id: game.guildId });
+      await db.updateOne(config.get('DB_NAME'), 'vt', { user_id: userId, guild_id: game.guildId }, { $set: { vt: new BigNumber(playerVT.vt).plus(game.bet).toString() } });
       //send message saying game is ending
       await game.channel.send(`I'm sorry <@${userId}>-san, but I am going to briefly shut down or restart. The game must end. I will return your bet.`);
       games.delete(userId);
@@ -120,8 +121,8 @@ exports.startGame = async (guildId, userId, timeLimit = 30, hardmode = false) =>
     throw new AigisError('you already have a Blackjack game in progress.', 400);
   }
   //check if player has enough tokens
-  let playerVT = await db.findOne(config.DB_NAME, 'vt', { user_id: userId, guild_id: guildId });
-  if (!playerVT || playerVT.vt < config.MIN_BET) {
+  let playerVT = await db.findOne(config.get('DB_NAME'), 'vt', { user_id: userId, guild_id: guildId });
+  if (!playerVT || playerVT.vt < config.get('MIN_BET')) {
     throw new AigisError('you do not have enough Velvet Tokens to play Blackjack. Use `/claim` to get your daily tokens or wait until tomorrow. Please be more careful with your money!', 400);
   }
   let game = {
@@ -151,22 +152,22 @@ exports.placeBet = async (guildId, userId, amount) => {
   let game = games.get(userId);
   if (!game || !game.guildId == guildId) {
     //can set bet even if no game in progress
-    const ret = await db.updateOne(config.DB_NAME, 'vt', { user_id: userId, guild_id: guildId }, { $set: { bet: amount } });
+    const ret = await db.updateOne(config.get('DB_NAME'), 'vt', { user_id: userId, guild_id: guildId }, { $set: { bet: amount } });
     if (ret == 0) {
       return false;
     }
     return true;
   }
-  if (amount < config.MIN_BET || amount > config.MAX_BET) {
-    //throw new AigisError(`you must bet between ${config.MIN_BET} and ${config.MAX_BET} tokens.`, 400);
+  if (amount < config.get('MIN_BET') || amount > config.get('MAX_BET')) {
+    //throw new AigisError(`you must bet between ${config.get('MIN_BET')} and ${config.get('MAX_BET')} tokens.`, 400);
     return false;
   }
-  let playerVT = await db.findOne(config.DB_NAME, 'vt', { user_id: userId, guild_id: guildId });
+  let playerVT = await db.findOne(config.get('DB_NAME'), 'vt', { user_id: userId, guild_id: guildId });
   if (!playerVT || playerVT.vt < amount) {
     //throw new AigisError('you do not have enough Velvet Tokens to make that bet.', 400);
     return false;
   }
-  const ret = await db.updateOne(config.DB_NAME, 'vt', { user_id: userId, guild_id: guildId }, { $set: { bet: amount } });
+  const ret = await db.updateOne(config.get('DB_NAME'), 'vt', { user_id: userId, guild_id: guildId }, { $set: { bet: amount } });
   if (ret == 0) {
     return false;
   }
@@ -236,7 +237,7 @@ exports.startTurn = async (guildId, userDisplayName, userId, interaction) => {
     throw new AigisError('you do not have a blackjack game in progress.', 400);
   }
   //check if player can cover their bet
-  let playerVT = await db.findOne(config.DB_NAME, 'vt', { user_id: userId, guild_id: guildId });
+  let playerVT = await db.findOne(config.get('DB_NAME'), 'vt', { user_id: userId, guild_id: guildId });
   if (playerVT.vt < game.bet) {
     interaction.channel.send(`I'm sorry <@${userId}>-san, but you do not have enough VT to cover your bet. The game will end.`);
     return 'quit';
@@ -592,10 +593,10 @@ async function payout(userId, game, result, insuranceBet = 0) {
     default:
       throw new AigisError('an invalid hand result was processed. Result: ' + result);
   }
-  let playerVT = await db.findOne(config.DB_NAME, "vt", { user_id: userId, guild_id: game.guildId });
+  let playerVT = await db.findOne(config.get('DB_NAME'), "vt", { user_id: userId, guild_id: game.guildId });
   let newVT = new BigNumber(playerVT.vt).plus(vtChange).plus(insuranceBet).toString();
   let newGambleHistory = new BigNumber(playerVT.gamble_history).plus(vtChange).plus(insuranceBet).toString();
-  await db.updateOne(config.DB_NAME, 'vt', { user_id: userId, guild_id: game.guildId }, { $set: { vt: newVT, gamble_history: newGambleHistory } });
+  await db.updateOne(config.get('DB_NAME'), 'vt', { user_id: userId, guild_id: game.guildId }, { $set: { vt: newVT, gamble_history: newGambleHistory } });
   return Math.abs(vtChange);
 }
 
@@ -623,7 +624,7 @@ async function createButtons(userId, guildId, game, double, split) {
 
   const row = new ActionRowBuilder().addComponents(hit, stand);
   if (double) {
-    const userVT = await db.findOne(config.DB_NAME, 'vt', { user_id: userId, guild_id: guildId });
+    const userVT = await db.findOne(config.get('DB_NAME'), 'vt', { user_id: userId, guild_id: guildId });
     if (userVT && userVT.vt >= game.bet * 2) {
       const double = new ButtonBuilder()
         .setCustomId('double')
@@ -668,7 +669,7 @@ exports.createMenuButtons = () => {
 /** Draw the blackjack table. Set hideDealerFirst to false when showing the dealer's full hand */
 async function drawTable(game, guildId, userId, username, hideDealerFirst = true) {
   //get appropriate variables set
-  const balance = await db.findOne(config.DB_NAME, 'vt', { user_id: userId, guild_id: guildId });
+  const balance = await db.findOne(config.get('DB_NAME'), 'vt', { user_id: userId, guild_id: guildId });
   const wide = game.dealerCards.length > CARDS_WIDE || game.playerCards.length > CARDS_WIDE;
   //set canvas
   const canvas = createCanvas(wide ? CANVAS_WIDTH_WIDE : CANVAS_WIDTH, CANVAS_HEIGHT);

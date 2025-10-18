@@ -85,7 +85,7 @@ async function getCoverArt(params) {
   /*
     Retrieve cover art for a manga. Parameters vary based on how the image needs to be retrieved.
     If web scraping with Cheerio is being used, the $ variable can be the only parameter
-    If the image cannot be retrieved or exports.CAN_CHECK_RATING is false, return config.DEFAULT_MANGA_IMAGE.
+    If the image cannot be retrieved or exports.CAN_CHECK_RATING is false, return config.get('DEFAULT_MANGA_IMAGE').
     Should be used only in this file, but is a very nice helper function to have.
   */
 }

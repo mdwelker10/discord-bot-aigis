@@ -1,10 +1,11 @@
 //const { Queue, Worker, Job } = require('bull');
 const Queue = require('bull');
+const config = require('../utils/config');
 
 let reminderQueue;
 
 exports.initQueue = async (client) => {
-  reminderQueue = new Queue('reminder', process.env.REDIS_URL);
+  reminderQueue = new Queue('reminder', config.get('REDIS_URL'));
   reminderQueue.process(async (job) => {
     try {
       const { channel, message, user } = job.data;

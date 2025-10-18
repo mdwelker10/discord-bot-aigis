@@ -45,9 +45,9 @@ module.exports = {
           desc += 'Hard mode does not pay more than normal games, it\'s just there if you want a bit more of a challenge. '
           desc += 'Below is a full command reference:\n\n';
           const help = new EmbedBuilder()
-            .setColor(config.EMBED_COLOR)
+            .setColor(config.get('EMBED_COLOR'))
             .setTitle('Blackjack Help')
-            .setThumbnail(config.AIGIS_ORGIA_ICON_IMAGE)
+            .setThumbnail(config.get('AIGIS_ORGIA_ICON_IMAGE'))
             .setDescription(desc)
             .addFields(
               { name: '/blackjack help', value: 'Get help with the Blackjack game' },
@@ -75,9 +75,9 @@ module.exports = {
           insurance += 'so if your insurance bet was 50 VT, you would win 100 VT and get your 50 VT back if the dealer has a Blackjack. If the dealer does not have a Blackjack, you lose the insurance bet. ';
           insurance += 'Keep in mind that if your insurance bet wins, your normal bet will still lose unless you also have Blackjack. The dealer does not have the option to take insurance.';
           const embed = new EmbedBuilder()
-            .setColor(config.EMBED_COLOR)
+            .setColor(config.get('EMBED_COLOR'))
             .setTitle('Blackjack Rules')
-            .setThumbnail(config.AIGIS_ORGIA_ICON_IMAGE)
+            .setThumbnail(config.get('AIGIS_ORGIA_ICON_IMAGE'))
             .setDescription(rules)
             .addFields(
               { name: 'Payouts', value: '- Win: 1:1\n- Blackjack: 3:2\n- Insurance: 2:1\n- Split: 1:1' },
@@ -112,12 +112,12 @@ async function changeBet(interaction) {
     //set variables
     const userId = interaction.user.id;
     const guildId = interaction.guild.id;
-    await interaction.followUp(`Please type in chat the amount you would like to bet within the next 60 seconds, <@${userId}>-san. The minimum bet is ${config.MIN_BET} and the maximum bet is ${numberToString(config.MAX_BET)}.`);
+    await interaction.followUp(`Please type in chat the amount you would like to bet within the next 60 seconds, <@${userId}>-san. The minimum bet is ${config.get('MIN_BET')} and the maximum bet is ${numberToString(config.get('MAX_BET'))}.`);
     //filter for the collector, only allow integers between MIN_BET and MAX_BET sent by the user
     const collectorFilter = msg => {
       if (msg.author.id === userId && !isNaN(msg.content) && Number.isInteger(parseFloat(msg.content))) {
         const bet = parseInt(msg.content);
-        return bet >= config.MIN_BET && bet <= config.MAX_BET
+        return bet >= config.get('MIN_BET') && bet <= config.get('MAX_BET')
       }
       return false;
     };

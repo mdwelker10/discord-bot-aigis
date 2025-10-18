@@ -1,29 +1,29 @@
-require('dotenv').config();
 const config = require('./config.js');
 const fs = require('fs');
 const path = require('path');
 const db = require('../database/db.js');
 const axios = require('axios');
 const AigisError = require('./AigisError.js');
+const config = require('./utils/config');
 
-/** Will clean the temp directory if the number of files is greater than config.TEMP_MAX_LENGTH */
+/** Will clean the temp directory if the number of files is greater than config.get('TEMP_MAX_LENGTH') */
 exports.cleanTemp = () => {
   const len = fs.readdirSync(config.TEMP_PATH).length;
-  if (len >= config.TEMP_MAX_LENGTH) {
+  if (len >= config.get('TEMP_MAX_LENGTH')) {
     for (const file of fs.readdirSync(config.TEMP_PATH)) {
       fs.unlinkSync(path.join(config.TEMP_PATH, file));
     }
   }
 }
 
-/** Will clean the downloads directory if it takes up more storage space than config.DOWNLOADS_MAX_SIZE */
+/** Will clean the downloads directory if it takes up more storage space than config.get('DOWNLOADS_MAX_SIZE') */
 exports.cleanDownloads = () => {
-  const dirSize = fs.readdirSync(process.env.DOWNLOAD_PATH).reduce((acc, file) => {
-    return acc + fs.statSync(path.join(process.env.DOWNLOAD_PATH, file)).size;
+  const dirSize = fs.readdirSync(config.get('DOWNLOAD_PATH')).reduce((acc, file) => {
+    return acc + fs.statSync(path.join(config.get('DOWNLOAD_PATH'), file)).size;
   }, 0);
-  if (dirSize >= config.DOWNLOADS_MAX_SIZE) {
-    for (const file of fs.readdirSync(process.env.DOWNLOAD_PATH)) {
-      fs.unlinkSync(path.join(process.env.DOWNLOAD_PATH, file));
+  if (dirSize >= config.get('DOWNLOADS_MAX_SIZE')) {
+    for (const file of fs.readdirSync(config.get('DOWNLOAD_PATH'))) {
+      fs.unlinkSync(path.join(config.get('DOWNLOAD_PATH'), file));
     }
   }
 }
@@ -34,7 +34,7 @@ exports.cleanDownloads = () => {
  * @returns {Promise<Object|null>} The guild config object from the database, or null if it doesn't exist
  */
 exports.getGuildConfig = async (guildId) => {
-  const server = await db.findOne(config.DB_NAME, 'config', { 'guild_id': guildId });
+  const server = await db.findOne(config.get('DB_NAME'), 'config', { 'guild_id': guildId });
   return server ?? null;
 }
 
@@ -51,7 +51,7 @@ exports.downloadImage = async (url, savepath, referer = null) => {
   }
   let obj = { responseType: 'stream' };
   if (referer) {
-    obj['headers'] = { 'User-Agent': config.USER_AGENT, 'Referer': referer };
+    obj['headers'] = { 'User-Agent': config.get('USER_AGENT'), 'Referer': referer };
   }
   const res = await axios.get(url, obj);
   const writer = fs.createWriteStream(savepath, { autoClose: true, flags: 'w+' });
@@ -86,9 +86,9 @@ exports.getCommandNames = (ignoreAllEntry = false) => {
   return commands;
 }
 
-/** Uses process.env.DEVELOPER_IDS to determine if a given ID is a developer */
+/** Uses config.get('DEVELOPER_IDS') to determine if a given ID is a developer */
 exports.isDeveloper = (userId) => {
-  return process.env.DEVELOPER_IDS.split(',').includes(userId);
+  return config.get('DEVELOPER_IDS').split(',').includes(userId);
 }
 
 /**

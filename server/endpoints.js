@@ -1,23 +1,28 @@
-require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const sanitize = require('sanitize-filename');
+const config = require('../utils/config');
 
 const router = express.Router();
 
 function requireAuth(req, res, next) {
   if (!req.session.user) {
     req.session.returnTo = req.originalUrl;
-    return res.redirect("/login");
+    console.log('Setting returnTo:', req.originalUrl); // Debug log
+    req.session.save((err) => {
+      if (err) {
+        console.error('Session save error:', err);
+      }
+      res.redirect("/login");
+    });
+    return;
   }
   next();
 }
 
 //router.use(requireAuth);
 router.get('/login', (req, res) => {
-  const returnTo = req.session.returnTo || '/';
-  const loginUri = `${process.env.LOGIN_URI}&state=${encodeURIComponent(returnTo)}`;
-  res.redirect(loginUri);
+  res.redirect(config.get('LOGIN_URI'));
 });
 
 router.get('/', (req, res) => {

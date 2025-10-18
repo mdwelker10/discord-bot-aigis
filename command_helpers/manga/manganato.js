@@ -82,7 +82,7 @@ async function getCoverArt($) {
     return img_name;
   } catch (err) {
     console.error(err);
-    return config.DEFAULT_MANGA_IMAGE;
+    return config.get('DEFAULT_MANGA_IMAGE');
   }
 }
 
@@ -104,7 +104,7 @@ exports.checkForUpdates = async (manga) => {
   if (parseFloat(chapterInfo[0]) > parseFloat(manga.latest_chapter_num)) {
     //update cover art
     let cover = await getCoverArt(ret.data);
-    if (cover == config.DEFAULT_MANGA_IMAGE) {
+    if (cover == config.get('DEFAULT_MANGA_IMAGE')) {
       console.error(`Could not retrieve cover art for ${manga.title} on Manganato.`);
       cover = manga.cover_art;
     }

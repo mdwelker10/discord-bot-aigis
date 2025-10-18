@@ -54,8 +54,8 @@ module.exports = {
         str += `Although, I do keep track of all VT that you have gained or lost via gambling means, and you can see this information with the \`/vt balance\` command. `;
         str += `Below are the commands you can use with regards to Velvet Tokens, not including the games you can play with them:\n\n`;
         const embed = new EmbedBuilder()
-          .setColor(config.EMBED_COLOR)
-          .setThumbnail(config.AIGIS_BUSTUP_IMAGE)
+          .setColor(config.get('EMBED_COLOR'))
+          .setThumbnail(config.get('AIGIS_BUSTUP_IMAGE'))
           .setTitle('Velvet Tokens Information')
           .setDescription(str)
           .addFields(
@@ -69,7 +69,7 @@ module.exports = {
           .setTimestamp();
         return await interaction.editReply({ embeds: [embed] });
       } else if (subcommand === 'balance') { //check balance
-        const data = await db.findOne(config.DB_NAME, 'vt', { user_id: interaction.user.id, guild_id: interaction.guild.id });
+        const data = await db.findOne(config.get('DB_NAME'), 'vt', { user_id: interaction.user.id, guild_id: interaction.guild.id });
         if (!data) {
           return await interaction.editReply(`${user}-san, you do not have any Velvet Tokens yet. You can claim your daily tokens with the /vt daily command.`);
         } else {
@@ -79,7 +79,7 @@ module.exports = {
           return await interaction.editReply(str);
         }
       } else if (subcommand === 'leaderboard') { //show leaderboard
-        const conn = await db.connect(config.DB_NAME);
+        const conn = await db.connect(config.get('DB_NAME'));
         const collection = conn.collection('vt');
         const data = await collection.find().sort({ vt: -1 }).collation({ locale: "en_US", numericOrdering: true }).limit(10).toArray();
         str = data.length === 0 ? 'No users have any Velvet Tokens yet.' : '';
@@ -95,8 +95,8 @@ module.exports = {
           str += `${i + 1}. ${name} - ${numberToString(data[i].vt)} VT -- Streak: ${data[i].daily_streak}\n`;
         }
         const embed = new EmbedBuilder()
-          .setColor(config.EMBED_COLOR)
-          .setThumbnail(config.AIGIS_BUSTUP_IMAGE)
+          .setColor(config.get('EMBED_COLOR'))
+          .setThumbnail(config.get('AIGIS_BUSTUP_IMAGE'))
           .setTitle(`${interaction.guild.name} VT Leaderboard`)
           .setDescription(str)
           .setTimestamp();
@@ -119,7 +119,7 @@ module.exports = {
         if (vt <= 0) {
           return await interaction.editReply(`You cannot give less than 1 Velvet Token ${targetUser.displayName}-san.`);
         }
-        const sender = await db.findOne(config.DB_NAME, 'vt', { user_id: interaction.user.id, guild_id: interaction.guild.id });
+        const sender = await db.findOne(config.get('DB_NAME'), 'vt', { user_id: interaction.user.id, guild_id: interaction.guild.id });
         if (!sender) {
           return await interaction.editReply(`There was an error processing your request. Please report this.`);
         }
@@ -127,15 +127,15 @@ module.exports = {
         if (senderVT.lt(vt)) {
           return await interaction.editReply(`You do not have enough Velvet Tokens to give ${vt} VT to ${targetUser.displayName}-san.`);
         }
-        const receiver = await db.findOne(config.DB_NAME, 'vt', { user_id: targetUser.id, guild_id: interaction.guild.id });
+        const receiver = await db.findOne(config.get('DB_NAME'), 'vt', { user_id: targetUser.id, guild_id: interaction.guild.id });
         if (!receiver) {
           return await interaction.editReply(`${targetUser.displayName}-san does not have any Velvet Tokens yet. Please tell them to claim their daily tokens to initialize their account.`);
         }
         //calculate new vt totals
         let newSenderVT = senderVT.minus(vt);
         let newReceiverVT = new BigNumber(receiver.vt).plus(vt);
-        await db.updateOne(config.DB_NAME, 'vt', { user_id: targetUser.id, guild_id: interaction.guild.id }, { $set: { vt: newReceiverVT.toString() } });
-        await db.updateOne(config.DB_NAME, 'vt', { user_id: interaction.user.id, guild_id: interaction.guild.id }, { $set: { vt: newSenderVT.toString() } });
+        await db.updateOne(config.get('DB_NAME'), 'vt', { user_id: targetUser.id, guild_id: interaction.guild.id }, { $set: { vt: newReceiverVT.toString() } });
+        await db.updateOne(config.get('DB_NAME'), 'vt', { user_id: interaction.user.id, guild_id: interaction.guild.id }, { $set: { vt: newSenderVT.toString() } });
         console.log(`${interaction.user.id} gave ${vt} VT to ${targetUser.id} in guild ${interaction.guild.id}`);
         return await interaction.editReply(`The transfer was a success! Your current balance is ${numberToString(newSenderVT)} VT. ${targetUser.displayName}-san now has ${numberToString(newReceiverVT)} VT.`);
       } else {

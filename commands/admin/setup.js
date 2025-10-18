@@ -132,7 +132,7 @@ module.exports = {
       map.set('sotd_role_id', guildConfig ? guildConfig.sotd_role_id : guild.id);
       if (!guildConfig || force) {
         //if no config document exists or force enabled then replace/upsert config document
-        await db.replace(config.DB_NAME, 'config', { guild_id: guild.id }, map, true);
+        await db.replace(config.get('DB_NAME'), 'config', { guild_id: guild.id }, map, true);
       } else {
         //if config document exists and force not enabled then return error
         return await submitted.reply({ content: `${username}-san, the configuration for this server already exists. Please use the force option to override.`, flags: MessageFlags.Ephemeral });

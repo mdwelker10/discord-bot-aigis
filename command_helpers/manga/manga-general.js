@@ -23,16 +23,16 @@ COLLECTION_NAME = 'manga';
  */
 exports.insertManga = async (manga, guild_id, user_id) => {
   //ping_list is a map (JSON object) of guild id to a list of user ids
-  const existing_data = await db.findOne(config.DB_NAME, COLLECTION_NAME, { manga_id: manga.manga_id, lang: manga.lang });
+  const existing_data = await db.findOne(config.get('DB_NAME'), COLLECTION_NAME, { manga_id: manga.manga_id, lang: manga.lang });
   //if an entry exists in the database for this manga and this language just edit ping list
   if (existing_data) {
     if (existing_data.ping_list[guild_id] && existing_data.ping_list[guild_id].includes(user_id)) {
       throw new AigisError('you are already following that manga in that language.');
     }
     //push user id to the ping list - Use a computed property for name of key. $push creates the list's key if it doesn't exist
-    await db.updateOne(config.DB_NAME, COLLECTION_NAME, { manga_id: manga_id, lang: lang }, { $push: { [`ping_list.${guild_id}`]: user_id } });
+    await db.updateOne(config.get('DB_NAME'), COLLECTION_NAME, { manga_id: manga_id, lang: lang }, { $push: { [`ping_list.${guild_id}`]: user_id } });
   } else {
-    await db.insert(config.DB_NAME, COLLECTION_NAME, manga);
+    await db.insert(config.get('DB_NAME'), COLLECTION_NAME, manga);
   }
 }
 

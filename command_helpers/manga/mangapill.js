@@ -85,7 +85,7 @@ async function getCoverArt($) {
     return img_name;
   } catch (err) {
     console.error(err);
-    return config.DEFAULT_MANGA_IMAGE;
+    return config.get('DEFAULT_MANGA_IMAGE');
   }
 }
 
@@ -116,7 +116,7 @@ exports.checkForUpdates = async (manga) => {
   const latest_chapter_num = latest_chapter == 0 ? -1 : chapter.text().split(' ')[1];
   if (parseFloat(latest_chapter_num) > parseFloat(manga.latest_chapter_num)) {
     let cover = await getCoverArt($);
-    if (cover == config.DEFAULT_MANGA_IMAGE) {
+    if (cover == config.get('DEFAULT_MANGA_IMAGE')) {
       console.error(`Could not retrieve cover art for ${manga.title} on Mangapill.`);
       cover = manga.cover_art;
     }

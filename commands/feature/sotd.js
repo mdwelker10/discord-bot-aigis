@@ -1,10 +1,9 @@
-require('dotenv').config();
 const { SlashCommandBuilder, EmbedBuilder, bold, hyperlink, PermissionsBitField, MessageFlags } = require("discord.js");
 const axios = require('axios');
 const db = require("../../database/db");
 const AigisError = require('../../utils/AigisError');
 const { insertPlaylist, removePlaylist, checkToken, selectSong, stopSotdCronJob } = require('../../command_helpers/sotd');
-const { PLAYLISTS_COLL_NAME, MIN_LENGTH } = require('../../command_helpers/sotd');
+const { PLAYLISTS_COLL_NAME } = require('../../command_helpers/sotd');
 const config = require('../../utils/config');
 const { getGuildConfig, isDeveloper, checkPermission } = require('../../utils/utils');
 
@@ -61,10 +60,10 @@ module.exports = {
         str += ` If you have a link for the playlist like \`spotify.com/playlist/2KoXhS4FAumKfk0FJw2mpv\`, the playlist-id is the last part of the link, in this case \`2KoXhS4FAumKfk0FJw2mpv\`.`;
         str += ` There might be more to the link you have, but only worry about text before the question mark.`;
         const embed = new EmbedBuilder()
-          .setColor(config.EMBED_COLOR)
+          .setColor(config.get('EMBED_COLOR'))
           .setTitle('Song of the Day Help')
           .setDescription(str)
-          .setThumbnail(config.AIGIS_DANCING_IMAGE)
+          .setThumbnail(config.get('AIGIS_DANCING_IMAGE'))
           .addFields(
             { name: '/sotd help', value: 'This command showing all the Song of the Day commands' },
             { name: '/sotd add-playlist <playlist-id>', value: 'Add a playlist to the list of playlists to select from for Song of the Day. Playlist must have at least 50 songs.' },
@@ -91,7 +90,7 @@ module.exports = {
           await interaction.editReply(`I'm sorry ${interaction.user.displayName}-san, I was unable to retrieve the configuration for this server. Please have somone with the "manage server" permission execute the \`/setup\` command`);
           return;
         }
-        if (process.env.DEV != 1) {
+        if (config.get('DEV') != 1) {
           await interaction.editReply(`${interaction.user.displayName}-san, the testing phase for the Song of the Day is over.`);
         } else {
           try {
@@ -169,7 +168,7 @@ module.exports = {
         if (!exists) {
           throw new AigisError(`the role ID of ${role.id} that you have given me does not exist.`);
         }
-        let ret = await db.updateOne(config.DB_NAME, 'config', { guild_id: interaction.guildId }, { $set: { sotd_role_id: role.id } });
+        let ret = await db.updateOne(config.get('DB_NAME'), 'config', { guild_id: interaction.guildId }, { $set: { sotd_role_id: role.id } });
         if (ret === 0) {
           throw new AigisError('I was unable to update the role ID in the database.');
         }
@@ -215,7 +214,7 @@ async function addPlaylist(id, name, guildId) {
       'owner': data.owner.display_name,
       'image': data.images[0].url
     }
-    if (data.tracks.total < MIN_LENGTH) {
+    if (data.tracks.total < config.get('SOTD_MIN_PLAYLIST_LENGTH')) {
       throw new AigisError('the playlist needs at least 50 songs, or it is too short to be used for the Song of the Day.');
     }
     let success = await insertPlaylist(document, guildId);
@@ -244,11 +243,11 @@ async function addPlaylist(id, name, guildId) {
 }
 
 async function listPlaylists(guildId) {
-  let data = await db.find(config.DB_NAME, PLAYLISTS_COLL_NAME, {});
+  let data = await db.find(config.get('DB_NAME'), PLAYLISTS_COLL_NAME, {});
   data = data.filter(p => p.guild_ids.includes(guildId));
   if (data.length == 0) {
     return new EmbedBuilder()
-      .setColor(config.EMBED_COLOR)
+      .setColor(config.get('EMBED_COLOR'))
       .setTitle('Song of the Day Playlists')
       .setDescription('There are no playlists in the list of Song of the Day playlists.')
       .setTimestamp();
@@ -262,7 +261,7 @@ async function listPlaylists(guildId) {
     }
   }
   const embed = new EmbedBuilder()
-    .setColor(config.EMBED_COLOR)
+    .setColor(config.get('EMBED_COLOR'))
     .setTitle('Song of the Day Playlists')
     .setDescription(str)
     .setTimestamp();

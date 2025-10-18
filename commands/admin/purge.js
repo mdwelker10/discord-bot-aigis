@@ -38,9 +38,9 @@ module.exports = {
       desc += `**Please be careful when using this command ${username}-san.** When the delay period has passed, your data cannot be recovered.`;
       const embed = new EmbedBuilder()
         .setTitle('Purge Command Help')
-        .setColor(config.EMBED_COLOR)
+        .setColor(config.get('EMBED_COLOR'))
         .setDescription(desc)
-        .setThumbnail(config.AIGIS_COOLDOWN_IMAGE)
+        .setThumbnail(config.get('AIGIS_COOLDOWN_IMAGE'))
         .addFields(
           { name: '/purge help', value: 'This command showing information for the purge command' },
           { name: `/purge revert`, value: `Reverse the scheduled data deletion. If the delay period has passed then a purge cannot be reverted.` },
@@ -58,7 +58,7 @@ module.exports = {
       }
       const ping = cfg.permission_role_id == 'everyone' ? `<@${interaction.guild.ownerId}` : `<@&${cfg.permission_role_id}>`
       if (subcommand == 'revert') { //revert command
-        let ret = await db.updateOne(config.DB_NAME, 'config', { guild_id: guildId, purge_date: { $exists: true } }, { $unset: { purge_date: "" } });
+        let ret = await db.updateOne(config.get('DB_NAME'), 'config', { guild_id: guildId, purge_date: { $exists: true } }, { $unset: { purge_date: "" } });
         if (ret === 0) {
           throw new AigisError(`you do not have a data deletion scheduled.`);
         }
@@ -67,7 +67,7 @@ module.exports = {
       let purgeDate = new Date();
       purgeDate.setDate(purgeDate.getDate() + 7);
       //set purge date
-      let ret = await db.updateOne(config.DB_NAME, 'config', { guild_id: guildId, purge_date: { $exists: false } }, { $set: { purge_date: purgeDate } });
+      let ret = await db.updateOne(config.get('DB_NAME'), 'config', { guild_id: guildId, purge_date: { $exists: false } }, { $set: { purge_date: purgeDate } });
       if (ret === 0) {
         throw new AigisError(`you already have a data deletion scheduled. It will take place on ${cfg.purge_date.toDateString()}.`);
       }

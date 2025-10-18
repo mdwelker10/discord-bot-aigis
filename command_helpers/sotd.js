@@ -8,8 +8,6 @@ const fs = require('fs');
 const path = require('path');
 const { cleanTemp } = require('../utils/utils');
 
-exports.MIN_LENGTH = 35;
-
 exports.DS_COLL_NAME = 'sotd-ds';
 exports.PLAYLISTS_COLL_NAME = 'sotd-playlists';
 
@@ -18,35 +16,35 @@ const MAX_CHARS = Number.MAX_SAFE_INTEGER; //max number of characters for embed 
 
 //check if Spotify JWT token is expired and create a new one if necessary. Return token value
 exports.checkToken = async () => {
-  let expiry = process.env.SPOTIFY_EXPIRE_TIME;
+  let expiry = config.get('SPOTIFY_EXPIRE_TIME');
   let current = Math.floor(Date.now() / 1000) + 1000; // 1000 seconds before token expiry
   if (current > expiry) {
     let authOptions = {
       method: 'post',
       url: 'https://accounts.spotify.com/api/token',
       headers: {
-        'Authorization': 'Basic ' + (new Buffer.from(process.env.SPOTIFY_CLIENT_ID + ':' + process.env.SPOTIFY_CLIENT_SECRET).toString('base64')),
+        'Authorization': 'Basic ' + (new Buffer.from(config.get('SPOTIFY_CLIENT_ID') + ':' + config.get('SPOTIFY_CLIENT_SECRET')).toString('base64')),
         'Content-Type': 'application/x-www-form-urlencoded'
       },
       data: new URLSearchParams({ 'grant_type': 'client_credentials' })
     };
     try {
       let response = await axios(authOptions);
-      process.env.SPOTIFY_TOKEN = response.data.access_token;
-      process.env.SPOTIFY_EXPIRE_TIME = Math.floor(Date.now() / 1000) + response.data.expires_in; //expires in an hour
-      return process.env.SPOTIFY_TOKEN;
+      config.set('SPOTIFY_TOKEN', response.data.access_token);
+      config.set('SPOTIFY_EXPIRE_TIME', Math.floor(Date.now() / 1000) + response.data.expires_in); //expires in an hour
+      return config.get('SPOTIFY_TOKEN');
     } catch (err) {
       throw new AigisError("I could not verify your authentication token. I cant access Spotify!");
     }
   } else {
-    return process.env.SPOTIFY_TOKEN;
+    return config.get('SPOTIFY_TOKEN');
   }
 }
 
 
 
 exports.insertPlaylist = async (playlist, guildId) => {
-  data = await db.findOne(config.DB_NAME, exports.PLAYLISTS_COLL_NAME, { 'spotify_id': playlist.spotify_id });
+  data = await db.findOne(config.get('DB_NAME'), exports.PLAYLISTS_COLL_NAME, { 'spotify_id': playlist.spotify_id });
   //if this server has this playlist added already
   if (data && data.guild_ids.includes(guildId)) {
     return false;
@@ -55,11 +53,11 @@ exports.insertPlaylist = async (playlist, guildId) => {
   //if this playlist exists but this server does not have it added
   if (data) {
     //add playlist to database
-    await db.updateOne(config.DB_NAME, exports.PLAYLISTS_COLL_NAME, { 'spotify_id': playlist.spotify_id }, { $push: { 'guild_ids': guildId } });
+    await db.updateOne(config.get('DB_NAME'), exports.PLAYLISTS_COLL_NAME, { 'spotify_id': playlist.spotify_id }, { $push: { 'guild_ids': guildId } });
   } else {
     //playlist is not in database
     playlist.guild_ids = [guildId];
-    await db.insert(config.DB_NAME, exports.PLAYLISTS_COLL_NAME, playlist);
+    await db.insert(config.get('DB_NAME'), exports.PLAYLISTS_COLL_NAME, playlist);
   }
   //add playlist to buffer and insert into database
   playlists.insert(playlist.spotify_id);
@@ -69,17 +67,17 @@ exports.insertPlaylist = async (playlist, guildId) => {
 
 //force determines whether to remove the playlist even if multiple guilds have it added
 exports.removePlaylist = async (playlist_id, guildId, playlists = null, force = false) => {
-  let data = await db.findOne(config.DB_NAME, exports.PLAYLISTS_COLL_NAME, { spotify_id: playlist_id });
+  let data = await db.findOne(config.get('DB_NAME'), exports.PLAYLISTS_COLL_NAME, { spotify_id: playlist_id });
   //if playlist doesnt exist or this server does not have it added
   if (!data || (!force && !data.guild_ids.includes(guildId))) {
     return false;
   }
   //if this playlist is only added by this server, remove it from database
   if (data.guild_ids.length === 1 || force) {
-    await db.deleteOne(config.DB_NAME, exports.PLAYLISTS_COLL_NAME, { spotify_id: playlist_id });
+    await db.deleteOne(config.get('DB_NAME'), exports.PLAYLISTS_COLL_NAME, { spotify_id: playlist_id });
   } else {
     //remove this server from the guild_ids array
-    await db.updateOne(config.DB_NAME, exports.PLAYLISTS_COLL_NAME, { spotify_id: playlist_id }, { $pull: { guild_ids: guildId } });
+    await db.updateOne(config.get('DB_NAME'), exports.PLAYLISTS_COLL_NAME, { spotify_id: playlist_id }, { $pull: { guild_ids: guildId } });
   }
   if (!playlists) {
     playlists = await getPlaylistBuffer(guildId);
@@ -99,7 +97,7 @@ exports.selectSong = async (guildId) => {
   let searching = true; // still searching for new song
   let tries = 0; // number of tries before giving up and returning current song
   let id = playlists.get(); // get playlist from buffer
-  let playlist = await db.findOne(config.DB_NAME, exports.PLAYLISTS_COLL_NAME, { spotify_id: id }); //get playlist object from database
+  let playlist = await db.findOne(config.get('DB_NAME'), exports.PLAYLISTS_COLL_NAME, { spotify_id: id }); //get playlist object from database
   let length = playlist.length; //get length from database
   let offset = Math.floor(Math.random() * length); //generate offset based on length in database
   let songs = await getSongs(guildId); //get recently chosen songs list from database
@@ -126,13 +124,13 @@ exports.selectSong = async (guildId) => {
       }
       searching = false;
       //update length of playlist in database - does not need to be concurrent
-      await db.updateOne(config.DB_NAME, exports.PLAYLISTS_COLL_NAME, { 'spotify_id': id }, { $set: { 'length': res.data.total } }, true).then(result => {
-        if (res.data.total < exports.MIN_LENGTH) {
+      await db.updateOne(config.get('DB_NAME'), exports.PLAYLISTS_COLL_NAME, { 'spotify_id': id }, { $set: { 'length': res.data.total } }, true).then(result => {
+        if (res.data.total < config.get('SOTD_MIN_PLAYLIST_LENGTH')) {
           console.error('Playlist ' + id + ' is too short to be used for Song of the Day. It is being removed.');
           exports.removePlaylist(id, guildId, playlists, true);
         }
       });
-      if (songs.length >= exports.MIN_LENGTH) {
+      if (songs.length >= config.get('SOTD_MIN_PLAYLIST_LENGTH')) {
         songs.shift();
       }
       songs.push(song.track.id);
@@ -152,7 +150,7 @@ exports.selectSong = async (guildId) => {
       }
       //build embed to display song
       const embed = new EmbedBuilder()
-        .setColor(config.EMBED_COLOR)
+        .setColor(config.get('EMBED_COLOR'))
         .setTitle('Song of the Day')
         .addFields(
           { name: `${bold('Song')}`, value: `[${songStr}](${song.track.external_urls.spotify})` },
@@ -194,7 +192,7 @@ exports.selectSong = async (guildId) => {
  * probably inefficient but it guaranteed circular buffer works properly 
  */
 async function getPlaylistBuffer(guildId) {
-  let obj = await db.findOne(config.DB_NAME, exports.DS_COLL_NAME, { structure: 'playlists', guild_id: guildId });
+  let obj = await db.findOne(config.get('DB_NAME'), exports.DS_COLL_NAME, { structure: 'playlists', guild_id: guildId });
   let playlists = null;
   if (!obj) {
     playlists = new MyBuffer();
@@ -205,11 +203,11 @@ async function getPlaylistBuffer(guildId) {
 }
 
 async function writePlaylists(guildId, playlists) {
-  await db.updateOne(config.DB_NAME, exports.DS_COLL_NAME, { structure: 'playlists', guild_id: guildId }, { $set: { 'data': playlists.toString() } }, true);
+  await db.updateOne(config.get('DB_NAME'), exports.DS_COLL_NAME, { structure: 'playlists', guild_id: guildId }, { $set: { 'data': playlists.toString() } }, true);
 }
 
 async function getSongs(guildId) {
-  let obj = await db.findOne(config.DB_NAME, exports.DS_COLL_NAME, { structure: 'songs', guild_id: guildId });
+  let obj = await db.findOne(config.get('DB_NAME'), exports.DS_COLL_NAME, { structure: 'songs', guild_id: guildId });
   if (!obj) {
     return [];
   } else {
@@ -218,5 +216,5 @@ async function getSongs(guildId) {
 }
 
 async function writeSongs(guildId, songs) {
-  await db.updateOne(config.DB_NAME, exports.DS_COLL_NAME, { structure: 'songs', guild_id: guildId }, { $set: { 'data': songs.length == 0 ? '' : songs.join(',') } }, true);
+  await db.updateOne(config.get('DB_NAME'), exports.DS_COLL_NAME, { structure: 'songs', guild_id: guildId }, { $set: { 'data': songs.length == 0 ? '' : songs.join(',') } }, true);
 }

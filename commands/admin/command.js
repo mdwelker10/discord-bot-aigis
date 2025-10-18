@@ -67,9 +67,9 @@ module.exports = {
       desc += `If you wish to enable or disable all non-admin commands, use the command name \`all\`. Below is each subcommand officially documented.`;
       const embed = new EmbedBuilder()
         .setTitle('Command Enable/Disable Help')
-        .setColor(config.EMBED_COLOR)
+        .setColor(config.get('EMBED_COLOR'))
         .setDescription(desc)
-        .setThumbnail(config.AIGIS_BUSTUP_IMAGE)
+        .setThumbnail(config.get('AIGIS_BUSTUP_IMAGE'))
         .addFields(
           { name: '/command help', value: 'This command showing how to enable and disable commands.' },
           { name: '/command list <datastore>', value: 'Get a list of all non-admin commands I have and whether they are enabled (\u2705) or disabled (\u274c) in your server. Set `datastore` to `True` to only list commands that store data.' },
@@ -93,9 +93,9 @@ module.exports = {
       }
       const embed = new EmbedBuilder()
         .setTitle(datastore ? 'Aigis Command List - Data Storing Commands' : 'Aigis Command List')
-        .setColor(config.EMBED_COLOR)
+        .setColor(config.get('EMBED_COLOR'))
         .setDescription(desc)
-        .setThumbnail(config.AIGIS_BUSTUP_IMAGE)
+        .setThumbnail(config.get('AIGIS_BUSTUP_IMAGE'))
         .setTimestamp();
       return await interaction.editReply({ embeds: [embed] });
     }
@@ -111,7 +111,7 @@ module.exports = {
     if (subcommand == 'enable') { //enable a command
       //check for all commands
       if (command == 'all') {
-        await db.updateOne(config.DB_NAME, 'config', { guild_id: guildId }, { $set: { disabled_commands: [] } });
+        await db.updateOne(config.get('DB_NAME'), 'config', { guild_id: guildId }, { $set: { disabled_commands: [] } });
         console.log(`All commands have been enabled in guild ${guildId}`);
         return await interaction.editReply(`${username}-san, all commands have been disabled.`);
       }
@@ -120,7 +120,7 @@ module.exports = {
     } else if (subcommand == 'disable') { //disable a command
       //check for all commands
       if (command == 'all') {
-        await db.updateOne(config.DB_NAME, 'config', { guild_id: guildId }, { $set: { disabled_commands: Object.keys(getCommandNames()) } });
+        await db.updateOne(config.get('DB_NAME'), 'config', { guild_id: guildId }, { $set: { disabled_commands: Object.keys(getCommandNames()) } });
         console.log(`All commands have been disabled in guild ${guildId}`);
         return await interaction.editReply(`${username}-san, all commands have been disabled.`);
       }
@@ -131,7 +131,7 @@ module.exports = {
     } else {
       return await interaction.editReply(`${username}-san, but I am having trouble parsing your command.`);
     }
-    await db.updateOne(config.DB_NAME, 'config', { guild_id: guildId }, { $set: { disabled_commands: disabled_commands } });
+    await db.updateOne(config.get('DB_NAME'), 'config', { guild_id: guildId }, { $set: { disabled_commands: disabled_commands } });
     console.log(`Command ${command} has been ${subcommand == 'enable' ? 'enabled' : 'disabled'} in guild ${guildId}`);
     return await interaction.editReply(`Alright ${username}-san, the command "${command}" has been ${subcommand == 'enable' ? 'enabled' : 'disabled'}.`);
   }

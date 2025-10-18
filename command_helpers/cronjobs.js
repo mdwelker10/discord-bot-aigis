@@ -7,8 +7,6 @@ const { resetDaily } = require('./daily');
 const { getGuildConfig } = require('../utils/utils');
 const db = require('../database/db');
 const AigisError = require('../utils/AigisError');
-const fs = require('fs');
-const path = require('path');
 
 //All cronjob objects
 let sotdJob;
@@ -22,7 +20,7 @@ exports.startSotd = (client) => {
     '0 0 0 * * *',
     async () => {
       //get all server configurations
-      const data = await db.find(config.DB_NAME, 'config', {});
+      const data = await db.find(config.get('DB_NAME'), 'config', {});
       //execute song of the day for each server
       for (const d of data) {
         try {

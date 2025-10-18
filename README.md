@@ -268,7 +268,7 @@ There is an option after each round to change your bet. If you select this optio
 ## Download
 Aigis uses [yt-dlp](https://github.com/yt-dlp/yt-dlp) via the `download` command to download videos and audio. To see a list of supported websites see [yt-dlp's list of supported sites](https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md), but I mainly use it for Twitter (or X, The Everything App!), Instagram, and Youtube. Aigis is limited to only video and audio files at the moment because that's my main use case and I didn't feel like programming all the possible options of yt-dlp that I will likely never use. I can add support for a certain extension or file type in the future if needed though (assuming yt-dlp supports it).
 
-At the time being all downloaded files are removed at the next `12:00 AM EST` after the download, this is due to limited space on the raspberry pi I have Aigis deployed on. When she upgrades her storage, this will be changed to a storage size based approach. Due to the limited file size on the pi, file downloads are temporarily capped at 500 MB per file. Once I have upgraded the SD card, this will change to become larger.
+The maximum file size that Aigis supports is 2GB. This should be enough to download most Twitter videos, short form content, and some shorter Youtube videos. If you need to download large video files then you should really use yt-dlp from your own computer.
 
 ### Supported Extensions and Command Reference
 Aigis supported the following extensions:

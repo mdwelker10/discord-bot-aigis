@@ -99,12 +99,12 @@ module.exports = {
   //autocomplete for tags
   async autocomplete(interaction) {
     const focusedValue = interaction.options.getFocused();
-    const choices = Object.keys(config.MANGADEX_TAGS);
+    const choices = Object.keys(config.getMangadxTags());
     const filteredChoices = choices.filter(choice => choice.toLowerCase().startsWith(focusedValue.toLowerCase()));
     if (filteredChoices.length > 25) {
       filteredChoices.length = 25; //25 is the most amount of choices allowed
     }
-    await interaction.respond(filteredChoices.map(choice => ({ name: choice, value: config.MANGADEX_TAGS[choice] })));
+    await interaction.respond(filteredChoices.map(choice => ({ name: choice, value: config.getMangadxTags()[choice] })));
   },
   async execute(interaction) {
     try {
@@ -124,9 +124,9 @@ module.exports = {
         let rand = `Get a random manga from Mangadex with the option to filter by 3 tags using OR logic. To see valid tags visit ${hyperlink("Mangadex's website", '<https://mangadex.org/tag>')}.`;
         const embed = new EmbedBuilder()
           .setTitle('Manga Command Help')
-          .setColor(config.EMBED_COLOR)
+          .setColor(config.get('EMBED_COLOR'))
           .setDescription(desc)
-          .setThumbnail(config.AIGIS_YUKATA_IMAGE)
+          .setThumbnail(config.get('AIGIS_YUKATA_IMAGE'))
           .addFields(
             { name: '/manga help', value: 'This command showing all Manga commands.' },
             { name: '/manga idhelp', value: 'Get help on how to find the ID for a manga on supported websites.' },
@@ -143,9 +143,9 @@ module.exports = {
         desc += `When you provide an ID for me, I will parse it to figure out which website it belongs to automatically, so you do not need to worry about that. `;
         const embed = new EmbedBuilder()
           .setTitle('Manga ID Help')
-          .setColor(config.EMBED_COLOR)
+          .setColor(config.get('EMBED_COLOR'))
           .setDescription(desc)
-          .setThumbnail(config.AIGIS_YUKATA_IMAGE)
+          .setThumbnail(config.get('AIGIS_YUKATA_IMAGE'))
           .addFields(
             { name: 'Mangadex', value: websites['mangadex'].getIdHelpString() },
             { name: 'Mangapill', value: websites['mangapill'].getIdHelpString() },
@@ -171,9 +171,9 @@ module.exports = {
         desc += "Below is a list of supported websites, and whether or not the content rating can be determined programatically.\n\n";
         const embed = new EmbedBuilder()
           .setTitle('Manga ID Help')
-          .setColor(config.EMBED_COLOR)
+          .setColor(config.get('EMBED_COLOR'))
           .setDescription(desc)
-          .setThumbnail(config.AIGIS_YUKATA_IMAGE)
+          .setThumbnail(config.get('AIGIS_YUKATA_IMAGE'))
           .addFields(
             { name: 'Mangadex', value: "Content rating can be determined." },
             { name: 'Mangapill', value: "Does not have 18+ Manga." },
@@ -261,7 +261,7 @@ module.exports = {
         const tag3 = interaction.options.getString('tag-3') ?? false;
         let tagsUsed = []; //for later logging
         for (const tag of [tag1, tag2, tag3]) {
-          if (tag && !tagsUsed.includes(tag) && Object.values(config.MANGADEX_TAGS).includes(tag)) {
+          if (tag && !tagsUsed.includes(tag) && Object.values(config.getMangadxTags()).includes(tag)) {
             tagsUsed.push(tag);
             console.log(`Tag: ${tag}`);
             url += `&includedTags[]=${tag}`;
@@ -310,8 +310,8 @@ module.exports = {
             { name: 'Author', value: author },
             { name: 'Status', value: manga.attributes.status },
             { name: 'Content Rating', value: manga.attributes.contentRating })
-          .setImage(art ?? config.DEFAULT_MANGA_IMAGE) //if no image use default of aigis reading
-          .setColor(config.EMBED_COLOR)
+          .setImage(art ?? config.get('DEFAULT_MANGA_IMAGE')) //if no image use default of aigis reading
+          .setColor(config.get('EMBED_COLOR'))
           .setFooter({ text: 'via Mangadex' })
           .setTimestamp();
         //attach image if needed
@@ -344,7 +344,7 @@ module.exports = {
 }
 
 function validateLanguage(lang) {
-  if (config.MANGADEX_ISO6391[lang]) {
+  if (config.getMangadxLanguages()[lang]) {
     return true;
   } else {
     return ISO6391.validate(lang);

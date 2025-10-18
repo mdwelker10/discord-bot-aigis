@@ -1,4 +1,3 @@
-require('dotenv').config();
 const { exec } = require("child_process");
 const { SlashCommandBuilder, EmbedBuilder, hyperlink, time, TimestampStyles } = require("discord.js");
 const { promisify } = require("util");
@@ -61,10 +60,10 @@ module.exports = {
         desc += `You can always review my source code on ${hyperlink("GitHub", 'https://github.com/mdwelker10/discord-bot-aigis')} if you want to see how I work and manage your data.\n\n`;
         desc += `The command syntax is \`/download video <url> <ext> <audio-only>\`. Only \`download video\` is available at the moment, but it should work on audio-only files too. The fields for the command are explained below, and do note that all downloaded files are deleted from my system every day at ${time(Math.floor(estMidnight.toSeconds()), 't')} in your timezone.`;
         const embed = new EmbedBuilder()
-          .setColor(config.EMBED_COLOR)
+          .setColor(config.get('EMBED_COLOR'))
           .setTitle('Donwload Help')
           .setDescription(desc)
-          .setThumbnail(config.AIGIS_EPISODE_AIGIS_IMAGE)
+          .setThumbnail(config.get('AIGIS_EPISODE_AIGIS_IMAGE'))
           .addFields(
             { name: 'url', value: 'The URL of the video(s) or audio(s) to download. This is required.' },
             { name: 'ext', value: 'The file extension to use for the downloaded video. This is optional as the default is mp4 for video, mp3 for audio. Supported extensions for video are mp4, mov, mkv, webm, and flv. Supported extensions for audio are mp3, m4a, ogg, and opus.' },
@@ -98,8 +97,8 @@ module.exports = {
         }
         const embed = new EmbedBuilder()
           .setTitle('File Download Links')
-          .setColor(config.EMBED_COLOR)
-          .setThumbnail(config.AIGIS_EPISODE_AIGIS_IMAGE)
+          .setColor(config.get('EMBED_COLOR'))
+          .setThumbnail(config.get('AIGIS_EPISODE_AIGIS_IMAGE'))
           .setDescription(desc)
           .setFooter({
             text: 'Files downloaded by yt-dlp',
@@ -128,9 +127,9 @@ async function downloadFiles(url, audioOnly, ext) {
     cleanDownloads();
     let command = '';
     if (audioOnly) {
-      command = `yt-dlp -x --audio-format ${ext} -o "${process.env.DOWNLOAD_PATH}/${filename}_%(autonumber)s_audio.%(ext)s" --print after_move:filename --max-filesize 2G "${url}"`
+      command = `yt-dlp -x --audio-format ${ext} -o "${config.get('DOWNLOAD_PATH')}/${filename}_%(autonumber)s_audio.%(ext)s" --print after_move:filename --max-filesize 2G "${url}"`
     } else {
-      command = `yt-dlp --merge-output-format ${ext} -o "${process.env.DOWNLOAD_PATH}/${filename}%(autonumber)s_video.%(ext)s" --print after_move:filename --max-filesize 2G "${url}"`
+      command = `yt-dlp --merge-output-format ${ext} -o "${config.get('DOWNLOAD_PATH')}/${filename}%(autonumber)s_video.%(ext)s" --print after_move:filename --max-filesize 2G "${url}"`
     }
     const { stdout } = await execPromise(command);
     let files = stdout.trim().split("\n");
@@ -146,6 +145,6 @@ async function downloadFiles(url, audioOnly, ext) {
 
 function getFileLinks(files) {
   return files.map((file) => {
-    return `https://${process.env.DOMAIN}/downloads/${file}`;
+    return `${config.get('DOMAIN')}/downloads/${file}`;
   });
 }

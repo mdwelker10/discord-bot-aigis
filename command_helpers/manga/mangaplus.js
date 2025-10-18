@@ -45,7 +45,7 @@ exports.followManga = async (manga_id, user_id, guild, lang = 'en') => {
     lang: lang,
     latest_chapter: 0,
     latest_chapter_num: -1,
-    cover_art: config.DEFAULT_MANGA_IMAGE,
+    cover_art: config.get('DEFAULT_MANGA_IMAGE'),
     ping_list: { [`${guild_id}`]: [user_id] },
     website: 'mangaplus',
     nsfw: !exports.CAN_CHECK_RATING
@@ -94,7 +94,7 @@ async function getCoverArt(page, manga_id) {
     return imgName;
   } catch (err) {
     console.error(err);
-    return config.DEFAULT_MANGA_IMAGE;
+    return config.get('DEFAULT_MANGA_IMAGE');
   }
 }
 
@@ -120,7 +120,7 @@ exports.checkForUpdates = async (manga) => {
 
   if (parseFloat(chapterNum) > parseFloat(manga.latest_chapter_num)) {
     let art = await getCoverArt(page, manga.manga_id);
-    if (art == config.DEFAULT_MANGA_IMAGE) {
+    if (art == config.get('DEFAULT_MANGA_IMAGE')) {
       console.error(`Could not retrieve cover art for ${manga.title} on Mangaplus.`);
       art = manga.cover_art;
     }
