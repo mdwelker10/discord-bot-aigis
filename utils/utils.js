@@ -4,7 +4,6 @@ const path = require('path');
 const db = require('../database/db.js');
 const axios = require('axios');
 const AigisError = require('./AigisError.js');
-const config = require('./utils/config');
 
 /** Will clean the temp directory if the number of files is greater than config.get('TEMP_MAX_LENGTH') */
 exports.cleanTemp = () => {

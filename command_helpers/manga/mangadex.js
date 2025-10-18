@@ -6,7 +6,6 @@ const path = require('path');
 const { AttachmentBuilder } = require('discord.js');
 const { downloadImage } = require('../../utils/utils');
 const { insertManga, mangaChannelNSFW } = require('./manga-general');
-const config = require('../../utils/config');
 
 /** The display name of the website */
 exports.NAME = 'Mangadex';

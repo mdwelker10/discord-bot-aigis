@@ -1,7 +1,7 @@
 const { MongoClient } = require('mongodb');
-const url = config.get('MONGO_URI');
 const AigisError = require('../utils/AigisError');
 const config = require('../utils/config');
+const url = config.get('MONGO_URI');
 
 process.on('SIGINT', async () => {
   await closeConnection();

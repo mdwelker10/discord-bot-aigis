@@ -11,7 +11,6 @@ const path = require('path');
 const { createCanvas, loadImage } = require('canvas');
 const { numberToString } = require("../utils/utils");
 const { setTimeout } = require('node:timers/promises');
-const config = require('../utils/config');
 
 let games = new Map(); //map of game objects, key is player's user id
 

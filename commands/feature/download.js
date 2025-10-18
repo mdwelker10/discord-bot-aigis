@@ -1,5 +1,5 @@
 const { exec } = require("child_process");
-const { SlashCommandBuilder, EmbedBuilder, hyperlink, time, TimestampStyles } = require("discord.js");
+const { SlashCommandBuilder, EmbedBuilder, hyperlink, time } = require("discord.js");
 const { promisify } = require("util");
 const AigisError = require("../../utils/AigisError");
 const config = require("../../utils/config");
