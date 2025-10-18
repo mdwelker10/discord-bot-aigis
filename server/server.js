@@ -12,6 +12,11 @@ exports.startServer = async () => {
   const app = express();
   const port = config.get('WEB_SERVER_PORT');
 
+  // Trust proxy for Cloudflare tunnel
+  if (config.get('DEV') !== "1") {
+    app.set('trust proxy', 1);
+  }
+
   // Create Redis client for sessions
   const redisClient = createClient({
     url: config.get('REDIS_URL')
@@ -36,7 +41,9 @@ exports.startServer = async () => {
     cookie: {
       secure: config.get('DEV') === "1" ? false : true,
       httpOnly: true,
-      maxAge: 1000 * 60 * 60 * 24 // 1 day
+      maxAge: 1000 * 60 * 60 * 24, // 1 day
+      sameSite: config.get('DEV') === "1" ? 'lax' : 'none', // Important for proxies
+      domain: config.get('DEV') === "1" ? undefined : config.get('COOKIE_DOMAIN') // Set domain for production
     }
   }));
 
@@ -74,6 +81,8 @@ exports.startServer = async () => {
       const user = await userResponse.json();
       req.session.user = user;
       console.info(`User ${user.username} authenticated via Discord OAuth.`);
+      console.log('Session ID in callback:', req.sessionID); // Debug log
+      console.log('Full session in callback:', req.session); // Debug log
       const redirectTo = req.session.returnTo || "/";
       console.log('returnTo value:', req.session.returnTo, '-> redirecting to:', redirectTo); // Debug log
       delete req.session.returnTo;
