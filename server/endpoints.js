@@ -8,14 +8,9 @@ const router = express.Router();
 function requireAuth(req, res, next) {
   if (!req.session.user) {
     req.session.returnTo = req.originalUrl;
-    console.log('Setting returnTo:', req.originalUrl); // Debug log
-    console.log('Session ID:', req.sessionID); // Debug log
-    console.log('Session before save:', req.session); // Debug log
     req.session.save((err) => {
       if (err) {
         console.error('Session save error:', err);
-      } else {
-        console.log('Session saved successfully'); // Debug log
       }
       res.redirect("/login");
     });
