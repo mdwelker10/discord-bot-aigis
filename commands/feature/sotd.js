@@ -103,6 +103,7 @@ module.exports = {
             if (err instanceof AigisError || !err.response || !err.response.status) {
               throw err;
             }
+            console.error("Error fetching song for Song of the Day:", err.response.status, err.response.data);
             if (err.response.status === 400) {
               throw new AigisError(`something went wrong getting the Song of the Day. I am not sure what happened. Please tell a developer to look at my logs.`);
             } else if (err.response.status === 404) {

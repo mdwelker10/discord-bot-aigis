@@ -16,6 +16,8 @@ module.exports = {
         '**/temp',
         '.git',
         './images',
+        './downloads',
+        './logs'
       ],
       log_type: 'raw',
     }

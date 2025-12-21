@@ -84,14 +84,9 @@ module.exports = {
         ext = ext.split("_")[0];
         const files = await downloadFiles(url, audioOnly, ext);
         const fileLinks = getFileLinks(files);
-        //get file deletion time (next midnight EST)
-        let now = DateTime.now().setZone("America/New_York");
-        let nextMidnight = now.plus({ days: 1 }).startOf("day");
-        const deleteTime = nextMidnight.toJSDate();
         //create embed return
         const plural = files.length > 1 ? "s" : "";
-        let desc = `Thank you for waiting ${username}-san, your file${plural} are ready to be downloaded. You can access ${plural ? "them" : "it"} at the link${plural} below. `
-        desc += `Please keep in mind that the file${plural} will be deleted at ${time(deleteTime)}.\n\n`;
+        let desc = `Thank you for waiting ${username}-san, your file${plural} are ready to be downloaded. You can access ${plural ? "them" : "it"} at the link${plural} below.\n`
         for (const [idx, f] of fileLinks.entries()) {
           desc += `- ${hyperlink(`File ${idx + 1}`, f)}\n`;
         }

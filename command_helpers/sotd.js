@@ -26,19 +26,19 @@ exports.checkToken = async () => {
         'Authorization': 'Basic ' + (new Buffer.from(config.get('SPOTIFY_CLIENT_ID') + ':' + config.get('SPOTIFY_CLIENT_SECRET')).toString('base64')),
         'Content-Type': 'application/x-www-form-urlencoded'
       },
-      data: new URLSearchParams({ 'grant_type': 'client_credentials' })
+      data: { 'grant_type': 'client_credentials' },
+      json: true
     };
     try {
       let response = await axios(authOptions);
       config.set('SPOTIFY_TOKEN', response.data.access_token);
       config.set('SPOTIFY_EXPIRE_TIME', Math.floor(Date.now() / 1000) + response.data.expires_in); //expires in an hour
-      return config.get('SPOTIFY_TOKEN');
     } catch (err) {
+      console.error("Error retrieving Spotify token:", err);
       throw new AigisError("I could not verify your authentication token. I cant access Spotify!");
     }
-  } else {
-    return config.get('SPOTIFY_TOKEN');
   }
+  return config.get('SPOTIFY_TOKEN');
 }
 
 
