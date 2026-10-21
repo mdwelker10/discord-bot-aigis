@@ -1,4 +1,4 @@
-FROM arm64v8/node:22-bookworm-slim
+FROM arm64v8/node:22.23.4-bookworm-slim
 
 WORKDIR /app
 RUN mkdir temp
@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y curl nano ffmpeg \
 RUN curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp
 RUN chmod +x /usr/local/bin/yt-dlp
 
-RUN npm install
+RUN npm ci
 RUN npm install pm2 -g
 
 COPY . ./
