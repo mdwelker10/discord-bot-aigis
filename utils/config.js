@@ -45,9 +45,10 @@ class Config {
    * Get a configuration value by key
    * Priority: Environment variable > Default value > undefined
    * @param {string} key - The configuration key to retrieve
+   * @param {*} [defaultValue] - The default value to return if the key is not found. Default is undefined.
    * @returns {*} The configuration value
    */
-  get(key) {
+  get(key, defaultValue = undefined) {
     // First check environment variables
     if (process.env[key] !== undefined) {
 
@@ -72,7 +73,7 @@ class Config {
       return this.variables[key];
     }
 
-    return undefined;
+    return defaultValue;
   }
 
   /** 
