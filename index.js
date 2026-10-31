@@ -74,6 +74,9 @@ client.on(Events.InteractionCreate, async interaction => {
       console.error(`No command named ${interaction.commandName} found`);
       return;
     }
+    if (interaction.commandName === 'download') {
+      return await interaction.reply({ content: "The download command is temporarily disabled", flags: MessageFlags.Ephemeral });
+    }
     try {
       //get guild config to check if command is disabled
       const server = await getGuildConfig(interaction.guildId);
